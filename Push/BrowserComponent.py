@@ -397,6 +397,11 @@ def make_instruments_browser_model(browser):
      instruments,
      drum_hits])
 
+# JULIEN
+def make_plugins_browser_model(browser):
+    query = TagBrowserQuery(include=['Plug-ins'])
+    return QueryingBrowserModel(browser=browser, queries=[query])
+
 
 def make_drum_pad_browser_model(browser):
     drums = TagBrowserQuery(include=[['Drums', 'Drum Hits']])
@@ -416,6 +421,8 @@ def filter_type_for_hotswap_target(target):
     if isinstance(target, Live.Device.Device):
         if target.type == DeviceType.instrument:
             return FilterType.instrument_hotswap
+	elif target.type == DeviceType.audio_effect:
+            return FilterType.audio_effect_hotswap
         elif target.type == DeviceType.audio_effect:
             return FilterType.audio_effect_hotswap
         elif target.type == DeviceType.midi_effect:
@@ -435,7 +442,8 @@ def make_browser_model(browser, filter_type = None):
     factories = {FilterType.instrument_hotswap: make_instruments_browser_model,
      FilterType.drum_pad_hotswap: make_drum_pad_browser_model,
      FilterType.audio_effect_hotswap: make_audio_effect_browser_model,
-     FilterType.midi_effect_hotswap: make_midi_effect_browser_model}
+     FilterType.midi_effect_hotswap: make_midi_effect_browser_model,
+     FilterType.plugins_hotswap: make_plugins_browser_model}
     if filter_type == None:
         filter_type = filter_type_for_browser(browser)
     return factories.get(filter_type, make_fallback_browser_model)(browser)
