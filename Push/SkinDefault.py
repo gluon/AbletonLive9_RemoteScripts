@@ -49,11 +49,11 @@ class Colors:
     class Session:
         SceneSelected = BiLed.GREEN
         SceneUnselected = BiLed.OFF
-        SceneTriggered = BiLed.GREEN_BLINK
+        SceneTriggered = BiLed.BLUE
         ClipStopped = Rgb.AMBER
-        ClipStarted = Pulse(Rgb.GREEN.shade(1), Rgb.GREEN, 48)
+        ClipStarted = (Rgb.BLUE.shade(1), Rgb.GREEN, 48)
         ClipRecording = Pulse(Rgb.BLACK, Rgb.RED, 48)
-        ClipTriggeredPlay = Blink(Rgb.GREEN, Rgb.BLACK, 24)
+        ClipTriggeredPlay = (Rgb.BLUE, Rgb.BLACK, 24)
         ClipTriggeredRecord = Blink(Rgb.RED, Rgb.BLACK, 24)
         ClipEmpty = Rgb.BLACK
         RecordButton = Rgb.RED.shade(2)
