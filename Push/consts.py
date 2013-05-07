@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
+from _Framework.Resource import PrioritizedResource
 DISPLAY_LENGTH = 72
 TAPPING_DELAY = 0.4
 CUKE_MODE = False
@@ -194,29 +195,41 @@ MUSICAL_MODES = ['Major',
   6,
   8,
   10]]
+MIN_OFF_THRESHOLD = 10
+MAX_OFF_THRESHOLD = 370
+MIN_ON_THRESHOLD = 10
+MAX_ON_THRESHOLD = 410
+MIN_THRESHOLD_STEP = -20
+MAX_THRESHOLD_STEP = 20
+CRITICAL_THRESHOLD_LIMIT = 0
 PROTO_FAST_DEVICE_NAVIGATION = False
 PROTO_AUDIO_NOTE_MODE = False
 PROTO_SONG_IS_ROOT = False
 PROTO_TOUCH_ENCODER_TO_STRIP = False
-M4L_PRIORITY = 6
-MESSAGE_BOX_PRIORITY = 5
-DIALOG_PRIORITY = 4
-MODAL_DIALOG_PRIORITY = 3
-BROWSER_PRIORITY = 2
-NOTIFICATION_PRIORITY = 1
-HIDDEN_SESSION_PRIORITY = -2
-BACKGROUND_PRIORITY = -3
+DEFAULT_PRIORITY = PrioritizedResource.default_priority
+SHARED_PRIORITY = DEFAULT_PRIORITY
+M4L_PRIORITY = DEFAULT_PRIORITY + 6
+MESSAGE_BOX_PRIORITY = DEFAULT_PRIORITY + 5
+DIALOG_PRIORITY = DEFAULT_PRIORITY + 4
+MODAL_DIALOG_PRIORITY = DEFAULT_PRIORITY + 3
+BROWSER_PRIORITY = DEFAULT_PRIORITY + 2
+NOTIFICATION_PRIORITY = DEFAULT_PRIORITY + 1
+HIDDEN_SESSION_PRIORITY = DEFAULT_PRIORITY - 2
+BACKGROUND_PRIORITY = DEFAULT_PRIORITY - 3
 ENCODER_SENSITIVITY = 0.5
 CONTINUOUS_MAPPING_SENSITIVITY = 2.0
 QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
 CHAR_ARROW_UP = '\x00'
 CHAR_ARROW_DOWN = '\x01'
+CHAR_ARROW_RIGHT = '\x1e'
+CHAR_ARROW_LEFT = '\x1f'
 CHAR_RACK = '\x02'
 CHAR_BAR_LEFT = '\x03'
 CHAR_BAR_RIGHT = '\x04'
 CHAR_SPLIT_BLOCK = '\x05'
 CHAR_SPLIT_DASH = '\x06'
 CHAR_FOLDER = '\x07'
+CHAR_ELLIPSIS = '\x1c'
 CHAR_FLAT_SIGN = '\x1b'
 CHAR_ELLIPSIS = '\x1c'
 CHAR_FULL_BLOCK = '\x1d'
@@ -245,12 +258,13 @@ class MessageBoxText:
     DELETE_SCENE = '                  Scene deleted:    %s'
     DUPLICATE_SCENE = '                  Scene duplicated: %s'
     DELETE_ENVELOPE = '                  Delete automation %(automation)s'
-    EMPTY_DEVICE_CHAIN = "\n\n               No Devices.    Press 'Browse' to add a device."
+    EMPTY_DEVICE_CHAIN = '\n\n               No Devices.    Press [Browse] to add a device.'
+    STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
 
 
 try:
     _test_mode = __builtins__.get('TEST_MODE', False)
     if not _test_mode:
-        from local_consts import PROTO_SONG_IS_ROOT, PROTO_AUDIO_NOTE_MODE, PROTO_FAST_DEVICE_NAVIGATION
+        from local_consts import PROTO_SONG_IS_ROOT, PROTO_AUDIO_NOTE_MODE, PROTO_FAST_DEVICE_NAVIGATION, PROTO_TOUCH_ENCODER_TO_STRIP
 except ImportError:
     pass

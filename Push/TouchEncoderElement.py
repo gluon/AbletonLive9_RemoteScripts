@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.SubjectSlot import subject_slot, SlotManager, SubjectEvent
 from _Framework import Task

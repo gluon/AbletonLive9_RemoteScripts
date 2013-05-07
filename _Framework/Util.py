@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
 """
 Various utilities.
 """
@@ -585,6 +585,14 @@ class NamedTuple(object):
 
     def __setstate__(self, state):
         self.__dict__['_NamedTuple__contents'] = state
+
+
+class MutableNamedTuple(NamedTuple):
+
+    def __setattr__(self, name, value):
+        if name not in self._NamedTuple__contents:
+            raise AttributeError, "'%s' is not a name of the named tuple" % name
+        self._NamedTuple__contents[name] = value
 
 
 def trace_value(value, msg = 'Value: '):

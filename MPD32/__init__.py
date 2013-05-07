@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MPD32/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/MPD32/__init__.py
 from _Generic.GenericScript import GenericScript
 import Live
 from config import *

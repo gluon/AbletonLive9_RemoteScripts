@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/LoopSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/LoopSelectorComponent.py
 from _Framework.SubjectSlot import subject_slot, Subject
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Util import product
@@ -77,6 +77,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         self._last_playhead_measure = -1
         if follow_detail_clip:
             self._on_detail_clip_changed.subject = self.song().view
+        self._on_session_record_changed.subject = self.song()
 
     @property
     def is_following(self):
@@ -164,6 +165,10 @@ class LoopSelectorComponent(ControlSurfaceComponent):
     def _on_playing_status_changed(self):
         self._update_measure_and_playhead_leds()
 
+    @subject_slot('session_record')
+    def _on_session_record_changed(self):
+        self._update_measure_and_playhead_leds(force_redraw=True)
+
     def _update_page_selection(self):
         if self.is_enabled() and self._is_following and self._sequencer_clip and (self._sequencer_clip.is_playing or self._sequencer_clip.is_recording):
             position = self._sequencer_clip.playing_position
@@ -177,7 +182,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
             if measure != self._last_playhead_measure or force_redraw:
                 if measure < len(measure_colors):
                     old_measure_value = self._measure_colors[measure]
-                    measure_colors[measure] = 'LoopSelector.Playhead'
+                    measure_colors[measure] = 'LoopSelector.PlayheadRecord' if self.song().session_record else 'LoopSelector.Playhead'
                     if clip_is_new_recording(self._sequencer_clip):
                         old_tail_values = measure_colors[measure + 1:]
                         measure_colors[measure + 1:] = ['LoopSelector.OutsideLoop'] * len(old_tail_values)

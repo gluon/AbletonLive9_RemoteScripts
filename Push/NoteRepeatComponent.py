@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteRepeatComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteRepeatComponent.py
 from _Framework.ModesComponent import ModesComponent
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot

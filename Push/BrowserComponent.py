@@ -1,15 +1,18 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
 from __future__ import with_statement
 from functools import partial
-from itertools import izip
+from itertools import izip, chain, imap
+import string
+import re
+import consts
 import Live
 FilterType = Live.Browser.FilterType
 DeviceType = Live.Device.DeviceType
 from _Framework.CompoundComponent import CompoundComponent
-from _Framework.Util import first, find_if, index_if, clamp, in_range, BooleanContext
+from _Framework.Util import first, find_if, index_if, clamp, in_range, BooleanContext, nop, const, lazy_attribute, memoize
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot, subject_slot_group, SlotManager, Subject
-from ScrollableList import ActionListItem, ActionList, ListComponent
+from ScrollableList import ActionListItem, ActionList, ListComponent, DefaultItemFormatter
 
 class VirtualBrowserItem(object):
     """
@@ -19,10 +22,14 @@ class VirtualBrowserItem(object):
     is_device = False
     is_loadable = False
 
-    def __init__(self, name = '', children = tuple(), is_folder = False):
+    def __init__(self, name = '', children_query = nop, is_folder = False):
         self.name = name
-        self.children = children
         self.is_folder = is_folder
+        self.children_query = children_query
+
+    @lazy_attribute
+    def children(self):
+        return self.children_query()
 
     @property
     def is_selected(self):
@@ -38,7 +45,8 @@ class BrowserListItem(ActionListItem):
     """
 
     def __str__(self):
-        return self.content.name if self.content else ''
+        import os
+        return os.path.splitext(self.content.name)[0] if self.content else ''
 
     def action(self):
         if self.container and self.container.browser:
@@ -271,11 +279,10 @@ class BrowserQuery(object):
         self.subfolder = subfolder
 
     def __call__(self, browser):
-        result = self.query(browser)
-        if self.subfolder and len(result) > 0:
-            return [VirtualBrowserItem(name=self.subfolder, children=result, is_folder=True)]
+        if self.subfolder:
+            return [VirtualBrowserItem(name=self.subfolder, children_query=partial(self.query, browser), is_folder=True)]
         else:
-            return result
+            return self.query(browser)
 
     def query(self, browser):
         raise NotImplementedError
@@ -345,7 +352,7 @@ class SourceBrowserQuery(TagBrowserQuery):
         for item in root:
             groups.setdefault(item.source, []).append(item)
 
-        return map(lambda (k, g): VirtualBrowserItem(name=k, children=tuple(g)), sorted(groups.items(), key=first))
+        return map(lambda (k, g): VirtualBrowserItem(name=k, children_query=const(g)), sorted(groups.items(), key=first))
 
 
 class QueryingBrowserModel(FullBrowserModel):
@@ -362,11 +369,8 @@ class QueryingBrowserModel(FullBrowserModel):
         self.queries = queries
 
     def get_root_children(self):
-        root = []
-        for query in self.queries:
-            root += query(self.browser)
-
-        return root
+        browser = self.browser
+        return chain(*imap(lambda q: q(browser), self.queries))
 
     def can_be_exchanged(self, model):
         return isinstance(model, QueryingBrowserModel) and super(QueryingBrowserModel, self).can_be_exchanged(model)
@@ -378,13 +382,15 @@ class QueryingBrowserModel(FullBrowserModel):
 
 
 def make_midi_effect_browser_model(browser):
-    query = TagBrowserQuery(include=['MIDI Effects'])
-    return QueryingBrowserModel(browser=browser, queries=[query])
+    midi_effects = TagBrowserQuery(include=['MIDI Effects'])
+    max = TagBrowserQuery(include=[['Max for Live', 'Max MIDI Effect']], subfolder='Max for Live')
+    return QueryingBrowserModel(browser=browser, queries=[midi_effects, max])
 
 
 def make_audio_effect_browser_model(browser):
-    query = TagBrowserQuery(include=['Audio Effects'])
-    return QueryingBrowserModel(browser=browser, queries=[query])
+    audio_effects = TagBrowserQuery(include=['Audio Effects'])
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Audio Effect']], subfolder='Max for Live')
+    return QueryingBrowserModel(browser=browser, queries=[audio_effects, max])
 
 
 def make_instruments_browser_model(browser):
@@ -392,9 +398,11 @@ def make_instruments_browser_model(browser):
     drums = SourceBrowserQuery(include=['Drums'], exclude=['Drum Hits'], subfolder='Drum Rack')
     instruments = TagBrowserQuery(include=['Instruments'], exclude=['Drum Rack', 'Instrument Rack'])
     drum_hits = TagBrowserQuery(include=[['Drums', 'Drum Hits']], subfolder='Drum Hits')
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live')
     return QueryingBrowserModel(browser=browser, queries=[instrument_rack,
      drums,
      instruments,
+     max,
      drum_hits])
 
 
@@ -402,7 +410,11 @@ def make_drum_pad_browser_model(browser):
     drums = TagBrowserQuery(include=[['Drums', 'Drum Hits']])
     samples = SourceBrowserQuery(include=['Samples'], subfolder='Samples')
     instruments = TagBrowserQuery(include=['Instruments'])
-    return QueryingBrowserModel(browser=browser, queries=[drums, samples, instruments])
+    max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live')
+    return QueryingBrowserModel(browser=browser, queries=[drums,
+     samples,
+     instruments,
+     max])
 
 
 def make_fallback_browser_model(browser):
@@ -448,6 +460,50 @@ def filter_type_for_browser(browser):
     return filter_type
 
 
+def make_stem_cleaner(stem):
+    """ Returns a function that can be used to remove the stem from a sentence """
+    if stem[-1] == 's':
+        stem = stem[:-1]
+    if len(stem) > 2:
+        return _memoized_stem_cleaner(stem)
+    return nop
+
+
+@memoize
+def _memoized_stem_cleaner(stem):
+    ellipsis = consts.CHAR_ELLIPSIS
+    rule1 = re.compile('([a-z])' + stem + 's?([ A-Z])')
+    rule2 = re.compile('[' + ellipsis + ' \\-]' + stem + 's?([\\-' + ellipsis + ' A-Z])')
+    rule3 = re.compile('' + stem + 's?$')
+
+    def cleaner(short_name):
+        short_name = ' ' + short_name
+        short_name = rule1.sub('\\1' + ellipsis + '\\2', short_name)
+        short_name = rule2.sub(ellipsis + '\\1', short_name)
+        short_name = rule3.sub(ellipsis, short_name)
+        return short_name.strip()
+
+    return cleaner
+
+
+def split_stem(sentence):
+    """ Splits camel cased sentence into words """
+    sentence = re.sub('([a-z])([A-Z])', '\\1 \\2', sentence)
+    return sentence.split()
+
+
+_stripper_double_spaces = re.compile(' [\\- ]*')
+_stripper_double_ellipsis = re.compile(consts.CHAR_ELLIPSIS + '+')
+_stripper_space_ellipsis = re.compile('[\\- ]?' + consts.CHAR_ELLIPSIS + '[\\- ]?')
+
+def full_strip(string):
+    """ Strip string for double spaces and dashes """
+    string = _stripper_double_spaces.sub(' ', string)
+    string = _stripper_double_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
+    string = _stripper_space_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
+    return string.strip()
+
+
 class BrowserComponent(CompoundComponent):
     """
     Component for controlling the Live library browser.  It has 4
@@ -466,18 +522,26 @@ class BrowserComponent(CompoundComponent):
         num_data_sources = self.NUM_COLUMNS * self.COLUMN_SIZE
         self._data_sources = map(DisplayDataSource, ('',) * num_data_sources)
         self._last_loaded_item = None
+        self._default_item_formatter = DefaultItemFormatter()
         self._list_components = self.register_components(*[ ListComponent() for _ in xrange(self.NUM_COLUMNS) ])
-        for component in self._list_components:
+        for i, component in enumerate(self._list_components):
             component.do_trigger_action = lambda item: self._do_load_item(item)
             component.last_action_item = lambda : self._last_loaded_item
+            component.item_formatter = partial(self._item_formatter, i)
 
         self._select_buttons = []
         self._state_buttons = []
         self._encoder_controls = []
+        self._enter_button = None
+        self._exit_button = None
+        self._shift_button = None
         self._on_list_item_action.replace_subjects(self._list_components)
         self._on_hotswap_target_changed.subject = self._browser
         self._on_filter_type_changed.subject = self._browser
         self._on_browser_full_refresh.subject = self._browser
+        self._scroll_offset = 0
+        self._max_scroll_offset = 0
+        self._max_hierarchy = 0
         self._last_filter_type = None
         self._skip_next_preselection = False
         self._browser_model_dirty = True
@@ -495,6 +559,16 @@ class BrowserComponent(CompoundComponent):
     def set_display_line4(self, display):
         self.set_display_line_with_index(display, 3)
 
+    def set_enter_button(self, button):
+        self._enter_button = button
+        self._on_enter_value.subject = button
+        self._update_navigation_button_state()
+
+    def set_exit_button(self, button):
+        self._exit_button = button
+        self._on_exit_value.subject = button
+        self._update_navigation_button_state()
+
     def set_display_line_with_index(self, display, index):
         if display:
             sources = self._data_sources[index::self.COLUMN_SIZE]
@@ -502,7 +576,8 @@ class BrowserComponent(CompoundComponent):
 
     def set_select_buttons(self, buttons):
         for button in buttons or []:
-            button.reset()
+            if button:
+                button.reset()
 
         self._on_select_matrix_value.subject = buttons or None
         self._select_buttons = buttons
@@ -511,21 +586,41 @@ class BrowserComponent(CompoundComponent):
             self._set_button_if_enabled(component, 'action_button', button)
 
         for component, button in izip(self._list_components, buttons[::2]):
-            self._set_button_if_enabled(component, 'select_prev_button', button)
+            if self._shift_button and self._shift_button.is_pressed():
+                self._set_button_if_enabled(component, 'prev_page_button', button)
+                self._set_button_if_enabled(component, 'select_prev_button', None)
+            else:
+                self._set_button_if_enabled(component, 'prev_page_button', None)
+                self._set_button_if_enabled(component, 'select_prev_button', button)
 
     def set_state_buttons(self, buttons):
         for button in buttons or []:
-            button.reset()
+            if button:
+                button.reset()
 
         self._on_state_matrix_value.subject = buttons or None
         self._state_buttons = buttons
         buttons = buttons or (None, None, None, None, None, None, None, None)
         for component, button in izip(self._list_components, buttons[::2]):
-            self._set_button_if_enabled(component, 'select_next_button', button)
+            if self._shift_button and self._shift_button.is_pressed():
+                self._set_button_if_enabled(component, 'next_page_button', button)
+                self._set_button_if_enabled(component, 'select_next_button', None)
+            else:
+                self._set_button_if_enabled(component, 'next_page_button', None)
+                self._set_button_if_enabled(component, 'select_next_button', button)
 
         for button in buttons[1::2]:
             if button and self.is_enabled():
                 button.set_light('DefaultButton.Disabled')
+
+    def set_shift_button(self, button):
+        self._shift_button = button
+        self._on_shift_button.subject = button
+
+    @subject_slot('value')
+    def _on_shift_button(self, value):
+        self.set_select_buttons(self._select_buttons)
+        self.set_state_buttons(self._state_buttons)
 
     def _set_button_if_enabled(self, component, name, button):
         setter = getattr(component, 'set_' + name)
@@ -538,13 +633,14 @@ class BrowserComponent(CompoundComponent):
 
     def set_encoder_controls(self, encoder_controls):
         if encoder_controls:
-            num_active_lists = len(self._browser_model.content_lists)
+            num_active_lists = len(self._browser_model.content_lists) - self._scroll_offset
+            num_assignable_lists = min(num_active_lists, len(encoder_controls) / 2)
             index = 0
-            for component in self._list_components[:num_active_lists - 1]:
+            for component in self._list_components[:num_assignable_lists - 1]:
                 component.set_encoder_controls(encoder_controls[index:index + 2])
                 index += 2
 
-            self._list_components[num_active_lists - 1].set_encoder_controls(encoder_controls[index:])
+            self._list_components[num_assignable_lists - 1].set_encoder_controls(encoder_controls[index:])
         else:
             for component in self._list_components:
                 component.set_encoder_controls([])
@@ -556,6 +652,7 @@ class BrowserComponent(CompoundComponent):
             self.set_state_buttons(self._state_buttons)
             self.set_select_buttons(self._select_buttons)
             self._update_browser_model()
+            self._update_navigation_button_state()
 
     def reset_load_memory(self):
         self._update_load_memory(None)
@@ -573,6 +670,73 @@ class BrowserComponent(CompoundComponent):
     def do_load_item(self, item):
         item.action()
         self.notify_load_item(item.content)
+
+    def back_to_top(self):
+        self._set_scroll_offset(0)
+
+    def _set_scroll_offset(self, offset):
+        self._scroll_offset = offset
+        self._on_content_lists_changed()
+        scrollable_list = self._list_components[-1].scrollable_list
+        if scrollable_list:
+            scrollable_list.request_notify_item_activated()
+
+    def _update_navigation_button_state(self):
+        if self._exit_button:
+            self._exit_button.set_light(self._scroll_offset > 0)
+        if self._enter_button:
+            self._enter_button.set_light(self._scroll_offset < self._max_scroll_offset)
+
+    def _shorten_item_name(self, shortening_limit, list_index, item_name):
+        """
+        Creates the name of an item shortened by removing words from the parents name
+        """
+
+        def is_short_enough(item_name):
+            return len(item_name) <= 9
+
+        content_lists = self._browser_model.content_lists
+        parent_lists = reversed(content_lists[max(0, list_index - 3):list_index])
+        for content_list in parent_lists:
+            if is_short_enough(item_name):
+                break
+            parent_name = str(content_list.selected_item)
+            stems = split_stem(parent_name)
+            for stem in stems:
+                short_name = make_stem_cleaner(stem)(item_name)
+                short_name = full_strip(short_name)
+                item_name = short_name if len(short_name) > 4 else item_name
+                if is_short_enough(item_name):
+                    break
+
+        return item_name[:-1] if item_name[-1] == consts.CHAR_ELLIPSIS and len(item_name) >= shortening_limit else item_name
+
+    def _item_formatter(self, depth, index, item, action_in_progress):
+        display_string = ''
+        separator_length = len(self._data_sources[self.COLUMN_SIZE * depth].separator)
+        shortening_limit = 16 - separator_length
+        if item:
+            item_name = 'Loading...' if action_in_progress else self._shorten_item_name(shortening_limit, depth + self._scroll_offset, str(item))
+            display_string = consts.CHAR_SELECT if item and item.is_selected else ' '
+            display_string += item_name
+            if depth == len(self._list_components) - 1 and item.is_selected and self._scroll_offset < self._max_hierarchy:
+                display_string = string.ljust(display_string, consts.DISPLAY_LENGTH / 4 - 1)
+                shortening_limit += 1
+                display_string = display_string[:shortening_limit] + consts.CHAR_ARROW_RIGHT
+            if depth == 0 and self._scroll_offset > 0:
+                prefix = consts.CHAR_ARROW_LEFT if index == 0 else ' '
+                display_string = prefix + display_string
+        return display_string[:shortening_limit + 1]
+
+    @subject_slot('value')
+    def _on_enter_value(self, value):
+        if value:
+            self._set_scroll_offset(min(self._max_scroll_offset, self._scroll_offset + 1))
+
+    @subject_slot('value')
+    def _on_exit_value(self, value):
+        if value:
+            self._set_scroll_offset(max(0, self._scroll_offset - 1))
 
     @subject_slot('hotswap_target')
     def _on_hotswap_target_changed(self):
@@ -620,8 +784,11 @@ class BrowserComponent(CompoundComponent):
     @subject_slot('content_lists')
     def _on_content_lists_changed(self):
         components = self._list_components
-        contents = self._browser_model.content_lists
+        contents = self._browser_model.content_lists[self._scroll_offset:]
         messages = self._browser_model.empty_list_messages
+        scroll_depth = len(self._browser_model.content_lists) - len(self._list_components)
+        self._max_scroll_offset = max(0, scroll_depth + 2)
+        self._max_hierarchy = max(0, scroll_depth)
         for component, content, message in map(None, components, contents, messages):
             if component != None:
                 component.scrollable_list = content
@@ -645,7 +812,13 @@ class BrowserComponent(CompoundComponent):
             set_data_sources_with_separator(component, sources, '|')
 
         if last:
-            sources = self._data_sources[num_head * self.COLUMN_SIZE:]
+            offset = num_head * self.COLUMN_SIZE
+            scrollable_list = last[0].scrollable_list
+            if scrollable_list and find_if(lambda item: item.content.is_folder, scrollable_list.items):
+                sources = self._data_sources[offset:offset + self.COLUMN_SIZE]
+                map(DisplayDataSource.clear, self._data_sources[offset + self.COLUMN_SIZE:])
+            else:
+                sources = self._data_sources[offset:]
             set_data_sources_with_separator(last[0], sources, '')
             for component in last[1:]:
                 component.set_enabled(False)
@@ -653,6 +826,7 @@ class BrowserComponent(CompoundComponent):
         self.set_select_buttons(self._select_buttons)
         self.set_state_buttons(self._state_buttons)
         self.set_encoder_controls(self._encoder_controls)
+        self._update_navigation_button_state()
 
     @subject_slot('value')
     def _on_select_matrix_value(self, value, *_):

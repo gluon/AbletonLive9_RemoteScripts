@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
 from __future__ import with_statement
 import Live
 GridQuantization = Live.Clip.GridQuantization
@@ -22,7 +22,7 @@ STEP_STATE_ALLOW_DELETE = 1
 STEP_STATE_ADDED_MUTED = 2
 DEFAULT_VELOCITY = 100
 QUANTIZATION_FACTOR = 24
-BEAT_TIME_EPSILON = 1e-05
+BEAT_TIME_EPSILON = 1.0000000000000006e-05
 QUANTIZATION_LIST = [2.0,
  3.0,
  4.0,
@@ -145,12 +145,13 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
         self._bottom_data_sources = [ DisplayDataSource() for _ in xrange(8) ]
         self._show_settings_task = self._tasks.add(Task.sequence(Task.wait(Defaults.MOMENTARY_DELAY), Task.run(self._show_settings)))
         self._show_settings_task.kill()
+        self._full_velocity_button = None
         self._mute_button = None
+        self._full_velocity = False
         self._velocity_offset = 0
         self._length_offset = 0
         self._nudge_offset = 0
         self._attribute_deltas = [ None for _ in xrange(3) ]
-        self._full_velocity = False
         self._pressed_steps = []
         self._modified_steps = []
         self._pressed_step_callback = None
@@ -264,6 +265,14 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
         if display:
             display.set_data_sources(self._bottom_data_sources)
 
+    def set_clear_display_line1(self, display):
+        if display:
+            display.reset()
+
+    def set_clear_display_line2(self, display):
+        if display:
+            display.reset()
+
     def _data_sources_for_line(self, line_index):
         return (None, None, None, None, None, None, None, None) if line_index > 0 else self._top_data_sources
 
@@ -285,6 +294,10 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
     def set_mute_button(self, button):
         self._mute_button = button
         self._on_mute_value.subject = button
+
+    def set_full_velocity_button(self, button):
+        self._full_velocity_button = button
+        self._on_full_velocity_value.subject = button
 
     def set_button_matrix(self, matrix):
         self._matrix = matrix
@@ -327,9 +340,6 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
 
     def set_full_velocity(self, active):
         self._full_velocity = active
-        if self.is_enabled():
-            if self._full_velocity:
-                self._trigger_modification()
 
     def update(self):
         self._update_editor_matrix_leds()
@@ -485,15 +495,16 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
                         button.turn_off()
 
     @subject_slot('value')
-    def _on_full_level_value(self, value):
-        if self.is_enabled():
-            if value > 0:
-                self._trigger_modification()
-
-    @subject_slot('value')
     def _on_mute_value(self, value):
         if self.is_enabled():
-            self._trigger_modification()
+            if value:
+                self._trigger_modification(immediate=True)
+
+    @subject_slot('value')
+    def _on_full_velocity_value(self, value):
+        if self.is_enabled():
+            if value:
+                self._trigger_modification(immediate=True)
 
     @subject_slot('normalized_value')
     def _on_velocity_value(self, value):
@@ -609,14 +620,15 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
         x, y = step
         time = self._get_step_start_time(x, y)
         notes = self._time_step(time).filter_notes(self._clip_notes)
-        if notes:
-            most_significant_velocity = most_significant_note(notes)[3]
-            if self._mute_button.is_pressed() or self._full_velocity and most_significant_velocity != 127:
-                self._trigger_modification(step)
+        if not (self._full_velocity_button and self._full_velocity_button.is_pressed()):
+            full_velocity = self._full_velocity
+            if notes:
+                most_significant_velocity = most_significant_note(notes)[3]
+                (self._mute_button.is_pressed() or most_significant_velocity != 127 and full_velocity) and self._trigger_modification(step, immediate=True)
         else:
             pitch = self._note_index
             mute = self._mute_button.is_pressed()
-            velocity = 127 if self._full_velocity else DEFAULT_VELOCITY
+            velocity = 127 if full_velocity else DEFAULT_VELOCITY
             note = (pitch,
              time,
              self._get_step_length(),
@@ -633,7 +645,7 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
             for time, length in time_step.connected_time_ranges():
                 self._sequencer_clip.remove_notes(time, self._note_index, length, 1)
 
-    def _trigger_modification(self, step = None, done = False):
+    def _trigger_modification(self, step = None, done = False, immediate = False):
         """
         Because the modification of notes is slow, we
         accumulate modification events and perform all of them
@@ -651,8 +663,12 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
                 self._modified_steps.append(step)
             if step in self._pressed_steps:
                 self._pressed_steps.remove(step)
-        if not done and self._modify_task.is_killed:
-            self._modify_task.restart()
+        if not done:
+            if immediate:
+                self._do_modification()
+                self._modify_task.kill()
+            elif self._modify_task.is_killed:
+                self._modify_task.restart()
 
     def _do_modification(self):
         attribute_deltas = [ 0 for _ in xrange(3) ]
@@ -725,7 +741,8 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
             current_velocity = velocity
             time = time_step.clamp(time, self._nudge_offset)
             length = max(0, length + self._length_offset)
-            velocity = 127 if self._full_velocity else clamp(velocity + self._velocity_offset, 1, 127)
+            full_velocity = self._full_velocity_button and self._full_velocity_button.is_pressed() or self._full_velocity
+            velocity = 127 if full_velocity else clamp(velocity + self._velocity_offset, 1, 127)
             mute = not step_mute if self._mute_button.is_pressed() else mute
             attribute_deltas[0] = self._delta_value(attribute_deltas[0], time - current_time, self._nudge_offset > 0)
             attribute_deltas[1] = self._delta_value(attribute_deltas[1], length - current_length, self._length_offset > 0)
@@ -738,7 +755,7 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
 
     def _delta_value(self, current_delta, requested_delta, up):
         if abs(requested_delta) > BEAT_TIME_EPSILON:
-            return max(requested_delta, current_delta) if up else min(requested_delta, current_delta)
+            return (max if up else min)(requested_delta, current_delta)
         else:
             return current_delta
 

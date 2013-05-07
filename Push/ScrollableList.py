@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ScrollableList.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ScrollableList.py
 from __future__ import with_statement
 from functools import partial
 from _Framework.CompoundComponent import CompoundComponent
@@ -60,10 +60,19 @@ class ScrollableList(Subject, Scrollable):
         self._selected_item_index = -1
         self._last_activated_item_index = None
         self._offset = 0
+        self._pager = Scrollable()
+        self._pager.scroll_up = self.prev_page
+        self._pager.scroll_down = self.next_page
+        self._pager.can_scroll_up = self.can_scroll_up
+        self._pager.can_scroll_down = self.can_scroll_down
+
+    @property
+    def pager(self):
+        return self._pager
 
     def scroll_up(self):
         if self.can_scroll_up():
-            self.selected_item_index -= 1
+            self.select_item_index_with_border(self.selected_item_index - 1, 1)
             self.notify_scroll()
 
     def can_scroll_up(self):
@@ -71,7 +80,7 @@ class ScrollableList(Subject, Scrollable):
 
     def scroll_down(self):
         if self.can_scroll_down():
-            self.selected_item_index += 1
+            self.select_item_index_with_border(self.selected_item_index + 1, 1)
             self.notify_scroll()
 
     def can_scroll_down(self):
@@ -103,6 +112,38 @@ class ScrollableList(Subject, Scrollable):
             self._normalize_offset(index)
             self._do_set_selected_item_index(index)
 
+    def select_item_index_with_border(self, index, border_size):
+        """
+        Selects an item with an index. Moves the view if the selection would exceed the
+        border of the current view.
+        """
+        if index >= 0 and index < len(self._items):
+            if not in_range(index, self._offset + border_size, self._offset + self._num_visible_items - border_size):
+                offset = index - (self._num_visible_items - 2 * border_size) if self.selected_item_index < index else index - border_size
+                self._offset = clamp(offset, 0, len(self._items))
+            self._normalize_offset(index)
+            self._do_set_selected_item_index(index)
+
+    def next_page(self):
+        if self.can_scroll_down():
+            current_page = self.selected_item_index / self.num_visible_items
+            last_page_index = len(self.items) - self.num_visible_items
+            if self.selected_item_index < last_page_index:
+                index = clamp((current_page + 1) * self.num_visible_items, 0, len(self.items) - self.num_visible_items)
+            else:
+                index = len(self.items) - 1
+            self.select_item_index_with_offset(index, 0)
+
+    def prev_page(self):
+        if self.can_scroll_up():
+            current_page = self.selected_item_index / self.num_visible_items
+            last_page_index = len(self.items) - self.num_visible_items
+            if self.selected_item_index <= last_page_index:
+                index = clamp((current_page - 1) * self.num_visible_items, 0, len(self.items) - self.num_visible_items)
+            else:
+                index = max(len(self.items) - self.num_visible_items, 0)
+            self.select_item_index_with_offset(index, 0)
+
     def _set_selected_item_index(self, index):
         if not (index >= 0 and index < len(self._items) and self.selected_item_index != -1):
             raise AssertionError
@@ -120,6 +161,7 @@ class ScrollableList(Subject, Scrollable):
                 self._offset = index - (self._num_visible_items - 1)
             elif index < self._offset:
                 self._offset = index
+            self._offset = clamp(self._offset, 0, len(self._items) - self._num_visible_items)
 
     @property
     def selected_item(self):
@@ -180,6 +222,21 @@ class ActionList(ScrollableList):
     item_type = ActionListItem
 
 
+class DefaultItemFormatter(object):
+    """
+    Item formatter that will indicate selection and show action_message if the item
+    is currently performing an action
+    """
+    action_message = 'Loading...'
+
+    def __call__(self, index, item, action_in_progress):
+        display_string = ''
+        if item:
+            display_string += consts.CHAR_SELECT if item.is_selected else ' '
+            display_string += self.action_message if action_in_progress else str(item)
+        return display_string
+
+
 class ListComponent(CompoundComponent):
     """
     Component that handles a ScrollableList.  If an action button is
@@ -191,7 +248,6 @@ class ListComponent(CompoundComponent):
     SELECTION_DELAY = 0.5
     ENCODER_FACTOR = 10.0
     empty_list_message = ''
-    action_message = 'Loading...'
     _current_action_item = None
     _last_action_item = None
 
@@ -202,7 +258,9 @@ class ListComponent(CompoundComponent):
         self._action_on_scroll_task = Task.Task()
         self._scrollable_list = None
         self._scroller = self.register_component(ScrollComponent())
+        self._pager = self.register_component(ScrollComponent())
         self.last_action_item = lambda : self._last_action_item
+        self.item_formatter = DefaultItemFormatter()
         if scrollable_list == None:
             self.scrollable_list = ActionList(num_visible_items=len(data_sources))
         else:
@@ -228,9 +286,12 @@ class ListComponent(CompoundComponent):
             if new_list != None:
                 new_list.num_visible_items = len(self._data_sources)
                 self._scroller.scrollable = new_list
+                self._pager.scrollable = new_list.pager
                 self._on_scroll.subject = new_list
+                self._selected_index_float = new_list.selected_item_index
             else:
                 self._scroller.scrollable = ScrollComponent.default_scrollable
+                self._scroller.scrollable = ScrollComponent.default_pager
             self._on_selected_item_changed.subject = new_list
             self.update_all()
 
@@ -259,6 +320,16 @@ class ListComponent(CompoundComponent):
             next_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
         self._scroller.set_scroll_down_button(next_button)
 
+    def set_next_page_button(self, next_button):
+        if next_button:
+            next_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
+        self._pager.set_scroll_down_button(next_button)
+
+    def set_prev_page_button(self, prev_button):
+        if prev_button:
+            prev_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
+        self._pager.set_scroll_up_button(prev_button)
+
     def set_action_button(self, button):
         if button:
             button.set_on_off_values('Browser.Load', 'Browser.LoadNotPossible')
@@ -280,6 +351,7 @@ class ListComponent(CompoundComponent):
     @subject_slot('selected_item')
     def _on_selected_item_changed(self):
         self._scroller.update()
+        self._pager.update()
         self._update_display()
         self._update_action_feedback()
         self._activation_task.kill()
@@ -300,12 +372,22 @@ class ListComponent(CompoundComponent):
             with self._delay_activation():
                 with self._in_encoder_selection():
                     self._selected_index_float = clamp(self._selected_index_float + offset * self.ENCODER_FACTOR, 0, len(self._scrollable_list.items))
-                    self._scrollable_list.selected_item_index = int(self._selected_index_float)
+                    self._scrollable_list.select_item_index_with_border(int(self._selected_index_float), 1)
 
     @subject_slot('value')
     def _on_action_button_value(self, value):
         if value != 0 and self._current_action_item == None:
             self._trigger_action(self.next_item if self._action_target_is_next_item() else self.selected_item)
+
+    @subject_slot('value')
+    def _on_next_page(self, value):
+        if value:
+            self._scrollable_list.next_page()
+
+    @subject_slot('value')
+    def _on_prev_page(self, value):
+        if value:
+            self._scrollable_list.prev_page()
 
     def do_trigger_action(self, item):
         item.action()
@@ -361,11 +443,9 @@ class ListComponent(CompoundComponent):
     def _update_display(self):
         visible_items = self._scrollable_list.visible_items if self._scrollable_list else []
         for index, data_source in enumerate(self._data_sources):
-            display_string = ''
             item = visible_items[index] if index < len(visible_items) else None
-            if item:
-                display_string = consts.CHAR_SELECT if item.is_selected else ' '
-                display_string += self.action_message if item == self._current_action_item else str(item)
+            action_in_progress = item and item == self._current_action_item
+            display_string = self.item_formatter(index, item, action_in_progress)
             data_source.set_display_string(display_string)
 
         if not visible_items and self._data_sources and self.empty_list_message:

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent

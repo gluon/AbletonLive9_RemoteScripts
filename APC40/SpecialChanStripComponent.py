@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/SpecialChanStripComponent.py
 from _Framework.ChannelStripComponent import ChannelStripComponent
 TRACK_FOLD_DELAY = 5
 

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SkinDefault.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SkinDefault.py
 from Colors import Basic, Rgb, Pulse, Blink, BiLed
 
 class Colors:
@@ -25,12 +25,12 @@ class Colors:
         Off = Rgb.BLACK
 
     class Scales:
-        Selected = BiLed.GREEN
+        Selected = BiLed.YELLOW
         Unselected = BiLed.GREEN_HALF
         FixedOn = BiLed.AMBER
-        FixedOff = BiLed.AMBER_HALF
+        FixedOff = BiLed.YELLOW_HALF
         Diatonic = BiLed.AMBER
-        Chromatic = BiLed.AMBER_HALF
+        Chromatic = BiLed.YELLOW_HALF
 
     class Instrument:
         NoteBase = Rgb.OCEAN
@@ -40,6 +40,7 @@ class Colors:
         NoteInactive = Rgb.BLACK
         NoteOff = Rgb.BLACK
         Feedback = Rgb.GREEN
+        FeedbackRecord = Rgb.RED.shade(1)
 
     class Recording:
         On = Basic.FULL
@@ -73,15 +74,16 @@ class Colors:
         PadSelected = Rgb.OCEAN
         PadSelectedNotSoloed = Rgb.OCEAN
         PadFilled = Rgb.YELLOW
-        PadEmpty = Rgb.YELLOW.shade(1)
-        PadMuted = Rgb.AMBER
-        PadMutedSelected = Rgb.OCEAN
-        PadSoloed = Rgb.OCEAN.highlight()
-        PadSoloedSelected = Rgb.OCEAN
+        PadEmpty = Rgb.YELLOW.shade(2)
+        PadMuted = Rgb.AMBER.shade(1)
+        PadMutedSelected = Rgb.OCEAN.shade(1)
+        PadSoloed = Rgb.BLUE
+        PadSoloedSelected = Rgb.OCEAN.highlight()
         PadInvisible = Rgb.BLACK
 
     class LoopSelector:
         Playhead = Rgb.GREEN
+        PlayheadRecord = Rgb.RED
         SelectedPage = Rgb.OCEAN
         InsideLoop = Rgb.WHITE
         OutsideLoop = Rgb.DARK_GREY
@@ -94,6 +96,7 @@ class Colors:
         StepEmpty = Rgb.BLACK
         StepDisabled = Rgb.RED.shade(2)
         Playhead = Rgb.GREEN
+        PlayheadRecord = Rgb.RED
         QuantizationSelected = BiLed.GREEN
         QuantizationUnselected = BiLed.YELLOW
 
@@ -102,12 +105,14 @@ class Colors:
         RateUnselected = BiLed.YELLOW
 
     class Mixer:
-        SoloOn = Rgb.OCEAN
-        SoloOff = Rgb.OCEAN.shade(2)
-        MuteOn = BiLed.AMBER_HALF
-        MuteOff = BiLed.AMBER
+        SoloOn = Rgb.BLUE
+        SoloOff = Rgb.DARK_GREY
+        MuteOn = Rgb.DARK_GREY
+        MuteOff = BiLed.YELLOW
         StopTrack = Rgb.RED
         StoppingTrack = Blink(Rgb.RED, Rgb.BLACK, 24)
+        ArmSelected = BiLed.RED
+        ArmUnselected = BiLed.RED_HALF
 
     class Browser:
         Load = BiLed.GREEN

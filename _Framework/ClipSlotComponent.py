@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ClipSlotComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ClipSlotComponent.py
 import Live
 from ControlSurfaceComponent import ControlSurfaceComponent
 from Util import in_range
@@ -231,7 +231,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
     def _do_launch_clip(self, value):
         button = self._launch_button_value_slot.subject
         object_to_launch = self._clip_slot
-        if not value != 0:
+        if not value:
             launch_pressed = not button.is_momentary()
             if self.has_clip():
                 object_to_launch = self._clip_slot.clip

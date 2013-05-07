@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DisplayDataSource.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DisplayDataSource.py
 
 
 class DisplayDataSource(object):
@@ -37,6 +37,10 @@ class DisplayDataSource(object):
             raise isinstance(new_string, str) or isinstance(new_string, unicode) or AssertionError
             self._display_string = self._display_string != new_string and new_string
             self.update()
+
+    def clear(self):
+        self.set_display_string('')
+        self.separator = None
 
     def connect_to(self, data_source):
         if self._represented_data_source != None:

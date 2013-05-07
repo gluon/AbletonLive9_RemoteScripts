@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/InstrumentComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/InstrumentComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ModesComponent import DisplayingModesComponent, ModesComponent

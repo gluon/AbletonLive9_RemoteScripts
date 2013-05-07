@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
 from _Framework.Util import flatten
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.InputControlElement import ParameterSlot
+from _Framework.TrackArmState import TrackArmState
 from MessageBoxComponent import Messenger
 from consts import MessageBoxText
 import consts
@@ -41,8 +42,10 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         self._track_parameter_graphic_sources = [ DisplayDataSource(' ') for _ in xrange(14) ]
         self._on_return_tracks_changed.subject = self.song()
         self._on_selected_track_changed.subject = self.song().view
-        self._fold_task = self._tasks.add(Task.sequence(Task.wait(TRACK_FOLD_DELAY), Task.run(self._do_fold_track)))
+        self._fold_task = self._tasks.add(Task.sequence(Task.wait(TRACK_FOLD_DELAY), Task.run(self._do_fold_track))).kill()
         self._cue_volume_slot = self.register_disconnectable(ParameterSlot())
+        self._track_state = self.register_disconnectable(TrackArmState())
+        self._on_arm_state_changed.subject = self._track_state
 
     def set_volume_control(self, control):
         if control != None:
@@ -89,10 +92,16 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         return self._track
 
     def set_track(self, track):
+        self._track_state.set_track(track)
         super(SpecialChanStripComponent, self).set_track(track)
         self._update_track_listeners()
         self._update_parameter_name_sources()
         self._update_parameter_values()
+
+    @subject_slot('arm')
+    def _on_arm_state_changed(self):
+        if self.is_enabled() and self._track:
+            self._update_track_button()
 
     @subject_slot('return_tracks')
     def _on_return_tracks_changed(self):
@@ -102,7 +111,26 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
 
     @subject_slot('selected_track')
     def _on_selected_track_changed(self):
+        self.on_selected_track_changed()
+
+    def on_selected_track_changed(self):
+        self._update_track_listeners()
         self._update_track_name_data_source()
+        self._update_track_button()
+
+    def _update_track_button(self):
+        if self.is_enabled() and self._select_button != None:
+            if self._track == None:
+                self._select_button.set_light(self.empty_color)
+            elif self._track.can_be_armed and (self._track.arm or self._track.implicit_arm):
+                if self._track == self.song().view.selected_track:
+                    self._select_button.set_light('Mixer.ArmSelected')
+                else:
+                    self._select_button.set_light('Mixer.ArmUnselected')
+            elif self._track == self.song().view.selected_track:
+                self._select_button.turn_on()
+            else:
+                self._select_button.turn_off()
 
     def _update_track_listeners(self):
         mixer = self._track.mixer_device if self._track else None
@@ -131,17 +159,28 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
                 self._track_name_data_source.set_display_string(' ')
 
     def _select_value(self, value):
-        if self.is_enabled() and self._track:
-            if self._duplicate_button and self._duplicate_button.is_pressed() and value:
+        if self.is_enabled() and self._track and value:
+            if self._duplicate_button and self._duplicate_button.is_pressed():
                 self._do_duplicate_track(self._track)
-            elif self._delete_button and self._delete_button.is_pressed() and value:
+            elif self._delete_button and self._delete_button.is_pressed():
                 self._do_delete_track(self._track)
+            elif self._shift_pressed:
+                if self._track.can_be_armed:
+                    self._track.arm = not self._track.arm
             else:
-                super(SpecialChanStripComponent, self)._select_value(value)
-                if self._selector_button and self._selector_button.is_pressed() and value:
-                    self._do_select_track(self._track)
+                if self._track.can_be_armed and self.song().view.selected_track == self._track:
+                    self._track.arm = not self._track.arm
+                else:
+                    super(SpecialChanStripComponent, self)._select_value(value)
+                if self._track.can_be_armed and (self._track.implicit_arm or self._track.arm):
+                    for track in self.song().tracks:
+                        if track.can_be_armed and track != self._track:
+                            track.arm = False
+
+            if self._selector_button and self._selector_button.is_pressed():
+                self._do_select_track(self._track)
                 if not self._shift_pressed:
-                    if self._track.is_foldable and self._select_button.is_momentary() and value != 0:
+                    if self._track.is_foldable and self._select_button.is_momentary():
                         self._fold_task.restart()
                     else:
                         self._fold_task.kill()

@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/PadSensitivity.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/PadSensitivity.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.Util import NamedTuple
-MAX_32BIT_VALUE = 4294967295L
+from _Framework.Util import MutableNamedTuple, find_if
+MAX_32BIT_VALUE = 4294967295
 
 def bytes_from_value(value, byte_count):
     """
@@ -17,7 +17,7 @@ def bytes_from_value(value, byte_count):
     return tuple(reversed(value_bytes))
 
 
-class PadParameters(NamedTuple):
+class PadParameters(MutableNamedTuple):
     off_threshold = 0
     on_threshold = 0
     gain = 0
@@ -30,15 +30,22 @@ class PadParameters(NamedTuple):
 
 
 class PadSensitivity(ControlSurfaceComponent):
+    """
+    Sets the pad sensitivity either for all pads or for specific ones. Use the 'pads'
+    property to set the according pads, starting at 0 (bottom-left) to 63 (top-right)
+    """
 
-    def __init__(self, value_control = None, *a, **k):
+    def __init__(self, value_control = None, pads = None, *a, **k):
         super(PadSensitivity, self).__init__(*a, **k)
         raise value_control != None or AssertionError
+        self._validate_pads(pads)
+        self._pads = pads
         self._value_control = value_control
         self.parameters = PadParameters()
 
     def update(self):
-        self._send_values()
+        if self.is_enabled():
+            self._send_values()
 
     def _set_parameters(self, settings):
         self._parameter_bytes = ((settings.off_threshold, 4),
@@ -53,9 +60,30 @@ class PadSensitivity(ControlSurfaceComponent):
 
     parameters = property(_get_parameters, _set_parameters)
 
-    def _send_values(self):
+    def _set_pads(self, pads):
+        self._validate_pads(pads)
+        self._pads = pads
+        self.update()
+
+    def _get_pads(self):
+        return self._pads
+
+    pads = property(_get_pads, _set_pads)
+
+    def _validate_pads(self, pads):
+        if find_if(lambda pad: pad < 0 or pad > 63, pads or []) != None:
+            raise ValueError
+
+    def _generate_parameter_bytes(self):
         value_bytes = ()
         for value in self._parameter_bytes:
             value_bytes += bytes_from_value(value[0], value[1])
 
-        self._value_control.send_value(value_bytes)
+        return value_bytes
+
+    def _send_values(self):
+        if self.pads == None:
+            self._value_control.send_value(self._generate_parameter_bytes())
+        else:
+            for pad in self.pads:
+                self._value_control.send_value((pad,) + self._generate_parameter_bytes())

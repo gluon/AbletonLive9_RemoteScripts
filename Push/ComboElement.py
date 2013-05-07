@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ComboElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ComboElement.py
 from itertools import imap
 from _Framework.CompoundElement import CompoundElement
 from _Framework.ButtonElement import ButtonElementMixin

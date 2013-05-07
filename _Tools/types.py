@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Tools/types.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Tools/types.py
 """Define names for all type symbols known in the standard interpreter.
 
 Types that are part of optional modules (e.g. array) are not listed.

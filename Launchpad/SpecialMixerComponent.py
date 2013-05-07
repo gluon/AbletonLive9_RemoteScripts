@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SpecialMixerComponent.py
 import Live
 from _Framework.MixerComponent import MixerComponent
 from DefChannelStripComponent import DefChannelStripComponent

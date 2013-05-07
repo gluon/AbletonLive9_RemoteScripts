@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Push.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Push.py
 from __future__ import with_statement
 import Live
 from contextlib import contextmanager
@@ -51,6 +51,8 @@ from Selection import L9CSelection
 from AccentComponent import AccentComponent
 from AutoArmComponent import AutoArmComponent
 from PadSensitivity import PadSensitivity
+from WithPriority import WithPriority
+from Settings import SETTING_WORKFLOW, SETTING_THRESHOLD, SETTING_CURVE
 import Skin
 import consts
 import Colors
@@ -104,6 +106,8 @@ class Push(ControlSurface):
             self._init_handshake()
             self.set_pad_translations(PAD_TRANSLATIONS)
             self._on_selected_track_changed()
+            self._on_session_record_changed.subject = self.song()
+            self._on_session_record_changed()
             self.set_highlighting_session_component(self._session)
             self.set_feedback_channels(FEEDBACK_CHANNELS)
         self.log_message('Push script loaded')
@@ -124,11 +128,12 @@ class Push(ControlSurface):
                 song_view = self.song().view
                 old_selected_track = song_view.selected_track
                 yield
-                new_selected_track = song_view.selected_track
-                if new_selected_track != old_selected_track:
-                    self._restore_auto_arm_if_needed()
+                if song_view.selected_track != old_selected_track:
+                    self._track_selection_changed_by_action()
 
-    def _restore_auto_arm_if_needed(self):
+    def _track_selection_changed_by_action(self):
+        if self._matrix_modes.selected_mode == 'note':
+            self._session_recording.deactivate_recording()
         if self._auto_arm.needs_restore_auto_arm:
             self._auto_arm.restore_auto_arm()
 
@@ -145,7 +150,8 @@ class Push(ControlSurface):
 
     def refresh_state(self):
         super(Push, self).refresh_state()
-        self.schedule_message(5, self._start_handshake)
+        if self._user.mode == Sysex.LIVE_MODE:
+            self.schedule_message(5, self._start_handshake)
 
     def _pre_serialize(self):
         """ This will pre-serialize all settings, as a later access to Push's objects
@@ -171,7 +177,8 @@ class Push(ControlSurface):
         pref_dict = self._pref_dict
         preferences.set_serializer(lambda : dumps(pref_dict))
         self._settings = Settings.create_settings(preferences=self._pref_dict)
-        self._on_pad_params.subject = self._settings['PadParams']
+        self._on_pad_curve.subject = self._settings[SETTING_CURVE]
+        self._on_pad_threshold.subject = self._settings[SETTING_THRESHOLD]
 
     def _init_handshake(self):
         dongle_message, dongle = make_dongle_message(Sysex.DONGLE_ENQUIRY_PREFIX)
@@ -195,8 +202,10 @@ class Push(ControlSurface):
         self.update()
 
     def update(self):
+        self._on_session_record_changed()
         self._on_note_repeat_mode_changed(self._note_repeat.selected_mode)
         self.set_feedback_channels(FEEDBACK_CHANNELS)
+        self._update_calibration()
         super(Push, self).update()
 
     @subject_slot('success')
@@ -216,6 +225,9 @@ class Push(ControlSurface):
                 control._send_midi_backup = send_midi_backup
             control.receive_value = nop
             control.send_midi = nop
+
+    def _update_calibration(self):
+        self._send_midi(Sysex.CALIBRATION_SET)
 
     def _create_controls(self):
         is_momentary = True
@@ -341,6 +353,8 @@ class Push(ControlSurface):
         for encoder, touch_button in izip(self._global_param_controls, self._global_param_touch_buttons):
             encoder.set_touch_button(touch_button)
 
+        self._on_param_encoder_touched.replace_subjects(self._global_param_touch_buttons)
+
     def _init_background(self):
         self._background = BackgroundComponent()
         self._background.layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, scales_button=self._scale_presets_button, octave_up=self._octave_up_button, octave_down=self._octave_down_button, side_buttons=self._side_buttons, repeat_button=self._repeat_button, accent_button=self._accent_button, in_button=self._in_button, out_button=self._out_button, param_controls=self._global_param_controls, param_touch=self._global_param_touch_buttons, tempo_control_tap=self._tempo_control_tap, master_control_tap=self._master_volume_control_tap, touch_strip=self._touch_strip_control, touch_strip_tap=self._touch_strip_tap, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button, _notification=self._notification.use_single_line(2))
@@ -373,14 +387,24 @@ class Push(ControlSurface):
         self._auto_arm.notification_layer = Layer(display_line1=self._display_line3)
         self._auto_arm.notification_layer.priority = consts.NOTIFICATION_PRIORITY
         self._note_modes = ModesComponent(name='Note_Modes')
-        self._note_modes.add_mode('sequencer', [self._note_repeat, self._accent_component, self._step_sequencer])
+        self._note_modes.add_mode('sequencer', [self._note_repeat,
+         self._accent_component,
+         self._step_sequencer,
+         self._action_pad_sensitivity,
+         self._drum_pad_sensitivity])
         self._note_modes.add_mode('looper', self._audio_loop if consts.PROTO_AUDIO_NOTE_MODE else self._matrix_background)
-        self._note_modes.add_mode('instrument', [self._note_repeat, self._accent_component, self._instrument])
+        self._note_modes.add_mode('instrument', [self._note_repeat,
+         self._accent_component,
+         self._instrument,
+         self._instrument_pad_sensitivity])
         self._note_modes.add_mode('disabled', self._matrix_background)
         self._note_modes.selected_mode = 'disabled'
         self._note_modes.set_enabled(False)
         self._matrix_modes = ModesComponent(name='Matrix_Modes')
-        self._matrix_modes.add_mode('session', [(self._zooming, self._zooming_layer), (self._session, self._session_layer), AddLayerMode(self._session, self._restricted_session_layer)])
+        self._matrix_modes.add_mode('session', [(self._zooming, self._zooming_layer),
+         (self._session, self._session_layer),
+         AddLayerMode(self._session, self._restricted_session_layer),
+         self._action_pad_sensitivity])
         self._matrix_modes.add_mode('note', [self._view_control,
          self._note_modes,
          self._delete_clip,
@@ -395,9 +419,32 @@ class Push(ControlSurface):
         self._accent_component.set_enabled(False)
         self._accent_component.layer = Layer(toggle_button=self._accent_button)
         self._on_accent_mode_changed.subject = self._accent_component
-        sysex_control = SysexValueControl(Sysex.PAD_SENSITIVITY_PREFIX)
-        self._pad_sensitivity = PadSensitivity(value_control=sysex_control)
-        self._pad_sensitivity.parameters = self._settings['PadParams'].value
+        all_pad_sysex_control = SysexValueControl(Sysex.ALL_PADS_SENSITIVITY_PREFIX)
+        pad_sysex_control = SysexValueControl(Sysex.PAD_SENSITIVITY_PREFIX)
+        self._instrument_pad_sensitivity = PadSensitivity(value_control=all_pad_sysex_control)
+        self._instrument_pad_sensitivity.set_enabled(False)
+        self._instrument_pad_sensitivity.parameters = self._create_pad_parameters(self._settings[SETTING_CURVE].value, self._settings[SETTING_THRESHOLD].value)
+        self._action_pad_sensitivity = PadSensitivity(value_control=all_pad_sysex_control)
+        self._action_pad_sensitivity.set_enabled(False)
+        self._action_pad_sensitivity.parameters = Settings.action_pad_sensitvity
+        self._drum_pad_sensitivity = PadSensitivity(value_control=pad_sysex_control, pads=[0,
+         1,
+         2,
+         3,
+         8,
+         9,
+         10,
+         11,
+         16,
+         17,
+         18,
+         19,
+         24,
+         25,
+         26,
+         27])
+        self._drum_pad_sensitivity.set_enabled(False)
+        self._drum_pad_sensitivity.parameters = self._create_pad_parameters(self._settings[SETTING_CURVE].value, self._settings[SETTING_THRESHOLD].value)
 
     def _init_user(self):
         sysex_control = SysexValueControl(Sysex.MODE_CHANGE)
@@ -471,13 +518,14 @@ class Push(ControlSurface):
          self._device_navigation], behaviour=ReenterBehaviour(self._device_navigation.back_to_top))
         self._main_modes.add_mode('browse', [enable_stop_mute_solo_as_modifiers,
          partial(self._view_control.show_view, 'Browser'),
+         self._browser.back_to_top,
          self._browser_hotswap_mode,
          self._browser_mode,
          self._browser.reset_load_memory], groups=['add_effect', 'add_track', 'browse'], behaviour=mixin(DynamicBehaviourMixin, CancellableBehaviour)(lambda : not self._browser_hotswap_mode._mode.can_hotswap() and 'add_effect_left'))
-        self._main_modes.add_mode('add_effect_right', [enable_stop_mute_solo_as_modifiers, self._create_device_right], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_effect_left', [enable_stop_mute_solo_as_modifiers, self._create_device_left], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_instrument_track', [enable_stop_mute_solo_as_modifiers, self._create_instrument_track], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
-        self._main_modes.add_mode('add_default_track', [enable_stop_mute_solo_as_modifiers, self._create_default_track], groups=['add_track'])
+        self._main_modes.add_mode('add_effect_right', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_device_right], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_effect_left', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_device_left], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_instrument_track', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_instrument_track], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
+        self._main_modes.add_mode('add_default_track', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_default_track], groups=['add_track'])
         self._main_modes.selected_mode = 'device'
         self._main_modes.layer = Layer(volumes_button=self._vol_mix_mode_button, pan_sends_button=self._pan_send_mix_mode_button, track_button=self._single_track_mix_mode_button, clip_button=self._clip_mode_button, device_button=self._device_mode_button, browse_button=self._browse_mode_button, add_effect_right_button=self._create_device_button, add_effect_left_button=ComboElement((self._shift_button,), self._create_device_button), add_instrument_track_button=self._create_track_button)
         self._on_main_mode_button_value.replace_subjects([self._vol_mix_mode_button,
@@ -531,9 +579,9 @@ class Push(ControlSurface):
     def _init_transport_and_recording(self):
         self._view_control = ViewControlComponent(name='View_Control')
         self._view_control.set_enabled(False)
-        self._view_control.layer = Layer(prev_track_button=self._nav_left_button, next_track_button=self._nav_right_button, prev_scene_button=OptionalElement(self._nav_up_button, self._settings['SceneList'], False), next_scene_button=OptionalElement(self._nav_down_button, self._settings['SceneList'], False), prev_scene_list_button=OptionalElement(self._nav_up_button, self._settings['SceneList'], True), next_scene_list_button=OptionalElement(self._nav_down_button, self._settings['SceneList'], True))
+        self._view_control.layer = Layer(prev_track_button=self._nav_left_button, next_track_button=self._nav_right_button, prev_scene_button=OptionalElement(self._nav_up_button, self._settings[SETTING_WORKFLOW], False), next_scene_button=OptionalElement(self._nav_down_button, self._settings[SETTING_WORKFLOW], False), prev_scene_list_button=OptionalElement(self._nav_up_button, self._settings[SETTING_WORKFLOW], True), next_scene_list_button=OptionalElement(self._nav_down_button, self._settings[SETTING_WORKFLOW], True))
         self._session_recording = SessionRecordingComponent(self._clip_creator, self._view_control, name='Session_Recording')
-        self._session_recording.layer = Layer(new_button=OptionalElement(self._new_button, self._settings['SceneList'], False), scene_list_new_button=OptionalElement(self._new_button, self._settings['SceneList'], True), record_button=self._record_button, automation_button=self._automation_button, new_scene_button=ComboElement((self._shift_button,), self._new_button), re_enable_automation_button=ComboElement((self._shift_button,), self._automation_button), delete_automation_button=ComboElement((self._delete_button,), self._automation_button), length_button=self._fixed_length_button)
+        self._session_recording.layer = Layer(new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], False), scene_list_new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], True), record_button=self._record_button, automation_button=self._automation_button, new_scene_button=ComboElement((self._shift_button,), self._new_button), re_enable_automation_button=ComboElement((self._shift_button,), self._automation_button), delete_automation_button=ComboElement((self._delete_button,), self._automation_button), length_button=self._fixed_length_button)
         self._session_recording.length_layer = Layer(display_line=self._display_line4, label_display_line=self._display_line3, blank_display_line2=self._display_line2, blank_display_line1=self._display_line1, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, _notification=self._notification.use_single_line(1))
         self._session_recording.length_layer.priority = consts.DIALOG_PRIORITY
         self._transport = SpecialTransportComponent(name='Transport')
@@ -550,7 +598,7 @@ class Push(ControlSurface):
         self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application_view=self.application().view))
         self._browser = BrowserComponent(name='Browser')
         self._browser.set_enabled(False)
-        self._browser.layer = Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, _notification=self._notification.use_full_display(2))
+        self._browser.layer = Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, enter_button=self._in_button, exit_button=self._out_button, shift_button=WithPriority(consts.SHARED_PRIORITY, self._shift_button), _notification=self._notification.use_full_display(2))
         self._browser.layer.priority = consts.BROWSER_PRIORITY
         self._browser_mode = MultiEntryMode([SetAttributeMode(self._instrument._scales, 'release_info_display_with_encoders', False), self._browser])
         self._browser_dialog_mode = MultiEntryMode([SetAttributeMode(self._browser.layer, 'priority', consts.MODAL_DIALOG_PRIORITY), self._browser_mode])
@@ -584,7 +632,6 @@ class Push(ControlSurface):
         self._instrument._scales.scales_info_layer.priority = consts.MODAL_DIALOG_PRIORITY
 
     def _init_step_sequencer(self):
-        self._c_instance.playhead.velocity = int(self._skin['NoteEditor.Playhead'])
         self._step_sequencer = StepSeqComponent(self._clip_creator, self._c_instance.playhead, self._skin, name='Step_Sequencer')
         self._step_sequencer._drum_group._do_select_drum_pad = self._selector.on_select_drum_pad
         self._step_sequencer._drum_group._do_quantize_pitch = self._transport._quantization.quantize_pitch
@@ -602,7 +649,7 @@ class Push(ControlSurface):
             step_sequencer_bank_matrix.add_row([ self._matrix.get_button(column, row) for column in xrange(4, 8) ])
 
         self._step_sequencer.layer = Layer(button_matrix=step_sequencer_matrix, drum_matrix=step_sequencer_drum_matrix, loop_selector_matrix=step_sequencer_bank_matrix, touch_strip=self._touch_strip_control, quantization_buttons=self._side_buttons, mute_button=self._global_mute_button, solo_button=self._global_solo_button, select_button=self._select_button, delete_button=self._delete_button, shift_button=self._shift_button, drum_bank_up_button=self._octave_up_button, drum_bank_down_button=self._octave_down_button, quantize_button=self._quantize_button)
-        self._step_sequencer.note_settings_layer = Layer(top_display_line=self._display_line1, bottom_display_line=self._display_line2, encoder_controls=self._global_param_controls, encoder_touch_buttons=self._global_param_touch_buttons)
+        self._step_sequencer.note_settings_layer = Layer(top_display_line=self._display_line1, bottom_display_line=self._display_line2, clear_display_line1=self._display_line3, clear_display_line2=self._display_line4, encoder_controls=self._global_param_controls, encoder_touch_buttons=self._global_param_touch_buttons, full_velocity_button=self._accent_button)
         self._step_sequencer.note_settings_layer.priority = consts.MODAL_DIALOG_PRIORITY
         self._audio_loop = LoopSelectorComponent(follow_detail_clip=True, measure_length=1.0, name='Loop_Selector')
         self._audio_loop.set_enabled(False)
@@ -635,22 +682,26 @@ class Push(ControlSurface):
         self._selector.layer = Layer(select_button=self._select_button)
         self._selector.selection_display_layer = Layer(display_line=self._display_line3)
         self._selector.selection_display_layer.priority = consts.DIALOG_PRIORITY
-        self._swing_amount = ValueComponent('swing_amount', self.song(), display_label='Swing Amount:', display_format='%d%%', model_transform=lambda x: clamp(x / 200.0, 0.0, 0.5), view_transform=lambda x: x * 200.0, encoder_factor=100.0)
+        self._swing_amount = ValueComponent('swing_amount', self.song(), display_label='Swing Amount:', display_format='%d%%', model_transform=lambda x: clamp(x / 200.0, 0.0, 0.5), view_transform=lambda x: x * 200.0, encoder_factor=100.0, encoder=self._swing_control)
         self._swing_amount.layer = Layer(button=self._swing_control_tap, encoder=self._swing_control)
         self._swing_amount.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line3, graphic_display=self._display_line2, clear_display1=self._display_line4)
         self._swing_amount.display_layer.priority = consts.DIALOG_PRIORITY
-        self._tempo = ValueComponent('tempo', self.song(), display_label='Tempo:', display_format='%0.2f BPM')
+        self._tempo = ValueComponent('tempo', self.song(), display_label='Tempo:', display_format='%0.2f BPM', encoder=self._tempo_control)
         self._tempo.layer = Layer(button=self._tempo_control_tap)
         self._tempo.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line2, clear_display1=self._display_line3, clear_display2=self._display_line4)
         self._tempo.display_layer.priority = consts.DIALOG_PRIORITY
-        self._master_vol = ParameterValueComponent(self.song().master_track.mixer_device.volume, display_label='Master Volume:', display_seg_start=3, name='Master_Volume_Display')
+        self._master_vol = ParameterValueComponent(self.song().master_track.mixer_device.volume, display_label='Master Volume:', display_seg_start=3, name='Master_Volume_Display', encoder=self._master_volume_control)
         self._master_vol.layer = Layer(button=self._master_volume_control_tap)
         self._master_vol.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line3, graphic_display=self._display_line2, clear_display2=self._display_line4)
         self._master_vol.display_layer.priority = consts.DIALOG_PRIORITY
-        self._master_cue_vol = ParameterValueComponent(self.song().master_track.mixer_device.cue_volume, display_label='Cue Volume:', display_seg_start=3, name='Cue_Volume_Display')
+        self._master_cue_vol = ParameterValueComponent(self.song().master_track.mixer_device.cue_volume, display_label='Cue Volume:', display_seg_start=3, name='Cue_Volume_Display', encoder=ComboElement((self._shift_button,), self._master_volume_control))
         self._master_cue_vol.layer = Layer(button=ComboElement((self._shift_button,), self._master_volume_control_tap))
         self._master_cue_vol.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line3, graphic_display=self._display_line2, clear_display2=self._display_line4)
         self._master_cue_vol.display_layer.priority = consts.DIALOG_PRIORITY
+        self._value_components = [self._swing_amount,
+         self._tempo,
+         self._master_vol,
+         self._master_cue_vol]
         self._delete_component = DeleteComponent(name='Deleter')
         self._delete_component.layer = Layer(delete_button=self._delete_button)
         self._delete_clip = DeleteSelectedClipComponent(name='Selected_Clip_Deleter')
@@ -671,6 +722,7 @@ class Push(ControlSurface):
         self._on_devices_changed.subject = self.song().view.selected_track
         self._select_note_mode()
         self._main_modes.pop_groups(['add_effect'])
+        self._note_repeat.selected_mode = 'disabled'
 
     def _send_midi(self, midi_event_bytes, optimized = True):
         if not self._suppress_sysex or not self.is_sysex_message(midi_event_bytes):
@@ -679,6 +731,14 @@ class Push(ControlSurface):
     @subject_slot('devices')
     def _on_devices_changed(self):
         self._select_note_mode()
+
+    @subject_slot('session_record')
+    def _on_session_record_changed(self):
+        status = self.song().session_record
+        playhead_color = int(self._skin['NoteEditor.PlayheadRecord'] if status else self._skin['NoteEditor.Playhead'])
+        feedback_color = int(self._skin['Instrument.FeedbackRecord'] if status else self._skin['Instrument.Feedback'])
+        self._c_instance.playhead.velocity = playhead_color
+        self._c_instance.set_feedback_velocity(feedback_color)
 
     @subject_slot('selected_mode')
     def _on_note_repeat_mode_changed(self, mode_name):
@@ -691,8 +751,26 @@ class Push(ControlSurface):
         self._step_sequencer.set_full_velocity(accent_is_active)
 
     @subject_slot('value')
-    def _on_pad_params(self, setting):
-        self._pad_sensitivity.parameters = setting.value
+    def _on_pad_threshold(self, setting):
+        self._user.set_settings_info_text('' if setting.value >= consts.CRITICAL_THRESHOLD_LIMIT else consts.MessageBoxText.STUCK_PAD_WARNING)
+        new_pad_paramteres = self._create_pad_parameters(self._settings[SETTING_CURVE].value, setting.value)
+        self._instrument_pad_sensitivity.parameters = new_pad_paramteres
+        self._drum_pad_sensitivity.parameters = new_pad_paramteres
+
+    @subject_slot('value')
+    def _on_pad_curve(self, setting):
+        new_pad_paramteres = self._create_pad_parameters(setting.value, self._settings[SETTING_THRESHOLD].value)
+        self._instrument_pad_sensitivity.parameters = new_pad_paramteres
+        self._drum_pad_sensitivity.parameters = new_pad_paramteres
+
+    def _create_pad_parameters(self, curve_params, threshold):
+        import copy
+        params = copy.copy(curve_params)
+        threshold_range = consts.MAX_THRESHOLD_STEP - consts.MIN_THRESHOLD_STEP
+        t = float(threshold - consts.MIN_THRESHOLD_STEP) / float(threshold_range)
+        params.on_threshold = int((1 - t) * consts.MIN_ON_THRESHOLD + t * consts.MAX_ON_THRESHOLD)
+        params.off_threshold = int((1 - t) * consts.MIN_OFF_THRESHOLD + t * consts.MAX_OFF_THRESHOLD)
+        return params
 
     @subject_slot('before_mode_sent')
     def _on_before_hardware_mode_sent(self, mode):
@@ -737,6 +815,18 @@ class Push(ControlSurface):
 
     def _on_toggle_encoder(self, value):
         pass
+
+    @subject_slot_group('value')
+    def _on_param_encoder_touched(self, value, encoder):
+        """
+        When using the parameter encoders, other encoders around it are often accidentally
+        touched and will take over the screen. By putting all ValueComponents into timer
+        based displaying mode while touching a parameter, this noise is prevented.
+        """
+        param_encoder_touched = find_if(lambda encoder: encoder.is_pressed(), self._global_param_touch_buttons) != None
+        new_display_mode = ValueComponent.TIMER_BASED if param_encoder_touched else ValueComponent.TOUCH_BASED
+        for value_component in self._value_components:
+            value_component.display_mode = new_display_mode
 
     def expect_dialog(self, message):
         self.schedule_message(1, partial(self._dialog.expect_dialog, message))

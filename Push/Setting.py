@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Setting.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Setting.py
 from math import fabs
 from _Framework.Util import sign, clamp
 from _Framework.SubjectSlot import Subject, SubjectEvent
@@ -48,8 +48,9 @@ class OnOffSetting(Setting):
     """ Simple on/off setting represented by a boolean value """
     THRESHOLD = 0.01
 
-    def __init__(self, *a, **k):
+    def __init__(self, value_labels = ['On', 'Off'], *a, **k):
         super(OnOffSetting, self).__init__(values=[True, False], *a, **k)
+        self._value_labels = value_labels
 
     def change_relative(self, value):
         if fabs(value) >= self.THRESHOLD:
@@ -57,16 +58,17 @@ class OnOffSetting(Setting):
             return True
 
     def value_to_string(self, value):
-        return 'On' if value else 'Off'
+        return self._value_labels[int(not self.value)]
 
 
 class EnumerableSetting(Setting):
     """ Setting to go through a list of values """
     STEP_SIZE = 0.1
 
-    def __init__(self, *a, **k):
+    def __init__(self, value_formatter = str, *a, **k):
         super(EnumerableSetting, self).__init__(*a, **k)
         self._relative_value = 0.0
+        self._value_formatter = value_formatter
 
     def change_relative(self, value):
         if sign(value) != sign(self._relative_value):
@@ -87,4 +89,4 @@ class EnumerableSetting(Setting):
         self._relative_value = 0.0
 
     def value_to_string(self, value):
-        return str(value)
+        return self._value_formatter(value)

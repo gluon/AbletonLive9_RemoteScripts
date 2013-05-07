@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialMixerComponent.py
 from functools import partial
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot
@@ -74,37 +74,22 @@ class SpecialMixerComponent(MixerComponent):
             display.set_data_sources(self._selected_track_data_sources)
 
     def set_track_select_buttons(self, buttons):
-        if buttons:
-            for strip, button in zip(self._channel_strips, buttons):
-                if button:
-                    button.set_on_off_values('Option.Selected', 'Option.Unselected')
-                strip.set_select_button(button)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_select_button(None)
+        for strip, button in map(None, self._channel_strips, buttons or []):
+            if button:
+                button.set_on_off_values('Option.Selected', 'Option.Unselected')
+            strip.set_select_button(button)
 
     def set_solo_buttons(self, buttons):
-        if buttons:
-            for strip, button in zip(self._channel_strips, buttons):
-                if button:
-                    button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
-                strip.set_solo_button(button)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_solo_button(None)
+        for strip, button in map(None, self._channel_strips, buttons or []):
+            if button:
+                button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
+            strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
-        if buttons:
-            for strip, button in zip(self._channel_strips, buttons):
-                if button:
-                    button.set_on_off_values('Mixer.MuteOff', 'Mixer.MuteOn')
-                strip.set_mute_button(button)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_mute_button(None)
+        for strip, button in map(None, self._channel_strips, buttons or []):
+            if button:
+                button.set_on_off_values('Mixer.MuteOff', 'Mixer.MuteOn')
+            strip.set_mute_button(button)
 
     def set_track_names_display(self, display):
         if display:
@@ -160,13 +145,8 @@ class SpecialMixerComponent(MixerComponent):
         self._set_parameter_graphics_display(display, 0)
 
     def set_volume_controls(self, controls):
-        if controls:
-            for control, strip in zip(controls, self._channel_strips):
-                strip.set_volume_control(control)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_volume_control(None)
+        for strip, control in map(None, self._channel_strips, controls or []):
+            strip.set_volume_control(control)
 
     def set_pan_send_names_display(self, display):
         self._normalize_pan_send_index()
@@ -210,22 +190,12 @@ class SpecialMixerComponent(MixerComponent):
         self._update_pan_sends()
 
     def set_pan_controls(self, controls):
-        if controls:
-            for control, strip in map(None, controls, self._channel_strips):
-                strip.set_pan_control(control)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_pan_control(None)
+        for strip, control in map(None, self._channel_strips, controls or []):
+            strip.set_pan_control(control)
 
     def set_send_controls(self, controls):
-        if controls:
-            for control, strip in map(None, controls, self._channel_strips):
-                strip.set_send_controls(control)
-
-        else:
-            for strip in self._channel_strips:
-                strip.set_send_controls(None)
+        for strip, control in map(None, self._channel_strips, controls or []):
+            strip.set_send_controls(control)
 
     def _set_parameter_names_display(self, display, parameter):
         if display:

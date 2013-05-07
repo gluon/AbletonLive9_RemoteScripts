@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Capabilities.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Capabilities.py
 PORTS_KEY = 'ports'
 CONTROLLER_ID_KEY = 'controller_id'
 FIRMWARE_KEY = 'firmware_updater'
@@ -10,6 +10,7 @@ DIRECTIONKEY = 'direction'
 PORTNAMEKEY = 'name'
 MACNAMEKEY = 'mac_name'
 PROPSKEY = 'props'
+HIDDEN = 'hidden'
 SYNC = 'sync'
 SCRIPT = 'script'
 NOTES_CC = 'notes_cc'

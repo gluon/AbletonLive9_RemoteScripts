@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
 START = (240, 71, 127, 21)
 CLEAR_LINE1 = START + (28, 0, 0, 247)
 CLEAR_LINE2 = START + (29, 0, 0, 247)
@@ -13,8 +13,17 @@ CONTRAST_PREFIX = START + (122, 0, 1)
 CONTRAST_ENQUIRY = START + (122, 0, 0, 247)
 BRIGHTNESS_PREFIX = START + (124, 0, 1)
 BRIGHTNESS_ENQUIRY = START + (124, 0, 0, 247)
-PAD_SENSITIVITY_PREFIX = START + (93, 0, 32)
-PAD_SENSITIVITY_ENQUIRY = START + (90, 0, 0, 247)
+ALL_PADS_SENSITIVITY_PREFIX = START + (93, 0, 32)
+PAD_SENSITIVITY_PREFIX = START + (90, 0, 33)
+
+def to_sysex_int(number, unused_parameter_name):
+    return (number >> 12 & 15,
+     number >> 8 & 15,
+     number >> 4 & 15,
+     number & 15)
+
+
+CALIBRATION_SET = START + (87, 0, 20) + to_sysex_int(215, 'Preload Scale Factor') + to_sysex_int(1000, 'Recalibration Interval') + to_sysex_int(200, 'Stuck Pad Detection Threshold') + to_sysex_int(0, 'Stuck Pad NoteOff Threshold Adder') + to_sysex_int(200, 'Pad Ignore Time') + (247,)
 MODE_CHANGE = START + (98, 0, 1)
 USER_MODE = 1
 LIVE_MODE = 0

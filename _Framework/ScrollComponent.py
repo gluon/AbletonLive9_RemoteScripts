@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ScrollComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ScrollComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SubjectSlot import subject_slot
 from _Framework import Task
@@ -32,6 +32,7 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
     scrolling_delay = Defaults.MOMENTARY_DELAY
     scrolling_step_delay = 0.1
     default_scrollable = Scrollable()
+    default_pager = Scrollable()
     _scrollable = default_scrollable
 
     def __init__(self, scrollable = None, *a, **k):
@@ -69,10 +70,14 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
 
     def set_scroll_up_button(self, button):
         self._on_scroll_up_value.subject = button
+        if not button or not button.is_pressed():
+            self._scroll_task_up.kill()
         self._update_scroll_up_button()
 
     def set_scroll_down_button(self, button):
         self._on_scroll_down_value.subject = button
+        if not button or not button.is_pressed():
+            self._scroll_task_down.kill()
         self._update_scroll_down_button()
 
     def update(self):

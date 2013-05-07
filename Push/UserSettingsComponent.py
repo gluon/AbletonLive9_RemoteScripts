@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/UserSettingsComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/UserSettingsComponent.py
 from itertools import count
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -14,6 +14,7 @@ class UserSettingsComponent(ControlSurfaceComponent):
         super(UserSettingsComponent, self).__init__(*a, **k)
         self._name_sources = [ DisplayDataSource() for _ in xrange(4) ]
         self._value_sources = [ DisplayDataSource() for _ in xrange(4) ]
+        self._info_source = DisplayDataSource()
         self._settings = []
         self._encoders = []
 
@@ -31,7 +32,7 @@ class UserSettingsComponent(ControlSurfaceComponent):
 
     def set_display_line4(self, display):
         if display:
-            display.reset()
+            display.set_data_sources([self._info_source])
 
     def set_encoders(self, encoders):
         self._encoders = encoders or []
@@ -45,6 +46,9 @@ class UserSettingsComponent(ControlSurfaceComponent):
         return self._settings
 
     settings = property(_get_settings, _set_settings)
+
+    def set_info_text(self, info_text):
+        self._info_source.set_display_string(info_text)
 
     @subject_slot_group('normalized_value')
     def _on_encoder_value(self, value, index):
@@ -81,6 +85,9 @@ class UserComponent(ActionWithSettingsComponent):
 
     def hide_settings(self):
         self._settings.set_enabled(False)
+
+    def set_settings_info_text(self, text):
+        self._settings.set_info_text(text)
 
     def post_trigger_action(self):
         self.mode = Sysex.LIVE_MODE if self.mode == Sysex.USER_MODE else Sysex.USER_MODE

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Util import forward_property, find_if, index_if
@@ -129,6 +129,9 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
         self._new_scene_button = button
         self._on_new_scene_button_value.subject = button
         self._update_new_scene_button()
+
+    def deactivate_recording(self):
+        self._stop_recording()
 
     def update(self):
         if self.is_enabled():

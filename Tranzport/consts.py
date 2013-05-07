@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Tranzport/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Tranzport/consts.py
 NOTE_OFF_STATUS = 128
 NOTE_ON_STATUS = 144
 CC_STATUS = 176

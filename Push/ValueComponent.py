@@ -1,10 +1,12 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ValueComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ValueComponent.py
+from functools import partial
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
 from _Framework.InputControlElement import ParameterSlot
+from _Framework import Task
 from DisplayingDeviceComponent import convert_parameter_value_to_graphic
 import consts
 NUM_SEGMENTS = 4
@@ -77,17 +79,34 @@ class ValueComponentBase(CompoundComponent):
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.
     """
+    TOUCH_BASED = 0
+    TIMER_BASED = 1
+    AUTO_HIDE_IN_SEC = 0.5
 
     def create_display_component(self, *a, **k):
         raise NotImplementedError
 
-    def __init__(self, display_label = ' ', display_seg_start = 0, *a, **k):
+    def __init__(self, display_label = ' ', display_seg_start = 0, encoder = None, *a, **k):
         super(ValueComponentBase, self).__init__(*a, **k)
+        self._display_mode = self.TOUCH_BASED
         self._button = None
+        self._on_encoder_changed.subject = encoder
         self._display = self.register_component(self.create_display_component(display_label=display_label, display_seg_start=display_seg_start))
         self._display.set_enabled(False)
+        self._hide_display_task = self._tasks.add(Task.sequence(Task.wait(self.AUTO_HIDE_IN_SEC), Task.run(partial(self._display.set_enabled, False))))
+        self._hide_display_task.kill()
 
     display_layer = forward_property('_display')('layer')
+
+    def _get_display_mode(self):
+        return self._display_mode
+
+    def _set_display_mode(self, mode):
+        if self._display_mode != mode:
+            self._display_mode = mode
+            self._update_display_state()
+
+    display_mode = property(_get_display_mode, _set_display_mode)
 
     def set_encoder(self, encoder):
         raise NotImplementedError
@@ -95,12 +114,25 @@ class ValueComponentBase(CompoundComponent):
     def set_button(self, button):
         self._button = button
         self._on_button_value.subject = button
-        self._display.set_enabled(button and button.is_pressed())
+        self._update_display_state()
 
     @subject_slot('value')
     def _on_button_value(self, value):
-        button = self._on_button_value.subject
-        self._display.set_enabled(button.is_pressed())
+        self._update_display_state()
+
+    @subject_slot('value')
+    def _on_encoder_changed(self, value):
+        if self.display_mode == self.TIMER_BASED:
+            self._display.set_enabled(True)
+            self._hide_display_task.restart()
+
+    def _update_display_state(self):
+        if self.display_mode == self.TOUCH_BASED:
+            self._display.set_enabled(self._button and self._button.is_pressed())
+            if self._button:
+                self._hide_display_task.kill()
+        elif self.display_mode == self.TIMER_BASED:
+            self._display.set_enabled(False)
 
     def update(self):
         button = self._on_button_value.subject
@@ -158,7 +190,6 @@ class ValueComponent(ValueComponentBase):
         self._property_name = property_name
         self._subject = subject
         self._display_format = display_format
-        self._encoder = None
         super(ValueComponent, self).__init__(*a, **k)
         if model_transform is not None:
             self.model_transform = model_transform
@@ -191,7 +222,6 @@ class ValueComponent(ValueComponentBase):
         return self.view_transform(x) / self.encoder_factor
 
     def set_encoder(self, encoder):
-        self._encoder = encoder
         self._on_encoder_value.subject = encoder
 
     @subject_slot('normalized_value')

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
 from __future__ import with_statement
 from SubjectSlot import subject_slot_group, SlotManager
 from NotifyingControlElement import NotifyingControlElement
@@ -35,6 +35,13 @@ class CompoundElement(NotifyingControlElement, SlotManager):
         """
         raise NotImplementedError
 
+    def get_control_element_priority(self, element):
+        """
+        Override to change priority for control element.
+        """
+        raise self._has_resource or AssertionError
+        return self.resource.max_priority
+
     def register_control_elements(self, *elements):
         return map(self.register_control_element, elements)
 
@@ -44,7 +51,7 @@ class CompoundElement(NotifyingControlElement, SlotManager):
             self._nested_control_elements[element] = False
             if self._listen_nested_requests > 0:
                 self._on_nested_control_element_value.add_subject(element)
-            priority = self._has_resource and self.resource.owner and self.resource.max_priority
+            priority = self._has_resource and self.resource.owner and self.get_control_element_priority(element)
             element.resource.grab(self, priority=priority)
         else:
             self._on_nested_control_element_grabbed(element)
@@ -146,7 +153,8 @@ class CompoundElement(NotifyingControlElement, SlotManager):
         with self._disable_notify_owner_on_button_ownership_change():
             for element in self._nested_control_elements:
                 self._on_nested_control_element_released(element)
-                element.resource.grab(self, priority=self.resource.max_priority, *a, **k)
+                priority = self.get_control_element_priority(element)
+                element.resource.grab(self, priority=priority, *a, **k)
 
             super(CompoundElement, self)._on_grab_resource(client, *a, **k)
 
