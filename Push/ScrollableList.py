@@ -20,7 +20,7 @@ class ScrollableListItem(object):
         self._scrollable_list = scrollable_list
 
     def __str__(self):
-        return str(self._content)
+        return unicode(self._content)
 
     @property
     def content(self):
@@ -172,13 +172,13 @@ class ScrollableList(Subject, Scrollable):
         return self._items
 
     def assign_items(self, items):
-        old_selection = str(self.selected_item)
+        old_selection = unicode(self.selected_item)
         for item in self._items:
             item._scrollable_list = None
 
         self._items = tuple([ self.item_type(index=index, content=item, scrollable_list=self) for index, item in enumerate(items) ])
         if self._items:
-            new_selection = index_if(lambda item: str(item) == old_selection, self._items)
+            new_selection = index_if(lambda item: unicode(item) == old_selection, self._items)
             self._selected_item_index = new_selection if in_range(new_selection, 0, len(self._items)) else 0
             self._normalize_offset(self._selected_item_index)
         else:
@@ -233,7 +233,7 @@ class DefaultItemFormatter(object):
         display_string = ''
         if item:
             display_string += consts.CHAR_SELECT if item.is_selected else ' '
-            display_string += self.action_message if action_in_progress else str(item)
+            display_string += self.action_message if action_in_progress else unicode(item)
         return display_string
 
 

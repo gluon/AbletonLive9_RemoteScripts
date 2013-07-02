@@ -293,6 +293,8 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
         track = song.view.selected_track
         if track.can_be_armed and (track.arm or track.implicit_arm):
             self._record_in_slot(track, scene_index)
+        if not song.is_playing:
+            song.is_playing = True
 
     def _find_last_clip(self):
         """ Finds the last clip of the session and returns the scene index """

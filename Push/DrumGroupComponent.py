@@ -88,36 +88,44 @@ class DrumGroupComponent(ScrollComponent):
         self._on_touch_strip_value.subject = touch_strip
         self._update_touch_strip()
 
-    def _scroll_to_touch_strip_position(self, scroll_pos):
+    def _scroll_to_led_position(self, scroll_pos):
         num_leds = self._on_touch_strip_value.subject.STATE_COUNT
         num_pad_rows = 32
         return min(int((scroll_pos + 1) / float(num_pad_rows) * num_leds), num_leds)
 
-    def _touch_strip_to_scroll_position(self, value):
+    def _touch_strip_to_scroll_position(self, value, offset):
         detailed = self._shift_button and self._shift_button.is_pressed()
         max_pitchbend = 16384.0
         num_pad_rows = 32
         max_pad_row = 28
         bank_size = 4
-        return min(int(value / max_pitchbend * num_pad_rows), max_pad_row) if detailed else clamp(int(int(value / max_pitchbend * num_pad_rows + 3) / float(bank_size)) * bank_size - 3, 0, max_pad_row)
+        offsetted_value = clamp(value - offset, 0, max_pitchbend)
+        return min(int(offsetted_value / max_pitchbend * num_pad_rows), max_pad_row) if detailed else clamp(int(int(value / max_pitchbend * num_pad_rows + 3) / float(bank_size)) * bank_size - 3, 0, max_pad_row)
+
+    def _scroll_to_touch_strip_position(self, scroll_pos):
+        max_pitchbend = 16384.0
+        num_pad_rows = 32.0
+        return min(int(scroll_pos / num_pad_rows * max_pitchbend), int(max_pitchbend))
 
     @subject_slot('value')
     def _on_touch_strip_value(self, value):
         drum_group_view = self._on_drum_pads_scroll_position_changed.subject
         if self.is_enabled() and drum_group_view:
-            position = self._touch_strip_to_scroll_position(value)
+            position = self._touch_strip_to_scroll_position(value, self._on_touch_strip_value.subject.drag_offset)
             drum_group_view.drum_pads_scroll_position = position
 
     @subject_slot('drum_pads_scroll_position')
     def _on_drum_pads_scroll_position_changed(self):
-        self._update_touch_strip_leds()
+        self._update_touch_strip_state()
 
-    def _update_touch_strip_leds(self):
+    def _update_touch_strip_state(self):
         drum_group_view = self._on_drum_pads_scroll_position_changed.subject
         touch_strip = self._on_touch_strip_value.subject
         if self.is_enabled() and touch_strip:
             if drum_group_view != None:
-                position = self._scroll_to_touch_strip_position(drum_group_view.drum_pads_scroll_position)
+                position = self._scroll_to_led_position(drum_group_view.drum_pads_scroll_position)
+                pp_position = self._scroll_to_touch_strip_position(drum_group_view.drum_pads_scroll_position)
+                touch_strip.drag_range = xrange(pp_position, pp_position + 2048)
                 state = list(self._touch_strip_state)
                 state[position:position + 3] = [touch_strip.STATE_FULL] * len(state[position:position + 3])
                 touch_strip.send_state(state)
@@ -146,7 +154,7 @@ class DrumGroupComponent(ScrollComponent):
             else:
                 state = (strip.STATE_OFF,) * strip.STATE_COUNT
             self._touch_strip_state = state
-            self._update_touch_strip_leds()
+            self._update_touch_strip_state()
 
     def can_scroll_up(self):
         if self._drum_group_device:
@@ -320,9 +328,11 @@ class DrumGroupComponent(ScrollComponent):
 
     def _update_control_from_script(self):
         takeover_drums = self._takeover_drums or self._selected_pads
+        profile = 'default' if takeover_drums else 'drums'
         if self._drum_matrix:
             for button, _ in self._drum_matrix.iterbuttons():
                 if button:
                     translation_channel = PAD_FEEDBACK_CHANNEL
                     button.set_channel(translation_channel)
                     button.set_enabled(takeover_drums)
+                    button.sensitivity_profile = profile

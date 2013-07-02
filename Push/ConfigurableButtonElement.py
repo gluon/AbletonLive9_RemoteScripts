@@ -101,3 +101,31 @@ class ConfigurableButtonElement(ButtonElement):
 
     def script_wants_forwarding(self):
         return self._is_enabled
+
+
+class PadButtonElement(ConfigurableButtonElement):
+    """
+    Button element for holding Push pressure-sensitive pad. The pad_id
+    parameter defines the Pad coordine id used in the sysex protocol.
+    """
+
+    def __init__(self, pad_id = None, pad_sensitivity_update = None, *a, **k):
+        raise pad_id is not None or AssertionError
+        super(PadButtonElement, self).__init__(*a, **k)
+        self._sensitivity_profile = 'default'
+        self._pad_id = pad_id
+        self._pad_sensitivity_update = pad_sensitivity_update
+
+    def _get_sensitivity_profile(self):
+        return self._sensitivity_profile
+
+    def _set_sensitivity_profile(self, profile):
+        if profile != self._sensitivity_profile:
+            self._sensitivity_profile = profile
+            self._pad_sensitivity_update.set_pad(self._pad_id, profile)
+
+    sensitivity_profile = property(_get_sensitivity_profile, _set_sensitivity_profile)
+
+    def reset(self):
+        self.sensitivity_profile = 'default'
+        super(PadButtonElement, self).reset()

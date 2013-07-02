@@ -405,11 +405,6 @@ def make_instruments_browser_model(browser):
      max,
      drum_hits])
 
-# JULIEN
-def make_plugins_browser_model(browser):
-    query = TagBrowserQuery(include=['Plug-ins'])
-    return QueryingBrowserModel(browser=browser, queries=[query])
-
 
 def make_drum_pad_browser_model(browser):
     drums = TagBrowserQuery(include=[['Drums', 'Drum Hits']])
@@ -433,8 +428,6 @@ def filter_type_for_hotswap_target(target):
     if isinstance(target, Live.Device.Device):
         if target.type == DeviceType.instrument:
             return FilterType.instrument_hotswap
-	elif target.type == DeviceType.audio_effect:
-            return FilterType.audio_effect_hotswap
         elif target.type == DeviceType.audio_effect:
             return FilterType.audio_effect_hotswap
         elif target.type == DeviceType.midi_effect:
@@ -454,8 +447,7 @@ def make_browser_model(browser, filter_type = None):
     factories = {FilterType.instrument_hotswap: make_instruments_browser_model,
      FilterType.drum_pad_hotswap: make_drum_pad_browser_model,
      FilterType.audio_effect_hotswap: make_audio_effect_browser_model,
-     FilterType.midi_effect_hotswap: make_midi_effect_browser_model,
-     FilterType.plugins_hotswap: make_plugins_browser_model}
+     FilterType.midi_effect_hotswap: make_midi_effect_browser_model}
     if filter_type == None:
         filter_type = filter_type_for_browser(browser)
     return factories.get(filter_type, make_fallback_browser_model)(browser)
@@ -480,36 +472,36 @@ def make_stem_cleaner(stem):
 @memoize
 def _memoized_stem_cleaner(stem):
     ellipsis = consts.CHAR_ELLIPSIS
-    rule1 = re.compile('([a-z])' + stem + 's?([ A-Z])')
-    rule2 = re.compile('[' + ellipsis + ' \\-]' + stem + 's?([\\-' + ellipsis + ' A-Z])')
-    rule3 = re.compile('' + stem + 's?$')
+    rule1 = re.compile(u'([a-z])' + stem + u's?([ A-Z])')
+    rule2 = re.compile(u'[' + ellipsis + ' \\-]' + stem + u's?([\\-' + ellipsis + u' A-Z])')
+    rule3 = re.compile(u'' + stem + u's?$')
 
     def cleaner(short_name):
         short_name = ' ' + short_name
-        short_name = rule1.sub('\\1' + ellipsis + '\\2', short_name)
-        short_name = rule2.sub(ellipsis + '\\1', short_name)
+        short_name = rule1.sub(u'\\1' + ellipsis + u'\\2', short_name)
+        short_name = rule2.sub(ellipsis + u'\\1', short_name)
         short_name = rule3.sub(ellipsis, short_name)
-        return short_name.strip()
+        return short_name.strip(' ')
 
     return cleaner
 
 
 def split_stem(sentence):
     """ Splits camel cased sentence into words """
-    sentence = re.sub('([a-z])([A-Z])', '\\1 \\2', sentence)
+    sentence = re.sub('([a-z])([A-Z])', u'\\1 \\2', sentence)
     return sentence.split()
 
 
-_stripper_double_spaces = re.compile(' [\\- ]*')
-_stripper_double_ellipsis = re.compile(consts.CHAR_ELLIPSIS + '+')
-_stripper_space_ellipsis = re.compile('[\\- ]?' + consts.CHAR_ELLIPSIS + '[\\- ]?')
+_stripper_double_spaces = re.compile(u' [\\- ]*')
+_stripper_double_ellipsis = re.compile(consts.CHAR_ELLIPSIS + u'+')
+_stripper_space_ellipsis = re.compile(u'[\\- ]?' + consts.CHAR_ELLIPSIS + u'[\\- ]?')
 
 def full_strip(string):
     """ Strip string for double spaces and dashes """
     string = _stripper_double_spaces.sub(' ', string)
     string = _stripper_double_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
     string = _stripper_space_ellipsis.sub(consts.CHAR_ELLIPSIS, string)
-    return string.strip()
+    return string.strip(' ')
 
 
 class BrowserComponent(CompoundComponent):
@@ -708,7 +700,7 @@ class BrowserComponent(CompoundComponent):
         for content_list in parent_lists:
             if is_short_enough(item_name):
                 break
-            parent_name = str(content_list.selected_item)
+            parent_name = unicode(content_list.selected_item)
             stems = split_stem(parent_name)
             for stem in stems:
                 short_name = make_stem_cleaner(stem)(item_name)
@@ -717,14 +709,14 @@ class BrowserComponent(CompoundComponent):
                 if is_short_enough(item_name):
                     break
 
-        return item_name[:-1] if item_name[-1] == consts.CHAR_ELLIPSIS and len(item_name) >= shortening_limit else item_name
+        return item_name[:-1] if len(item_name) >= shortening_limit and item_name[-1] == consts.CHAR_ELLIPSIS else item_name
 
     def _item_formatter(self, depth, index, item, action_in_progress):
         display_string = ''
         separator_length = len(self._data_sources[self.COLUMN_SIZE * depth].separator)
         shortening_limit = 16 - separator_length
         if item:
-            item_name = 'Loading...' if action_in_progress else self._shorten_item_name(shortening_limit, depth + self._scroll_offset, str(item))
+            item_name = 'Loading...' if action_in_progress else self._shorten_item_name(shortening_limit, depth + self._scroll_offset, unicode(item))
             display_string = consts.CHAR_SELECT if item and item.is_selected else ' '
             display_string += item_name
             if depth == len(self._list_components) - 1 and item.is_selected and self._scroll_offset < self._max_hierarchy:

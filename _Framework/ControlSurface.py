@@ -98,11 +98,6 @@ class ControlSurface(SlotManager):
     def components(self):
         return tuple(filter(lambda comp: not comp.is_private, self._components))
 
-    def enable_test_mode(self):
-        """ Acceptance tests should call this function before using the script,
-        to ensure an appropriate testing state """
-        pass
-
     def _get_tasks(self):
         return self._task_group
 

@@ -112,10 +112,7 @@ class ScrollableListComponent(ControlSurfaceComponent):
         elif index == self.num_segments - 1 and self._offset_index < self._maximal_offset():
             self.scroll_right()
         elif self._offset_index == 0:
-            if index < len(self._option_names):
-                self.notify_press_option(index)
-            else:
-                self.notify_press_option(None)
+            self.notify_press_option(index if index < len(self._option_names) else None)
         else:
             self.notify_press_option(index + self._offset_index - 1)
 
@@ -188,12 +185,11 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
 
     def _on_state_button_value(self, index, value):
         min_button_index = int(bool(self._offset_index))
-        max_button_index = len(self._state_button_slots) - int(self._maximal_offset > self._offset_index)
+        max_button_index = len(self._state_button_slots) - int(self._maximal_offset() > self._offset_index)
         if self.is_enabled() and value:
-            if index >= min_button_index and index < max_button_index:
-                if self._offset_index:
-                    index += self._offset_index - 1
-                if index <= self._maximal_offset and index < len(self._option_states):
+            if in_range(index, min_button_index, max_button_index):
+                index += max(0, self._offset_index - 1)
+                if index < len(self._option_states):
                     new_state = not self.option_state(index)
                     self.set_option_state(index, new_state)
                 else:

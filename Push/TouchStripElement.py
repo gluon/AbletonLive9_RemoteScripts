@@ -3,8 +3,9 @@ import Live
 import Sysex
 from _Framework.Util import group, in_range
 from _Framework.InputControlElement import InputControlElement, MIDI_PB_TYPE
+from _Framework.SubjectSlot import subject_slot, SlotManager
 
-class TouchStripElement(InputControlElement):
+class TouchStripElement(InputControlElement, SlotManager):
     """ Takes care of the different touch strip modes """
     MODE_CUSTOM_PITCHBEND = 0
     MODE_CUSTOM_VOLUME = 1
@@ -21,10 +22,14 @@ class TouchStripElement(InputControlElement):
     STATE_FULL = 3
     STATE_COUNT = 24
 
-    def __init__(self, *a, **k):
+    def __init__(self, touch_button = None, *a, **k):
         super(TouchStripElement, self).__init__(MIDI_PB_TYPE, 0, 0, *a, **k)
         self.mode = self.MODE_PITCHBEND
         self._touch_button = None
+        self._dragging = False
+        self.set_touch_button(None)
+        self.drag_range = None
+        self.drag_offset = 0
 
     def message_map_mode(self):
         return Live.MidiMap.MapMode.absolute_14_bit
@@ -44,6 +49,7 @@ class TouchStripElement(InputControlElement):
     mode = property(_get_mode, _set_mode)
 
     def set_touch_button(self, touch_button):
+        self._on_touch_value.subject = touch_button
         self._touch_button = touch_button
 
     def is_pressed(self):
@@ -51,6 +57,22 @@ class TouchStripElement(InputControlElement):
 
     def reset(self):
         self.mode = self.MODE_PITCHBEND
+        self.drag_range = None
+
+    @subject_slot('value')
+    def _on_touch_value(self, value):
+        self._dragging = False
+        self.drag_offset = 0
+
+    def notify_value(self, value):
+        if self.drag_range and self.mode == self.MODE_CUSTOM_FREE:
+            if not self._dragging and value in self.drag_range:
+                self.drag_offset = value - self.drag_range[0]
+                self._dragging = True
+            if self._dragging:
+                super(TouchStripElement, self).notify_value(value)
+        else:
+            super(TouchStripElement, self).notify_value(value)
 
     def turn_on_index(self, index, on_state = STATE_FULL, off_state = STATE_OFF):
         raise in_range(index, 0, self.STATE_COUNT) or AssertionError

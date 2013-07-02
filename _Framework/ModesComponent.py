@@ -311,6 +311,7 @@ class CancellableBehaviour(ModeButtonBehaviour):
     time, every mode in this mode group will be exited, going back to
     the last selected mode.  It also does mode latching.
     """
+    _previous_mode = None
 
     def press_immediate(self, component, mode):
         active_modes = component.active_modes
@@ -321,11 +322,17 @@ class CancellableBehaviour(ModeButtonBehaviour):
                 groups and component.pop_groups(groups)
             else:
                 component.pop_mode(mode)
+            self.restore_previous_mode(component)
         else:
+            self.remember_previous_mode(component)
             component.push_mode(mode)
 
-    def release_delayed(self, component, mode):
-        component.pop_mode(mode)
+    def remember_previous_mode(self, component):
+        self._previous_mode = component.active_modes[0] if component.active_modes else None
+
+    def restore_previous_mode(self, component):
+        if len(component.active_modes) == 0 and self._previous_mode != None:
+            component.push_mode(self._previous_mode)
 
 
 class ImmediateBehaviour(ModeButtonBehaviour):
@@ -357,9 +364,11 @@ class AlternativeBehaviour(CancellableBehaviour):
     def release_delayed(self, component, mode):
         raise self._check_mode_groups(component, mode) or AssertionError
         component.pop_groups(component.get_mode_groups(mode))
+        self.restore_previous_mode(component)
 
     def press_delayed(self, component, mode):
         raise self._check_mode_groups(component, mode) or AssertionError
+        self.remember_previous_mode(component)
         component.push_mode(self._alternative_mode)
 
     def release_immediate(self, component, mode):

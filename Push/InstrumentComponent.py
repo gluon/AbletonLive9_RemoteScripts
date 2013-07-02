@@ -460,15 +460,12 @@ class InstrumentComponent(CompoundComponent):
 
     def _setup_instrument_mode(self, interval):
         if self.is_enabled() and self._matrix:
-            for button, _ in self._matrix.iterbuttons():
-                if button:
-                    button.use_default_message()
-                    button.force_next_send()
-
+            self._matrix.reset()
             pattern = self._get_pattern(interval)
             max_j = self._matrix.width() - 1
             for button, (i, j) in self._matrix.iterbuttons():
                 if button:
+                    button.sensitivity_profile = 'instrument'
                     note_info = pattern.note(i, max_j - j)
                     if note_info.index != None:
                         button.set_on_off_values(note_info.color, 'Instrument.NoteOff')

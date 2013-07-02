@@ -4,8 +4,10 @@ from _Framework.Util import sign, clamp
 from _Framework.SubjectSlot import Subject, SubjectEvent
 
 class Setting(Subject):
-    """ Setting interface for writing to the preferences and all information for changing
-    and displaying it. """
+    """
+    Setting interface for writing to the preferences and all
+    information for changing and displaying it.
+    """
     __subject_events__ = (SubjectEvent(name='value', doc=' Called when the value of the\n                                                 setting changes '),)
 
     def __init__(self, name = '', values = None, default_value = None, preferences = None, *a, **k):

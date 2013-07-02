@@ -98,16 +98,14 @@ class MackieControlXT:
 
     def receive_midi(self, midi_bytes):
         if midi_bytes[0] & 240 == NOTE_ON_STATUS or midi_bytes[0] & 240 == NOTE_OFF_STATUS:
-            channel = midi_bytes[0] & 15
             note = midi_bytes[1]
-            velocity = midi_bytes[2]
+            value = BUTTON_PRESSED if midi_bytes[2] > 0 else BUTTON_RELEASED
             if note in range(SID_FIRST, SID_LAST + 1):
                 if note in channel_strip_switch_ids + fader_touch_switch_ids:
                     for s in self.__channel_strips:
-                        s.handle_channel_strip_switch_ids(note, velocity)
+                        s.handle_channel_strip_switch_ids(note, value)
 
         elif midi_bytes[0] & 240 == CC_STATUS:
-            channel = midi_bytes[0] & 15
             cc_no = midi_bytes[1]
             cc_value = midi_bytes[2]
             if cc_no in range(FID_PANNING_BASE, FID_PANNING_BASE + NUM_CHANNEL_STRIPS):

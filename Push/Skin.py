@@ -13,6 +13,11 @@ class Skin(object):
         self._fill_colors(colors)
 
     def _fill_colors(self, colors, pathname = ''):
+        try:
+            self._fill_colors(super(colors))
+        except TypeError:
+            map(self._fill_colors, colors.__bases__)
+
         for k, v in colors.__dict__.iteritems():
             if k[:1] != '_':
                 if callable(v):

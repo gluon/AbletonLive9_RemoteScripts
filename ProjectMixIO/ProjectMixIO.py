@@ -93,30 +93,28 @@ class ProjectMixIO:
 
     def receive_midi(self, midi_bytes):
         if midi_bytes[0] & 240 == NOTE_ON_STATUS or midi_bytes[0] & 240 == NOTE_OFF_STATUS:
-            channel = midi_bytes[0] & 15
             note = midi_bytes[1]
-            velocity = midi_bytes[2]
+            value = BUTTON_PRESSED if midi_bytes[2] > 0 else BUTTON_RELEASED
             if note in range(SID_FIRST, SID_LAST + 1):
                 if note in display_switch_ids:
-                    self.handle_display_switch_ids(note, velocity)
+                    self.handle_display_switch_ids(note, value)
                 if note in channel_strip_switch_ids + fader_touch_switch_ids:
                     for s in self.__channel_strips:
-                        s.handle_channel_strip_switch_ids(note, velocity)
+                        s.handle_channel_strip_switch_ids(note, value)
 
                 if note in channel_strip_control_switch_ids:
-                    self.__channel_strip_controller.handle_assignment_switch_ids(note, velocity)
+                    self.__channel_strip_controller.handle_assignment_switch_ids(note, value)
                 if note in function_key_control_switch_ids:
-                    self.__software_controller.handle_function_key_switch_ids(note, velocity)
+                    self.__software_controller.handle_function_key_switch_ids(note, value)
                 if note in software_controls_switch_ids:
-                    self.__software_controller.handle_software_controls_switch_ids(note, velocity)
+                    self.__software_controller.handle_software_controls_switch_ids(note, value)
                 if note in transport_control_switch_ids:
-                    self.__transport.handle_transport_switch_ids(note, velocity)
+                    self.__transport.handle_transport_switch_ids(note, value)
                 if note in marker_control_switch_ids:
-                    self.__transport.handle_marker_switch_ids(note, velocity)
+                    self.__transport.handle_marker_switch_ids(note, value)
                 if note in jog_wheel_switch_ids:
-                    self.__transport.handle_jog_wheel_switch_ids(note, velocity)
+                    self.__transport.handle_jog_wheel_switch_ids(note, value)
         elif midi_bytes[0] & 240 == CC_STATUS:
-            channel = midi_bytes[0] & 15
             cc_no = midi_bytes[1]
             cc_value = midi_bytes[2]
             if cc_no == JOG_WHEEL_CC_NO:

@@ -10,10 +10,7 @@ class M4LInterfaceComponent(ControlSurfaceComponent):
 
     def __init__(self, controls, *a, **k):
         super(M4LInterfaceComponent, self).__init__(self, *a, **k)
-        self._controls = {}
-        for control in controls:
-            self._controls[control.name] = control
-
+        self._controls = dict(map(lambda x: (x.name, x), controls))
         self._grabbed_controls = []
 
     def disconnect(self):

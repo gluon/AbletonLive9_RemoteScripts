@@ -3,7 +3,7 @@
 Various utilities.
 """
 from contextlib import contextmanager
-from functools import wraps
+from functools import wraps, partial
 from itertools import chain
 
 def clamp(val, minv, maxv):
@@ -293,9 +293,10 @@ class lazy_attribute(object):
     """
 
     def __init__(self, func, name = None):
+        wraps(func)(self)
         self._func = func
-        self.__name__ = func.__name__ if name is None else name
-        self.__doc__ = func.__doc__
+        if name:
+            self.__name__ = name
 
     def __get__(self, obj, cls = None):
         if obj is None:
@@ -441,13 +442,6 @@ def compose(*funcs):
     return lambda x: reduce(lambda x, f: f(x), funcs[::-1], x)
 
 
-def _partial(fn, *a, **k):
-    """
-    See functools.partial
-    """
-    return lambda *aa, **kk: fn(*(a + aa), **union(k, kk))
-
-
 def is_contextmanager(value):
     return callable(getattr(value, '__enter__')) and callable(getattr(value, '__exit__'))
 
@@ -535,16 +529,13 @@ class BooleanContext(object):
             self._managed._current_value = self._old_value
 
 
-class NamedTupleMeta(type):
-
-    def __new__(cls, name, bases, dct):
-        defaults = filter(lambda (k, _): k[:2] != '__', dct.iteritems())
-        for k, _ in defaults:
-            del dct[k]
-
-        cls = super(NamedTupleMeta, cls).__new__(cls, name, bases, dct)
-        cls._NamedTuple__defaults = union(getattr(cls, '_NamedTuple__defaults', {}), dict(defaults))
-        return cls
+def dict_diff(left, right):
+    """
+    Computes a dictionary with the elements that are in the right but
+    not or different in the left.
+    """
+    dummy = object()
+    return dict(filter(lambda (k, v): left.get(k, dummy) != v, right.iteritems()))
 
 
 class NamedTuple(object):
@@ -558,15 +549,17 @@ class NamedTuple(object):
     
       assert MyNamedTuple == NamedTuple(some_value = 3)
     """
-    __metaclass__ = NamedTupleMeta
-    __defaults = {}
 
-    def __init__(self, *a, **k):
-        super(NamedTuple, self).__init__(*a)
-        self.__dict__['_NamedTuple__contents'] = union(self.__defaults, k)
+    def __init__(self, *others, **k):
+        super(NamedTuple, self).__init__()
+        for other in others:
+            diff = dict_diff(self._eq_dict, other._eq_dict)
+            self._eq_dict.update(diff)
+            self.__dict__.update(diff)
 
-    def __getattr__(self, name):
-        return self.__contents[name]
+        self.__dict__.update(k)
+        if hasattr(self, '_eq_dict'):
+            self._eq_dict.update(k)
 
     def __setattr__(self, name, value):
         raise AttributeError, 'Named tuple is constant'
@@ -575,24 +568,85 @@ class NamedTuple(object):
         raise AttributeError, 'Named tuple is constant'
 
     def __getitem__(self, name):
-        return self.__contents[name]
+        return self.__dict__[name]
+
+    @lazy_attribute
+    def _eq_dict(self):
+
+        def public(objdict):
+            return dict(filter(lambda (k, _): not k.startswith('_'), objdict.iteritems()))
+
+        return reduce(lambda a, b: union(b, a), map(lambda c: public(c.__dict__), self.__class__.__mro__), public(self.__dict__))
 
     def __eq__(self, other):
-        return isinstance(other, NamedTuple) and self.__contents == other.__contents
+        return isinstance(other, NamedTuple) and self._eq_dict == other._eq_dict
 
     def __getstate__(self):
-        return self.__contents
+        res = dict(self.__dict__)
+        try:
+            del res['_eq_dict']
+        except KeyError:
+            pass
 
-    def __setstate__(self, state):
-        self.__dict__['_NamedTuple__contents'] = state
+        return res
 
 
-class MutableNamedTuple(NamedTuple):
+class Slicer(object):
+    """
+    A slicer object can be used to easily write a multi-dimensional
+    __getitem__ that use the normal slicing syntax.  An example of
+    usage is implementing flexible matrix types, as this example shows
+    (note that we create the Slicer object via the slicer decorator)::
+    
+      class Matrix(object):
+    
+          def __init__(self, rows=(,), *a, **k):
+              super(Matrix, self).__init__(*a, **k)
+              self._rows = rows
+    
+          @property
+          @slicer(2)
+          def submatrix(self, row_slice, col_slice):
+              return Matrix([row[col_slice] for row in self._rows[row_slice]])
+    
+    Future improvements could include __setitem__ implementation.
+    """
 
-    def __setattr__(self, name, value):
-        if name not in self._NamedTuple__contents:
-            raise AttributeError, "'%s' is not a name of the named tuple" % name
-        self._NamedTuple__contents[name] = value
+    def __init__(self, dimensions = 1, extractor = nop, keys = tuple(), *a, **k):
+        super(Slicer, self).__init__(*a, **k)
+        raise len(keys) < dimensions or AssertionError
+        self._keys = keys
+        self._dimensions = dimensions
+        self._extractor = extractor
+
+    def __getitem__(self, key):
+        new = key if isinstance(key, tuple) else (key,)
+        keys = self._keys + new
+        if not len(keys) <= self._dimensions:
+            raise AssertionError, 'Too many dimensions'
+            return len(keys) == self._dimensions and self._extractor(*keys)
+        else:
+            return Slicer(dimensions=self._dimensions, extractor=self._extractor, keys=keys)
+
+    def __call__(self):
+        return self
+
+
+def slicer(dimensions):
+    """
+    Slicer decorator.  Returns a decorator that will decorate a
+    function into a Slicer object of a given dimension.
+    """
+
+    def decorator(extractor):
+
+        @wraps(extractor)
+        def make_slicer(*a, **k):
+            return Slicer(dimensions=dimensions, extractor=partial(extractor, *a, **k))
+
+        return make_slicer
+
+    return decorator
 
 
 def trace_value(value, msg = 'Value: '):
@@ -639,6 +693,7 @@ class CallCounter(Bindable):
 
     def __init__(self, fn = nop, current_self = None, *a, **k):
         super(CallCounter, self).__init__(*a, **k)
+        wraps(fn)(self)
         self.fn = fn
         self.count = 0
         self.current_self = current_self

@@ -3,7 +3,6 @@
 Module for the color interfaces defining all posible ways of turning
 on buttons in the L9C.
 """
-import consts
 from itertools import izip, repeat
 
 class NotDrawableError(Exception):
@@ -86,8 +85,6 @@ class FallbackColor(Color):
 
     def draw(self, interface):
         try:
-            if consts.CUKE_MODE:
-                raise NotDrawableError
             self.default_color.draw(interface)
         except NotDrawableError:
             super(FallbackColor, self).draw(interface)
@@ -101,9 +98,7 @@ class AnimatedColor(Color):
 
     @property
     def midi_value(self):
-        if consts.CUKE_MODE:
-            return (self.color1.midi_value + self.channel2) % 128
-        raise NotImplementedError, 'Animations can be serialized in cuke mode only'
+        return self.convert_to_midi_value()
 
     def __init__(self, color1 = RgbColor(), color2 = RgbColor(), channel2 = 7, *a, **k):
         super(AnimatedColor, self).__init__(*a, **k)
@@ -112,12 +107,12 @@ class AnimatedColor(Color):
         self.channel2 = channel2
 
     def draw(self, interface):
-        if not (consts.CUKE_MODE or interface.num_delayed_messages >= 2):
-            raise AssertionError
-            interface.send_value(self.color1.midi_value)
-            interface.send_value(self.color2.midi_value, channel=self.channel2)
-        else:
-            super(AnimatedColor, self).draw(interface)
+        raise interface.num_delayed_messages >= 2 or AssertionError
+        interface.send_value(self.color1.midi_value)
+        interface.send_value(self.color2.midi_value, channel=self.channel2)
+
+    def convert_to_midi_value(self):
+        raise NotImplementedError, 'Animations cannot be serialized'
 
 
 class Pulse(AnimatedColor):

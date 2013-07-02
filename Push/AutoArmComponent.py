@@ -60,6 +60,7 @@ class AutoArmComponent(CompoundComponent):
         self._auto_arm_restore_behaviour = AutoArmRestoreBehaviour(auto_arm=self)
         self._notification = self.register_component(NotificationComponent(notification_time=10.0))
         self._on_tracks_changed.subject = self.song()
+        self._on_exclusive_arm_changed.subject = self.song()
         self._on_tracks_changed()
 
     notification_layer = forward_property('_notification')('message_box_layer')
@@ -92,20 +93,28 @@ class AutoArmComponent(CompoundComponent):
         self._update_notification()
 
     def restore_auto_arm(self):
-        for track in self.song().tracks:
-            if self.can_auto_arm_track(track):
-                track.arm = False
+        song = self.song()
+        exclusive_arm = song.exclusive_arm
+        for track in song.tracks:
+            if exclusive_arm or self.can_auto_arm_track(track):
+                if track.can_be_armed:
+                    track.arm = False
 
     @property
     def needs_restore_auto_arm(self):
         song = self.song()
-        return self.is_enabled() and self.can_auto_arm_track(song.view.selected_track) and not song.view.selected_track.arm and any(ifilter(lambda track: self.can_auto_arm_track(track) and track.arm, song.tracks))
+        exclusive_arm = song.exclusive_arm
+        return self.is_enabled() and self.can_auto_arm_track(song.view.selected_track) and not song.view.selected_track.arm and any(ifilter(lambda track: (exclusive_arm or self.can_auto_arm_track(track)) and track.can_be_armed and track.arm, song.tracks))
 
     @subject_slot('tracks')
     def _on_tracks_changed(self):
         tracks = filter(lambda t: t.can_be_armed, self.song().tracks)
         self._on_arm_changed.replace_subjects(tracks)
         self._on_current_input_routing_changed.replace_subjects(tracks)
+
+    @subject_slot('exclusive_arm')
+    def _on_exclusive_arm_changed(self):
+        self.update()
 
     @subject_slot_group('arm')
     def _on_arm_changed(self, track):

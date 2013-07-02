@@ -18,8 +18,8 @@ class TouchEncoderElement(EncoderElement, SlotManager):
     """ Class representing an encoder that is touch sensitive """
     __subject_events__ = (SubjectEvent(name='double_tap'),)
 
-    def __init__(self, undo_step_handler = None, delete_handler = None, *a, **k):
-        super(TouchEncoderElement, self).__init__(*a, **k)
+    def __init__(self, msg_type, channel, identifier, map_mode, undo_step_handler = None, delete_handler = None, touch_button = None, *a, **k):
+        super(TouchEncoderElement, self).__init__(msg_type, channel, identifier, map_mode, *a, **k)
         self._trigger_undo_step = False
         self._undo_step_open = False
         self._undo_step_handler = undo_step_handler
@@ -27,6 +27,7 @@ class TouchEncoderElement(EncoderElement, SlotManager):
         self._tap_count = 0
         self._tap_task = self._tasks.add(Task.sequence(Task.wait(consts.TAPPING_DELAY), Task.run(self._reset_tapping)))
         self._tap_task.kill()
+        self.set_touch_button(touch_button)
         self.set_observer(None)
 
     def is_pressed(self):

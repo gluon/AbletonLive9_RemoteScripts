@@ -2,7 +2,6 @@
 from _Framework.Resource import PrioritizedResource
 DISPLAY_LENGTH = 72
 TAPPING_DELAY = 0.4
-CUKE_MODE = False
 SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.Off',
  True: 'DefaultButton.On',
@@ -59,8 +58,8 @@ MUSICAL_MODES = ['Major',
  [0,
   1,
   3,
-  4,
-  7,
+  5,
+  6,
   8,
   10],
  'Diminished',

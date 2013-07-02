@@ -1,6 +1,6 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonMatrixElement.py
 from CompoundElement import CompoundElement
-from Util import in_range, product, const
+from Util import in_range, product, const, slicer
 
 class ButtonMatrixElement(CompoundElement):
     """
@@ -12,11 +12,25 @@ class ButtonMatrixElement(CompoundElement):
     return None when you try to query it.
     """
 
-    def __init__(self, *a, **k):
+    def __init__(self, rows = [], *a, **k):
         super(ButtonMatrixElement, self).__init__(*a, **k)
         self._buttons = []
         self._button_coordinates = {}
         self._max_row_width = 0
+        map(self.add_row, rows)
+
+    @property
+    @slicer(2)
+    def submatrix(self, col_slice, row_slice):
+
+        def toslice(obj):
+            return obj if isinstance(obj, slice) else (slice(obj, obj + 1) if obj != -1 else slice(obj, None))
+
+        col_slice = toslice(col_slice)
+        row_slice = toslice(row_slice)
+        rows = [ row[col_slice] for row in self._buttons[row_slice] ]
+        raise all(map(all, rows)) or AssertionError, 'Can not make submatrix with unknowned buttons'
+        return ButtonMatrixElement(rows=rows)
 
     def add_row(self, buttons):
         self._buttons.append([None] * len(buttons))
