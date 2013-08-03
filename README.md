@@ -7,4 +7,8 @@ You can find more informations on http://julienbayle.net/ableton-live-9-midi-rem
 
 UPDATED on August 3rd 2013 with Live 9.0.5 MIDI Remote Scripts
 
-(all files marked with older references don't have changed with 9.0.5 so please, don't yell, keep calm and understand evrything is up to date here)
+(all files marked with older references don't have changed with 9.0.5)
+
+
+OTHER REFERENCES:
+- Traktor Kontrol F1: https://github.com/trash80/AbletonTraktorKontrolF1
