@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/MxDCore.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/MxDCore.py
 import Live.Base
+from functools import partial
 import _Framework
 from _Framework.Debug import debug_print
 from MxDUtils import TupleWrapper, StringHandler
@@ -472,7 +473,7 @@ class MxDCore(object):
         self.manager.send_message(device_id, object_id, 'obs_type', unicode(result))
 
     def obs_bang(self, device_id, object_id, parameter):
-        self._observer_property_callback(device_id, object_id, None, None, None, None)
+        self._observer_property_callback(device_id, object_id)
 
     def rmt_set_id(self, device_id, object_id, parameter):
         if self._is_integer(parameter) and self._lom_id_exists(device_id, int(parameter)):
@@ -527,7 +528,7 @@ class MxDCore(object):
     def _object_for_id(self, device_id):
         lom_object = None
         try:
-            lom_object = lambda lom_id: self._get_lom_object_by_lom_id(device_id, lom_id)
+            lom_object = partial(self._get_lom_object_by_lom_id, device_id)
         except:
             pass
 
@@ -537,8 +538,7 @@ class MxDCore(object):
         result = ''
         lom_object = self._disambiguate_object(lom_object)
         if is_object_iterable(lom_object):
-            formatter = lambda el: self._str_representation_for_object(el)
-            result = concatenate_strings(map(formatter, lom_object))
+            result = concatenate_strings(map(self._str_representation_for_object, lom_object))
         elif is_lom_object(lom_object, self.lom_classes):
             result = ('id ' if mark_ids else '') + unicode(self._get_lom_id_by_lom_object(lom_object))
         elif isinstance(lom_object, type(False)):
@@ -553,11 +553,10 @@ class MxDCore(object):
         path_components = object_context[PATH_KEY]
         new_listeners = {}
         self._uninstall_path_listeners(device_id, object_id)
-        listener = lambda device_id = device_id, object_id = object_id: listener_callback(device_id, object_id)
+        listener = partial(listener_callback, device_id, object_id)
         obj_attr_iter = self._object_attr_path_iter(device_id, object_id, path_components)
         for lom_object, attribute in obj_attr_iter:
-            if attribute == 'clip':
-                attribute = 'has_clip'
+            attribute = self._listenable_property_for(attribute)
             if not (lom_object != None and hasattr(lom_object, attribute + '_has_listener') and not getattr(lom_object, attribute + '_has_listener')(listener)):
                 raise AssertionError
                 getattr(lom_object, 'add_%s_listener' % attribute)(listener)
@@ -741,11 +740,9 @@ class MxDCore(object):
             property_name = self._get_current_property(device_id, object_id)
             property_name == u'id' and self._observer_id_callback(device_id, object_id)
         else:
-            if current_object != None and property_name != '':
-                object_context = self.device_contexts[device_id][object_id]
-                listener_callback = lambda arg1 = None, arg2 = None, arg3 = None, arg4 = None: self._observer_property_callback(device_id, object_id, arg1, arg2, arg3, arg4)
-                transl_prop_name = property_name
-                transl_prop_name = property_name == 'clip' and 'has_clip'
+            object_context = current_object != None and property_name != '' and self.device_contexts[device_id][object_id]
+            listener_callback = partial(self._observer_property_callback, device_id, object_id)
+            transl_prop_name = self._listenable_property_for(property_name)
             if hasattr(current_object, transl_prop_name + '_has_listener'):
                 if not not getattr(current_object, transl_prop_name + '_has_listener')(listener_callback):
                     raise AssertionError
@@ -761,17 +758,15 @@ class MxDCore(object):
         self._uninstall_path_listeners(device_id, object_id)
         listener_callback, current_object, property_name = object_context[PROP_LISTENER_KEY]
         raise current_object != None and listener_callback != None and (property_name != '' or AssertionError)
-        if not not isinstance(current_object, TupleWrapper):
-            raise AssertionError
-            transl_prop_name = property_name
-            transl_prop_name = property_name == 'clip' and 'has_clip'
+        raise not isinstance(current_object, TupleWrapper) or AssertionError
+        transl_prop_name = self._listenable_property_for(property_name)
         if not hasattr(current_object, transl_prop_name + '_has_listener'):
             raise AssertionError
             if getattr(current_object, transl_prop_name + '_has_listener')(listener_callback):
                 getattr(current_object, 'remove_%s_listener' % transl_prop_name)(listener_callback)
         object_context[PROP_LISTENER_KEY] = (None, None, None)
 
-    def _observer_property_message_type(self, device_id, prop):
+    def _observer_property_message_type(self, prop):
         prop_type = None
         if isinstance(prop, (str, unicode)):
             prop_type = 'obs_string_val'
@@ -785,22 +780,19 @@ class MxDCore(object):
             prop_type = 'obs_id_val'
         return prop_type
 
-    def _observer_property_callback(self, device_id, object_id, arg1, arg2, arg3, arg4):
+    def _observer_property_callback(self, device_id, object_id, *args):
         current_object = self._get_current_lom_object(device_id, object_id)
         property_name = self._get_current_property(device_id, object_id)
-        arguments = (arg1,
-         arg2,
-         arg3,
-         arg4)
-        if list(arguments).count(None) < len(arguments):
+        if len(args) > 0:
             formatter = lambda arg: unicode(int(arg) if isinstance(arg, bool) else arg)
-            result = concatenate_strings(map(formatter, arguments))
-            self.manager.send_message(device_id, object_id, 'obs_list_val', result)
+            args_type = self._observer_property_message_type(args if len(args) > 1 else args[0])
+            result = concatenate_strings(map(formatter, args))
+            self.manager.send_message(device_id, object_id, args_type, result)
         elif not (current_object != None and property_name != '' and not isinstance(current_object, TupleWrapper)):
             raise AssertionError
             if hasattr(current_object, property_name):
                 prop = getattr(current_object, property_name)
-                prop_type = self._observer_property_message_type(device_id, prop)
+                prop_type = self._observer_property_message_type(prop)
                 if prop_type == None:
                     self._warn(device_id, object_id, 'unsupported property type')
                 else:
@@ -847,6 +839,9 @@ class MxDCore(object):
         if object.__class__.__name__ in ('ListWrapper', 'TupleWrapper'):
             result = object.get_list()
         return result
+
+    def _listenable_property_for(self, prop_name):
+        return 'has_clip' if prop_name == 'clip' else prop_name
 
     def _parse(self, device_id, object_id, string):
         return StringHandler.parse(string, self._object_for_id(device_id))

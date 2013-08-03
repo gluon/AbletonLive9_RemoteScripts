@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteRepeatComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteRepeatComponent.py
 from _Framework.ModesComponent import ModesComponent
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot
@@ -15,16 +15,20 @@ NOTE_REPEAT_FREQUENCIES = [32 * t,
  4]
 del t
 
+class DummyNoteRepeat(object):
+    repeat_rate = 1.0
+    enabled = False
+
+
 class NoteRepeatComponent(ModesComponent):
     """
     Component for setting up the note repeat
     """
 
-    def __init__(self, note_repeat = None, *a, **k):
+    def __init__(self, *a, **k):
         super(NoteRepeatComponent, self).__init__(*a, **k)
-        raise note_repeat or AssertionError
         self._last_record_quantization = None
-        self._note_repeat = note_repeat
+        self._note_repeat = None
         self._options = self.register_component(OptionsComponent())
         self._options.set_enabled(False)
         self._options.selected_color = 'NoteRepeat.RateSelected'
@@ -35,20 +39,26 @@ class NoteRepeatComponent(ModesComponent):
         self.add_mode('enabled', [self._options, (self._enable_note_repeat, self._disable_note_repeat)], 'DefaultButton.On')
         self.selected_mode = 'disabled'
         self._on_selected_option_changed.subject = self._options
-        self._on_selected_option_changed(self._options.selected_option)
+        self.set_note_repeat(None)
 
     options_layer = forward_property('_options')('layer')
+
+    def set_note_repeat(self, note_repeat):
+        if not note_repeat:
+            note_repeat = DummyNoteRepeat()
+            self._note_repeat.enabled = self._note_repeat != None and False
+        self._note_repeat = note_repeat
+        self._update_note_repeat(enabled=self.selected_mode == 'enabled')
 
     def _enable_note_repeat(self):
         self._last_record_quantization = self._song.midi_recording_quantization
         self._set_recording_quantization(False)
-        self._on_selected_option_changed(self._options.selected_option)
-        self._note_repeat.enabled = True
+        self._update_note_repeat(enabled=True)
 
     def _disable_note_repeat(self):
         if not self.song().midi_recording_quantization and self._last_record_quantization:
             self._set_recording_quantization(self._last_record_quantization)
-        self._note_repeat.enabled = False
+        self._update_note_repeat(enabled=False)
 
     def _set_recording_quantization(self, value):
 
@@ -61,3 +71,7 @@ class NoteRepeatComponent(ModesComponent):
     def _on_selected_option_changed(self, option):
         frequency = NOTE_REPEAT_FREQUENCIES[option]
         self._note_repeat.repeat_rate = 1.0 / frequency * 4.0
+
+    def _update_note_repeat(self, enabled = False):
+        self._on_selected_option_changed(self._options.selected_option)
+        self._note_repeat.enabled = enabled

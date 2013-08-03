@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserModes.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserModes.py
 """
 Different mode objects that turn live into different browsing modes.
 """
@@ -9,52 +9,35 @@ from _Framework.Util import index_if
 from _Framework.ModesComponent import Mode
 
 def can_browse_for_object(obj):
-    return obj != None and not isinstance(obj, (int, Live.Chain.Chain))
+    return obj != None
 
 
 class BrowserHotswapMode(Mode):
 
     @depends(selection=None)
-    def __init__(self, selection = None, application_view = None, *a, **k):
+    def __init__(self, selection = None, application = None, *a, **k):
         super(BrowserHotswapMode, self).__init__(*a, **k)
         self._selection = selection
-        self._application_view = application_view
+        self._application = application
 
     def can_hotswap(self):
-        return can_browse_for_object(self._selection.hotswap_target) or can_browse_for_object(self._selection.selected_object) or can_browse_for_object(self._selection.selected_device)
+        return can_browse_for_object(self._selection.selected_object) or can_browse_for_object(self._selection.selected_device)
 
     def enter_mode(self):
-        self._ensure_valid_hotswap_target()
-        if not self._application_view.browse_mode:
-            self._application_view.toggle_browse()
+        try:
+            self._set_hotswap_target(self._selection.selected_object)
+        except RuntimeError:
+            try:
+                self._set_hotswap_target(self._selection.selected_device)
+            except RuntimeError:
+                pass
 
     def leave_mode(self):
-        if self._application_view.browse_mode:
-            self._application_view.toggle_browse()
+        self._application.browser.hotswap_target = None
 
-    def _ensure_valid_hotswap_target(self):
-        if not can_browse_for_object(self._selection.hotswap_target):
-            if not self._target_device_selected_object():
-                self._target_selected_device()
-
-    def _can_browse_for_object(self, obj):
-        return obj != None and not isinstance(obj, (int, Live.Chain.Chain))
-
-    def _make_object_the_hotswap_target(self, lom_object):
-        self._selection.selected_object = lom_object
-
-    def _target_device_selected_object(self):
-        did_set_target = False
-        lom_object = self._selection.selected_object
-        if can_browse_for_object(lom_object):
-            self._make_object_the_hotswap_target(lom_object)
-            did_set_target = True
-        return did_set_target
-
-    def _target_selected_device(self):
-        selected_device = self._selection.selected_device
-        if can_browse_for_object(selected_device):
-            self._make_object_the_hotswap_target(selected_device)
+    def _set_hotswap_target(self, hotswap_object):
+        self._application.browser.hotswap_target = hotswap_object
+        self._application.view.show_view('Detail/DeviceChain')
 
 
 class BrowserAddEffectMode(Mode):
@@ -65,7 +48,6 @@ class BrowserAddEffectMode(Mode):
         super(BrowserAddEffectMode, self).__init__(*a, **k)
         self._selection = selection
         self._browser = browser
-        self._hotswap_was_enabled = False
         self._application_view = application_view
         self._track_to_add_effect = None
         self._selection_for_insert = None
@@ -77,16 +59,13 @@ class BrowserAddEffectMode(Mode):
         self._selection_for_insert = self._do_get_selection_for_insert()
         self._track_to_add_effect.view.device_insert_mode = self.get_insert_mode()
         self._browser.filter_type = self.get_filter_type()
-        self._hotswap_was_enabled = self._application_view.browse_mode
-        if self._hotswap_was_enabled:
-            self._application_view.toggle_browse()
+        if self._application_view.browse_mode:
+            self._browser.hotswap_target = None
 
     def leave_mode(self):
         disabled = Live.Track.DeviceInsertMode.default
         self._track_to_add_effect.view.device_insert_mode = disabled
         self._browser.filter_type = Live.Browser.FilterType.disabled
-        if self._hotswap_was_enabled != self._application_view.browse_mode:
-            self._application_view.toggle_browse()
 
     def get_insert_mode(self):
         return Live.Track.DeviceInsertMode.selected_left if self.insert_left else Live.Track.DeviceInsertMode.selected_right

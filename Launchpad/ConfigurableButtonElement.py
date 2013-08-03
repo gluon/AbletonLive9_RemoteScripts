@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/ConfigurableButtonElement.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/ConfigurableButtonElement.py
 import Live
 from _Framework.ButtonElement import *
 

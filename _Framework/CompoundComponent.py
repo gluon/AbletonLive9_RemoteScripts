@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundComponent.py
 from ControlSurfaceComponent import ControlSurfaceComponent
 
 class CompoundComponent(ControlSurfaceComponent):
@@ -28,8 +28,8 @@ class CompoundComponent(ControlSurfaceComponent):
 
     def set_enabled(self, enable):
         """
-        When disabling a compound component, childs are disabled. When
-        enabled, childs are restored to whatever state they were
+        When disabling a compound component, its children are disabled. When
+        enabled, these children are restored to whatever state they were
         explicitly set to.
         """
         super(CompoundComponent, self).set_enabled(enable)

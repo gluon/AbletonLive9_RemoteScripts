@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
@@ -8,7 +8,6 @@ from _Framework.SubjectSlot import subject_slot
 from _Framework.ScrollComponent import ScrollComponent
 from _Framework.Util import forward_property
 from _Framework.ModesComponent import ModesComponent
-from _Framework.Resource import StackingResource
 from MessageBoxComponent import Messenger
 import consts
 from consts import MessageBoxText
@@ -88,6 +87,14 @@ class SpecialClipSlotComponent(ClipSlotComponent, Messenger):
 
 class SpecialSceneComponent(SceneComponent, Messenger):
     clip_slot_component_type = SpecialClipSlotComponent
+
+    def _on_is_triggered_changed(self):
+        if not self._scene != None:
+            raise AssertionError
+            if self.is_enabled() and self._launch_button != None:
+                self._scene.is_triggered and self._launch_button.send_value(self._triggered_value)
+            else:
+                self._launch_button.turn_on()
 
     def _do_delete_scene(self, scene):
         try:

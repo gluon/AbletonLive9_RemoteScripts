@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftableTransportComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftableTransportComponent.py
 import Live
 from _Framework.TransportComponent import TransportComponent
 from _Framework.ButtonElement import ButtonElement

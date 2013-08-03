@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialSceneComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialSceneComponent.py
 import Live
 from _Framework.SceneComponent import SceneComponent
 from _Framework.InputControlElement import *

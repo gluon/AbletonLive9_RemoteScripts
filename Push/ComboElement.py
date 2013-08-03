@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ComboElement.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ComboElement.py
 from itertools import imap
 from _Framework.CompoundElement import CompoundElement
 from _Framework.ButtonElement import ButtonElementMixin
@@ -65,12 +65,13 @@ class WrapperElement(CompoundElement, ButtonElementMixin):
 class ComboElement(WrapperElement):
     """
     An element representing a combination of buttons.  It will forward
-    the button values when all the modifiers are pressed, and silently
-    discard them when they are not.
+    the button values when all the modifiers have the specified state,
+    and silently discard them when they are not. If no state is provided
+    for the modifiers, being pressed is assumed as the target state.
     
     When using resources, this element:
       - Grabs the modifiers at all times.
-      - Grabs the action button only when all modifiers are pressed.
+      - Grabs the action button only when all modifiers have the right state.
     
     This means that the action button can be used at the same time in
     the same Layer in a combined and un-combined fashion.  The setters
@@ -80,11 +81,11 @@ class ComboElement(WrapperElement):
     in a combo and raw.
     """
 
-    def __init__(self, modifiers = tuple(), control = None, *a, **k):
+    def __init__(self, control = None, modifiers = [], negative_modifiers = [], *a, **k):
         super(ComboElement, self).__init__(wrapped_control=control, *a, **k)
-        raise all(imap(lambda x: x.is_momentary(), modifiers)) or AssertionError
-        self._combo_modifiers = modifiers
-        self.register_control_elements(*modifiers)
+        raise all(imap(lambda x: x.is_momentary(), modifiers + negative_modifiers)) or AssertionError
+        self._combo_modifiers = dict(map(lambda x: (x, True), modifiers) + map(lambda x: (x, False), negative_modifiers))
+        self.register_control_elements(*self._combo_modifiers.keys())
 
     def on_nested_control_element_grabbed(self, control):
         if control != self._wrapped_control:
@@ -112,7 +113,7 @@ class ComboElement(WrapperElement):
             self.unregister_control_element(self._wrapped_control)
 
     def _combo_is_on(self):
-        return all(imap(self._modifier_is_pressed, self._combo_modifiers))
+        return all(imap(self._modifier_is_valid, self._combo_modifiers))
 
-    def _modifier_is_pressed(self, mod):
-        return self.owns_control_element(mod) and mod.is_pressed()
+    def _modifier_is_valid(self, mod):
+        return self.owns_control_element(mod) and mod.is_pressed() == self._combo_modifiers[mod]

@@ -1,14 +1,26 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/AccentComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/AccentComponent.py
 from _Framework.ModesComponent import ModesComponent
+
+class DummyFullVelocity(object):
+    enabled = False
+
 
 class AccentComponent(ModesComponent):
 
-    def __init__(self, full_velocity, *a, **k):
+    def __init__(self, *a, **k):
         super(AccentComponent, self).__init__(*a, **k)
-        self._full_velocity = full_velocity
+        self._full_velocity = None
         self.add_mode('disabled', None)
         self.add_mode('enabled', (self._on_accent_on, self._on_accent_off), 'DefaultButton.On')
         self.selected_mode = 'disabled'
+        self.set_full_velocity(None)
+
+    def set_full_velocity(self, full_velocity):
+        if not full_velocity:
+            full_velocity = DummyFullVelocity()
+            self._full_velocity.enabled = self._full_velocity != None and False
+        self._full_velocity = full_velocity
+        self._full_velocity.enabled = self.selected_mode == 'enabled'
 
     @property
     def activated(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SceneComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SceneComponent.py
 from CompoundComponent import CompoundComponent
 from ClipSlotComponent import ClipSlotComponent
 from Util import in_range, nop
@@ -39,7 +39,7 @@ class SceneComponent(CompoundComponent):
         self.update()
 
     def set_scene(self, scene):
-        if scene != self._scene:
+        if scene != self._scene or type(self._scene) != type(scene):
             if self._scene != None:
                 self._scene.remove_is_triggered_listener(self._on_is_triggered_changed)
             self._scene = scene
@@ -115,32 +115,36 @@ class SceneComponent(CompoundComponent):
         if self.is_enabled():
             if self._select_button and self._select_button.is_pressed() and value:
                 self._do_select_scene(self._scene)
-            if self._delete_button and self._delete_button.is_pressed() and value:
-                self._do_delete_scene(self._scene)
             elif self._scene != None:
-                launched = False
-                if self._launch_button.is_momentary():
-                    self._scene.set_fire_button_state(value != 0)
-                    launched = value != 0
-                elif value != 0:
-                    self._scene.fire()
-                    launched = True
-                if launched and self.song().select_on_launch:
-                    self.song().view.selected_scene = self._scene
+                if self._delete_button and self._delete_button.is_pressed() and value:
+                    self._do_delete_scene(self._scene)
+                else:
+                    self._do_launch_scene(value)
 
-    def _do_select_scene(self, scene):
+    def _do_select_scene(self, scene_for_overrides):
         if self._scene != None:
             view = self.song().view
             if view.selected_scene != self._scene:
                 view.selected_scene = self._scene
 
-    def _do_delete_scene(self, scene):
+    def _do_delete_scene(self, scene_for_overrides):
         try:
             if self._scene:
                 song = self.song()
                 song.delete_scene(list(song.scenes).index(self._scene))
         except RuntimeError:
             pass
+
+    def _do_launch_scene(self, value):
+        launched = False
+        if self._launch_button.is_momentary():
+            self._scene.set_fire_button_state(value != 0)
+            launched = value != 0
+        elif value != 0:
+            self._scene.fire()
+            launched = True
+        if launched and self.song().select_on_launch:
+            self.song().view.selected_scene = self._scene
 
     def _on_is_triggered_changed(self):
         if not self._scene != None:

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
 from _Framework.Util import flatten
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
@@ -159,31 +159,33 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
                 self._track_name_data_source.set_display_string(' ')
 
     def _select_value(self, value):
-        if self.is_enabled() and self._track and value:
-            if self._duplicate_button and self._duplicate_button.is_pressed():
+        if self.is_enabled() and self._track:
+            if value and self._duplicate_button and self._duplicate_button.is_pressed():
                 self._do_duplicate_track(self._track)
-            elif self._delete_button and self._delete_button.is_pressed():
+            elif value and self._delete_button and self._delete_button.is_pressed():
                 self._do_delete_track(self._track)
-            elif self._shift_pressed:
-                if self._track.can_be_armed:
-                    self._track.arm = not self._track.arm
+            elif value and self._shift_pressed:
+                self._do_toggle_arm(exclusive=False)
             else:
-                if self._track.can_be_armed and self.song().view.selected_track == self._track:
-                    self._track.arm = not self._track.arm
-                else:
-                    super(SpecialChanStripComponent, self)._select_value(value)
-                if self._track.can_be_armed and (self._track.implicit_arm or self._track.arm):
-                    for track in self.song().tracks:
-                        if track.can_be_armed and track != self._track:
-                            track.arm = False
+                self._select_value_without_modifier(value)
 
-            if self._selector_button and self._selector_button.is_pressed():
-                self._do_select_track(self._track)
-                if not self._shift_pressed:
-                    if self._track.is_foldable and self._select_button.is_momentary():
-                        self._fold_task.restart()
-                    else:
-                        self._fold_task.kill()
+    def _do_toggle_arm(self, exclusive = False):
+        if self._track.can_be_armed:
+            self._track.arm = not self._track.arm
+            if exclusive and (self._track.implicit_arm or self._track.arm):
+                for track in self.song().tracks:
+                    if track.can_be_armed and track != self._track:
+                        track.arm = False
+
+    def _select_value_without_modifier(self, value):
+        if value and self.song().view.selected_track == self._track:
+            self._do_toggle_arm(exclusive=True)
+        else:
+            super(SpecialChanStripComponent, self)._select_value(value)
+        if value and self._track.is_foldable and self._select_button.is_momentary():
+            self._fold_task.restart()
+        else:
+            self._fold_task.kill()
 
     def _do_delete_track(self, track):
         try:

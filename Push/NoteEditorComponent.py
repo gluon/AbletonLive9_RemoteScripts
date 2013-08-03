@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
 from __future__ import with_statement
 import Live
 GridQuantization = Live.Clip.GridQuantization
@@ -22,7 +22,7 @@ STEP_STATE_ALLOW_DELETE = 1
 STEP_STATE_ADDED_MUTED = 2
 DEFAULT_VELOCITY = 100
 QUANTIZATION_FACTOR = 24
-BEAT_TIME_EPSILON = 1.0000000000000006e-05
+BEAT_TIME_EPSILON = 1e-05
 QUANTIZATION_LIST = [2.0,
  3.0,
  4.0,
@@ -131,7 +131,7 @@ class LoopingTimeStep(TimeStep):
 
 class NoteEditorComponent(ControlSurfaceComponent, Paginator):
 
-    def __init__(self, clip_creator = None, playhead = None, *a, **k):
+    def __init__(self, clip_creator = None, *a, **k):
         super(NoteEditorComponent, self).__init__(*a, **k)
         self.loop_steps = False
         self._selected_page_point = 0
@@ -168,9 +168,14 @@ class NoteEditorComponent(ControlSurfaceComponent, Paginator):
         self._note_index = 36
         self._triplet_factor = 1.0
         self._set_quantization_index(3)
-        self._playhead = playhead
+        self._playhead = None
         self._playhead_notes = range(92, 100) + range(84, 92) + range(76, 84) + range(68, 76)
         self._playhead_triplet_notes = range(92, 98) + range(84, 90) + range(76, 82) + range(68, 74)
+
+    def set_playhead(self, playhead):
+        if self._playhead != None:
+            self._playhead.enabled = False
+        self._playhead = playhead
         with self._playhead_update_guard():
             self._update_full_playhead()
 

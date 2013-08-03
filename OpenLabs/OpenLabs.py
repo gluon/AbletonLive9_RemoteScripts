@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/OpenLabs/OpenLabs.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/OpenLabs/OpenLabs.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

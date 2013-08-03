@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Selection.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Selection.py
 """
 Object that encapsulates selection in the L9C controller.
 """
@@ -76,6 +76,8 @@ class L9CSelection(Selection):
     def _set_selected_object(self, lom_object):
         if isinstance(lom_object, Live.DrumPad.DrumPad):
             lom_object.canonical_parent.view.selected_drum_pad = lom_object
+        if isinstance(lom_object, Live.Chain.Chain):
+            lom_object.canonical_parent.view.selected_chain = lom_object
         else:
             self._application.get_document().view.select_device(lom_object)
 

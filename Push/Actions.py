@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Actions.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Actions.py
 import Live
+_Q = Live.Song.Quantization
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.SubjectSlot import subject_slot
@@ -37,6 +38,29 @@ class CaptureAndInsertSceneComponent(ActionWithSettingsComponent, Messenger):
             self.show_notification(MessageBoxText.CAPTURE_AND_INSERT_SCENE % self.song().view.selected_scene.name.strip())
         except Live.Base.LimitationError:
             self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
+
+
+class DuplicateDetailClipComponent(ActionWithSettingsComponent, Messenger):
+
+    def post_trigger_action(self):
+        view = self.song().view
+        clip = view.detail_clip
+        if clip != None:
+            slot = clip.canonical_parent
+            track = slot.canonical_parent
+            try:
+                start_duplicate = clip.is_playing
+                target_index = list(track.clip_slots).index(slot)
+                destination_index = track.duplicate_clip_slot(target_index)
+                view.highlighted_clip_slot = track.clip_slots[destination_index]
+                view.detail_clip = view.highlighted_clip_slot.clip
+                if start_duplicate:
+                    view.highlighted_clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+                self.show_notification(MessageBoxText.DUPLICATE_CLIP % clip.name)
+            except Live.Base.LimitationError:
+                self.expect_dialog(MessageBoxText.SCENE_LIMIT_REACHED)
+            except RuntimeError:
+                self.show_notification(MessageBoxText.CLIP_DUPLICATION_FAILED)
 
 
 class DuplicateLoopComponent(ActionWithSettingsComponent, Messenger):
@@ -341,8 +365,7 @@ class CreateInstrumentTrackComponent(CompoundComponent, Messenger):
         self._go_to_hotswap_task.kill()
 
     def _prepare_browser(self):
-        if self.application().view.browse_mode:
-            self.application().view.toggle_browse()
+        self.application().browser.hotswap_target = None
 
     def _do_browser_load_item(self, item):
         song = self.song()

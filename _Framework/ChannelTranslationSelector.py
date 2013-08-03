@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ChannelTranslationSelector.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ChannelTranslationSelector.py
 from ModeSelectorComponent import ModeSelectorComponent
 from InputControlElement import InputControlElement
 

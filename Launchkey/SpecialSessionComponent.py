@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/SpecialSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 from _Framework.Util import in_range, nop
 from consts import *

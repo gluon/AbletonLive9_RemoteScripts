@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurface.py
 from __future__ import with_statement
 from functools import partial, wraps
 from itertools import chain
@@ -18,7 +18,7 @@ CS_LIST_KEY = 'control_surfaces'
 class _ModuleLoadedCheck(object):
     """
     This class is not to be instantiated.  We just use it to check
-    wether the module have been unloaded (showing leaking listeners).
+    whether the modules have been unloaded (showing leaking listeners).
     """
     pass
 

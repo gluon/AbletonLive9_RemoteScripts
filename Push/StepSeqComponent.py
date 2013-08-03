@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/StepSeqComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/StepSeqComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
@@ -6,17 +6,26 @@ from DrumGroupComponent import DrumGroupComponent
 from NoteEditorComponent import NoteEditorComponent
 from LoopSelectorComponent import LoopSelectorComponent
 
+class DummyPlayhead(object):
+    notes = []
+    start_time = 0.0
+    step_length = 1.0
+    clip_start_time = 0.0
+    clip_start_marker = 0.0
+    clip_loop = (0.0, 0.0)
+    velocity = 0.0
+    enabled = False
+
+
 class StepSeqComponent(CompoundComponent):
     """ Step Sequencer Component """
 
-    def __init__(self, clip_creator = None, playhead = None, skin = None, *a, **k):
+    def __init__(self, clip_creator = None, skin = None, *a, **k):
         super(StepSeqComponent, self).__init__(*a, **k)
         raise clip_creator or AssertionError
-        raise playhead or AssertionError
         raise skin or AssertionError
         self._skin = skin
-        self._playhead = playhead
-        self._note_editor, self._loop_selector, self._big_loop_selector, self._drum_group = self.register_components(NoteEditorComponent(clip_creator=clip_creator, playhead=playhead), LoopSelectorComponent(clip_creator=clip_creator), LoopSelectorComponent(clip_creator=clip_creator, measure_length=2.0), DrumGroupComponent())
+        self._note_editor, self._loop_selector, self._big_loop_selector, self._drum_group = self.register_components(NoteEditorComponent(clip_creator=clip_creator), LoopSelectorComponent(clip_creator=clip_creator), LoopSelectorComponent(clip_creator=clip_creator, measure_length=2.0), DrumGroupComponent())
         self._big_loop_selector.set_enabled(False)
         self._big_loop_selector.set_paginator(self._note_editor)
         self._loop_selector.set_paginator(self._note_editor)
@@ -27,6 +36,13 @@ class StepSeqComponent(CompoundComponent):
         self._note_editor_matrix = None
         self._on_pressed_pads_changed.subject = self._drum_group
         self._on_detail_clip_changed.subject = self.song().view
+        self.set_playhead(None)
+
+    def set_playhead(self, playhead):
+        playhead = playhead or DummyPlayhead()
+        self._playhead = playhead
+        self._note_editor.set_playhead(playhead)
+        self.update()
         self._on_detail_clip_changed()
 
     @forward_property('_note_editor')

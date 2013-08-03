@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TrackArmState.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TrackArmState.py
 from SubjectSlot import Subject, subject_slot, SlotManager
 
 class TrackArmState(Subject, SlotManager):

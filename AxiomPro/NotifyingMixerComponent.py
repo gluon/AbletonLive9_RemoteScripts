@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/NotifyingMixerComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/NotifyingMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 

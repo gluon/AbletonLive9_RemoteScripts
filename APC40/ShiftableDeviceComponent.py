@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftableDeviceComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftableDeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.DeviceComponent import DeviceComponent

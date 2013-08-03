@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/LomUtils.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/LomUtils.py
 import sys
 from _Tools import types
 from MxDUtils import TupleWrapper
@@ -46,8 +46,8 @@ class LomInformation(object):
     def _generate_property_info(self, prop_name, lom_object):
         try:
             real_prop = getattr(lom_object, prop_name)
-            prop_type = real_prop.__class__.__name__
-            if not isinstance(real_prop, HIDDEN_TYPES):
+            if not isinstance(real_prop, HIDDEN_TYPES) and not is_class(real_prop):
+                prop_type = real_prop.__class__.__name__
                 if prop_name in TUPLE_TYPES:
                     type_name = TUPLE_TYPES[prop_name].__name__
                     self._lists_of_children.append((prop_name, type_name))
@@ -58,9 +58,9 @@ class LomInformation(object):
                     if real_prop != None:
                         self._children.append((prop_name, prop_type))
                 elif callable(real_prop):
-                    if not prop_name.endswith('_listener') and not is_class(real_prop):
+                    if not prop_name.endswith('_listener'):
                         self._functions.append((prop_name,))
-                elif prop_type not in ('class', 'type', 'Enum'):
+                elif prop_type not in ('type', 'Enum'):
                     info_type = 'int' if isinstance(real_prop, ENUM_TYPES) else prop_type
                     self._properties.append((prop_name, info_type))
         except (AssertionError, RuntimeError):

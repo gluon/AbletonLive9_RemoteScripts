@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Colors.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Colors.py
 """
 Module for the color interfaces defining all posible ways of turning
 on buttons in the L9C.
@@ -187,16 +187,20 @@ class BiLed:
     """
     GREEN = FallbackColor(RgbColor(122), 22)
     GREEN_HALF = FallbackColor(RgbColor(123), 19)
-    GREEN_BLINK = FallbackColor(Blink(RgbColor(122), Rgb.BLACK, 4), 23)
+    GREEN_BLINK_SLOW = FallbackColor(Blink(RgbColor(122), Rgb.BLACK, 4), 23)
+    GREEN_BLINK_FAST = FallbackColor(Blink(RgbColor(122), Rgb.BLACK, 24), 24)
     RED = FallbackColor(RgbColor(120), 4)
     RED_HALF = FallbackColor(RgbColor(121), 1)
-    RED_BLINK = FallbackColor(Blink(RgbColor(120), Rgb.BLACK, 4), 5)
+    RED_BLINK_SLOW = FallbackColor(Blink(RgbColor(120), Rgb.BLACK, 4), 5)
+    RED_BLINK_FAST = FallbackColor(Blink(RgbColor(120), Rgb.BLACK, 24), 6)
     YELLOW = FallbackColor(RgbColor(124), 16)
     YELLOW_HALF = FallbackColor(RgbColor(125), 13)
-    YELLOW_BLINK = FallbackColor(Blink(RgbColor(124), Rgb.BLACK, 4), 17)
+    YELLOW_BLINK_SLOW = FallbackColor(Blink(RgbColor(124), Rgb.BLACK, 4), 17)
+    YELLOW_BLINK_FAST = FallbackColor(Blink(RgbColor(124), Rgb.BLACK, 24), 18)
     AMBER = FallbackColor(RgbColor(126), 10)
     AMBER_HALF = FallbackColor(RgbColor(127), 7)
-    AMBER_BLINK = FallbackColor(Blink(RgbColor(126), Rgb.BLACK, 4), 11)
+    AMBER_BLINK_SLOW = FallbackColor(Blink(RgbColor(126), Rgb.BLACK, 4), 11)
+    AMBER_BLINK_FAST = FallbackColor(Blink(RgbColor(126), Rgb.BLACK, 24), 12)
     OFF = FallbackColor(Rgb.BLACK, 0)
     ON = FallbackColor(Rgb.WHITE, 127)
 

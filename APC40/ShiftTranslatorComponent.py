@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftTranslatorComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/ShiftTranslatorComponent.py
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
 from _Framework.ButtonElement import ButtonElement
 from _Framework.MixerComponent import MixerComponent

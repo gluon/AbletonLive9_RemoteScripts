@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SubSelectorComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SubSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -118,6 +118,7 @@ class SubSelectorComponent(ModeSelectorComponent):
 
             strip = self._mixer.channel_strip(track)
             strip.set_default_buttons(None, None, None, None)
+            strip.set_mute_button(None)
             strip.set_solo_button(None)
             strip.set_arm_button(None)
             strip.set_send_controls((None, None))

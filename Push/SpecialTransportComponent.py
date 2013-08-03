@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialTransportComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialTransportComponent.py
 import Live
 RecordingQuantization = Live.Song.RecordingQuantization
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

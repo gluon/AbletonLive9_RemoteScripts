@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/LoopSelectorComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/LoopSelectorComponent.py
 from _Framework.SubjectSlot import subject_slot, Subject
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Util import product

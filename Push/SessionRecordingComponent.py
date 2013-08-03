@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Util import forward_property, find_if, index_if
+from _Framework import Task
 from _Framework.ToggleComponent import ToggleComponent
 from ActionWithOptionsComponent import ToggleWithOptionsComponent
 from consts import MessageBoxText
@@ -366,7 +367,7 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
                     clip.end_marker = loop_end
                     clip.loop_start = loop_start
                     clip.start_marker = loop_start
-                    slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+                    self._tasks.add(Task.sequence(Task.delay(0), Task.run(lambda : slot.fire(force_legato=True, launch_quantization=_Q.q_no_q))))
                     self.song().overdub = False
                 self._fixed_length.is_active = False
         self._length_press_state = None

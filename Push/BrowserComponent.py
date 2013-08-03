@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
 from __future__ import with_statement
 from functools import partial
 from itertools import izip, chain, imap
@@ -78,7 +78,7 @@ class BrowserModel(Subject, SlotManager):
     models and prevent unnecessary updating, override it when
     neccesary.
     """
-    __subject_events__ = ('content_lists',)
+    __subject_events__ = ('content_lists', 'selection_updated')
     empty_list_messages = []
 
     def __init__(self, browser = None, *a, **k):
@@ -193,6 +193,7 @@ class FullBrowserModel(BrowserModel):
 
     def update_selection(self):
         target = self._browser.hotswap_target
+        last_seleced_list_index = None
         if self._browser.hotswap_target != None:
             if isinstance(target, Live.DrumPad.DrumPad) and (not target.chains or not target.chains[0].devices):
                 for content_list in self.content_lists:
@@ -206,7 +207,11 @@ class FullBrowserModel(BrowserModel):
                     index = index_if(lambda x: x.content.is_selected, items)
                     if in_range(index, 0, len(items)):
                         content_list.select_item_index_with_offset(index, 2)
+                        last_seleced_list_index = list_index
                     list_index += 1
+
+        if last_seleced_list_index != None:
+            self.notify_selection_updated(last_seleced_list_index)
 
     def _push_content_list(self):
         if self._num_contents < len(self._contents):
@@ -355,6 +360,18 @@ class SourceBrowserQuery(TagBrowserQuery):
         return map(lambda (k, g): VirtualBrowserItem(name=k, children_query=const(g)), sorted(groups.items(), key=first))
 
 
+class PlacesBrowserQuery(BrowserQuery):
+    """
+    Query that fetches all places of the browser
+    """
+
+    def __init__(self, *a, **k):
+        super(PlacesBrowserQuery, self).__init__(*a, **k)
+
+    def query(self, browser):
+        return tuple(browser.packs) + tuple(browser.places)
+
+
 class QueryingBrowserModel(FullBrowserModel):
     """
     Browser model that takes query objects to build up the model hierarchy
@@ -381,16 +398,20 @@ class QueryingBrowserModel(FullBrowserModel):
             return True
 
 
+PLACES_LABEL = 'Places'
+
 def make_midi_effect_browser_model(browser):
     midi_effects = TagBrowserQuery(include=['MIDI Effects'])
     max = TagBrowserQuery(include=[['Max for Live', 'Max MIDI Effect']], subfolder='Max for Live')
-    return QueryingBrowserModel(browser=browser, queries=[midi_effects, max])
+    places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
+    return QueryingBrowserModel(browser=browser, queries=[midi_effects, max, places])
 
 
 def make_audio_effect_browser_model(browser):
     audio_effects = TagBrowserQuery(include=['Audio Effects'])
     max = TagBrowserQuery(include=[['Max for Live', 'Max Audio Effect']], subfolder='Max for Live')
-    return QueryingBrowserModel(browser=browser, queries=[audio_effects, max])
+    places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
+    return QueryingBrowserModel(browser=browser, queries=[audio_effects, max, places])
 
 
 def make_instruments_browser_model(browser):
@@ -399,11 +420,13 @@ def make_instruments_browser_model(browser):
     instruments = TagBrowserQuery(include=['Instruments'], exclude=['Drum Rack', 'Instrument Rack'])
     drum_hits = TagBrowserQuery(include=[['Drums', 'Drum Hits']], subfolder='Drum Hits')
     max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live')
+    places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
     return QueryingBrowserModel(browser=browser, queries=[instrument_rack,
      drums,
      instruments,
      max,
-     drum_hits])
+     drum_hits,
+     places])
 
 
 def make_drum_pad_browser_model(browser):
@@ -411,10 +434,12 @@ def make_drum_pad_browser_model(browser):
     samples = SourceBrowserQuery(include=['Samples'], subfolder='Samples')
     instruments = TagBrowserQuery(include=['Instruments'])
     max = TagBrowserQuery(include=[['Max for Live', 'Max Instrument']], subfolder='Max for Live')
+    places = PlacesBrowserQuery(subfolder=PLACES_LABEL)
     return QueryingBrowserModel(browser=browser, queries=[drums,
      samples,
      instruments,
-     max])
+     max,
+     places])
 
 
 def make_fallback_browser_model(browser):
@@ -436,6 +461,8 @@ def filter_type_for_hotswap_target(target):
             FilterType.disabled
     elif isinstance(target, Live.DrumPad.DrumPad):
         return FilterType.drum_pad_hotswap
+    elif isinstance(target, Live.Chain.Chain):
+        return filter_type_for_hotswap_target(target.canonical_parent) if target else FilterType.disabled
     return FilterType.disabled
 
 
@@ -515,9 +542,9 @@ class BrowserComponent(CompoundComponent):
     NUM_COLUMNS = 4
     COLUMN_SIZE = 4
 
-    def __init__(self, *a, **k):
+    def __init__(self, browser = None, *a, **k):
         super(BrowserComponent, self).__init__(*a, **k)
-        self._browser = self.application().browser
+        self._browser = browser or self.application().browser
         self._browser_model = make_fallback_browser_model(self._browser)
         num_data_sources = self.NUM_COLUMNS * self.COLUMN_SIZE
         self._data_sources = map(DisplayDataSource, ('',) * num_data_sources)
@@ -740,6 +767,8 @@ class BrowserComponent(CompoundComponent):
 
     @subject_slot('hotswap_target')
     def _on_hotswap_target_changed(self):
+        if not self._skip_next_preselection:
+            self._set_scroll_offset(0)
         self._update_browser_model()
 
     @subject_slot('filter_type')
@@ -766,6 +795,7 @@ class BrowserComponent(CompoundComponent):
                 self.disconnect_disconnectable(self._browser_model)
                 self._browser_model = self.register_slot_manager(new_model)
                 self._on_content_lists_changed.subject = self._browser_model
+                self._on_selection_updated.subject = self._browser_model
             for contents in self._browser_model.content_lists:
                 contents.selected_item_index = 0
 
@@ -778,8 +808,16 @@ class BrowserComponent(CompoundComponent):
         self._browser_model_dirty = False
 
     @subject_slot_group('item_action')
-    def _on_list_item_action(self, item, list):
+    def _on_list_item_action(self, item, _):
         self.notify_load_item(item.content)
+
+    @subject_slot('selection_updated')
+    def _on_selection_updated(self, index):
+        more_content_available = len(self._browser_model.content_lists) > self.NUM_COLUMNS + self._scroll_offset
+        required_scroll_offset = index - (self.NUM_COLUMNS - 1)
+        if more_content_available and required_scroll_offset > self._scroll_offset:
+            self._set_scroll_offset(self._scroll_offset + 1)
+            self._browser_model.update_selection()
 
     @subject_slot('content_lists')
     def _on_content_lists_changed(self):

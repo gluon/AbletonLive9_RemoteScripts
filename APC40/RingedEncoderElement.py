@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/RingedEncoderElement.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/RingedEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0

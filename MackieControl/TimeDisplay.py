@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl/TimeDisplay.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl/TimeDisplay.py
 from MackieControlComponent import *
 
 class TimeDisplay(MackieControlComponent):

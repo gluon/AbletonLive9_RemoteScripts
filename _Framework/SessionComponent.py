@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionComponent.py
 import Live
 from CompoundComponent import CompoundComponent
 from SceneComponent import SceneComponent
@@ -309,11 +309,11 @@ class SessionComponent(CompoundComponent):
 
     def _reassign_scenes(self):
         scenes = self.song().scenes
-        for index in range(len(self._scenes)):
+        for index, scene in enumerate(self._scenes):
             scene_index = self._scene_offset + index
             if len(scenes) > scene_index:
-                self._scenes[index].set_scene(scenes[scene_index])
-                self._scenes[index].set_track_offset(self._track_offset)
+                scene.set_scene(scenes[scene_index])
+                scene.set_track_offset(self._track_offset)
             else:
                 self._scenes[index].set_scene(None)
 

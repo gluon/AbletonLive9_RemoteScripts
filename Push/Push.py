@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Push.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Push.py
 from __future__ import with_statement
 import Live
 from contextlib import contextmanager
@@ -15,7 +15,7 @@ from _Framework.DeviceBankRegistry import DeviceBankRegistry
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.Util import find_if, clamp, nop, mixin, const
 from _Framework.Defaults import TIMER_DELAY
-from OptionalElement import OptionalElement
+from OptionalElement import OptionalElement, ChoosingElement
 from ComboElement import ComboElement
 from HandshakeComponent import HandshakeComponent, make_dongle_message
 from ValueComponent import ValueComponent, ParameterValueComponent
@@ -38,7 +38,7 @@ from MatrixMaps import PAD_TRANSLATIONS, FEEDBACK_CHANNELS
 from BackgroundComponent import BackgroundComponent, ModifierBackgroundComponent
 from BrowserComponent import BrowserComponent
 from BrowserModes import BrowserHotswapMode
-from Actions import CreateInstrumentTrackComponent, CreateDefaultTrackComponent, CaptureAndInsertSceneComponent, DuplicateLoopComponent, SelectComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, CreateDeviceComponent
+from Actions import CreateInstrumentTrackComponent, CreateDefaultTrackComponent, CaptureAndInsertSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, SelectComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, CreateDeviceComponent
 from M4LInterfaceComponent import M4LInterfaceComponent
 from UserSettingsComponent import UserComponent
 from MessageBoxComponent import DialogComponent, NotificationComponent
@@ -88,7 +88,9 @@ class Push(ControlSurface):
             self._init_touch_strip_controller()
             self._init_accent()
             self._init_transport_and_recording()
-            self._init_global_actions()
+            self._init_duplicate_actions()
+            self._init_delete_actions()
+            self._init_value_components()
             self._init_mixer()
             self._init_session()
             self._init_step_sequencer()
@@ -180,6 +182,9 @@ class Push(ControlSurface):
         self._on_handshake_failure.subject = self._handshake
 
     def _start_handshake(self):
+        self._step_sequencer.set_playhead(self._c_instance.playhead)
+        self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
+        self._accent_component.set_full_velocity(self._c_instance.full_velocity)
         for control in self.controls:
             receive_value_backup = getattr(control, '_receive_value_backup', nop)
             if receive_value_backup != nop:
@@ -200,12 +205,15 @@ class Push(ControlSurface):
 
     @subject_slot('success')
     def _on_handshake_success(self):
-        self.log_message('Handshake succeded!')
+        self.log_message('Handshake succeded with firmware version %.2f!' % self._handshake.firmware_version)
         self.update()
 
     @subject_slot('failure')
     def _on_handshake_failure(self):
         self.log_message('Handshake failed, performing harakiri!')
+        self._step_sequencer.set_playhead(None)
+        self._note_repeat.set_note_repeat(None)
+        self._accent_component.set_full_velocity(None)
         for control in self.controls:
             receive_value_backup = getattr(control, 'receive_value', nop)
             if receive_value_backup != nop:
@@ -390,7 +398,8 @@ class Push(ControlSurface):
         self._matrix_modes.selected_mode = 'note'
 
     def _init_accent(self):
-        self._accent_component = AccentComponent(self._c_instance.full_velocity)
+        self._accent_component = AccentComponent()
+        self._accent_component.set_full_velocity(self._c_instance.full_velocity)
         self._accent_component.set_enabled(False)
         self._accent_component.layer = Layer(toggle_button=self._accent_button)
         self._on_accent_mode_changed.subject = self._accent_component
@@ -430,7 +439,7 @@ class Push(ControlSurface):
                 clip_slot.layer = Layer(delete_button=self._delete_button, select_button=self._select_button, duplicate_button=self._duplicate_button)
 
         self._session_layer = Layer(page_up_button=self._octave_up_button, page_down_button=self._octave_down_button, track_bank_left_button=self._nav_left_button, track_bank_right_button=self._nav_right_button, scene_bank_up_button=self._nav_up_button, scene_bank_down_button=self._nav_down_button, clip_launch_buttons=self._matrix, scene_launch_buttons=self._side_buttons, duplicate_button=self._duplicate_button)
-        self._restricted_session_layer = Layer(stop_all_clips_button=ComboElement((self._shift_button,), self._global_track_stop_button))
+        self._restricted_session_layer = Layer(stop_all_clips_button=ComboElement(self._global_track_stop_button, [self._shift_button]))
         self._session_stop_track_layer = Layer(stop_track_clip_buttons=self._track_state_buttons)
         self._session.duplicate_layer = Layer(scene_buttons=self._side_buttons)
         self._zooming = SpecialSessionZoomingComponent(self._session, name='Session_Overview')
@@ -477,7 +486,7 @@ class Push(ControlSurface):
         self._main_modes.add_mode('add_instrument_track', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_instrument_track], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
         self._main_modes.add_mode('add_default_track', [enable_stop_mute_solo_as_modifiers, self._browser.back_to_top, self._create_default_track], groups=['add_track'])
         self._main_modes.selected_mode = 'device'
-        self._main_modes.layer = Layer(volumes_button=self._vol_mix_mode_button, pan_sends_button=self._pan_send_mix_mode_button, track_button=self._single_track_mix_mode_button, clip_button=self._clip_mode_button, device_button=self._device_mode_button, browse_button=self._browse_mode_button, add_effect_right_button=self._create_device_button, add_effect_left_button=ComboElement((self._shift_button,), self._create_device_button), add_instrument_track_button=self._create_track_button)
+        self._main_modes.layer = Layer(volumes_button=self._vol_mix_mode_button, pan_sends_button=self._pan_send_mix_mode_button, track_button=self._single_track_mix_mode_button, clip_button=self._clip_mode_button, device_button=self._device_mode_button, browse_button=self._browse_mode_button, add_effect_right_button=self._create_device_button, add_effect_left_button=ComboElement(self._create_device_button, [self._shift_button]), add_instrument_track_button=self._create_track_button)
         self._on_main_mode_button_value.replace_subjects([self._vol_mix_mode_button,
          self._pan_send_mix_mode_button,
          self._single_track_mix_mode_button,
@@ -511,7 +520,7 @@ class Push(ControlSurface):
         self._mixer.selected_strip().name = 'Selected_Channel_strip'
         self._mixer.master_strip().name = 'Master_Channel_strip'
         self._mixer.master_strip()._do_select_track = self._selector.on_select_track
-        self._mixer.master_strip().layer = Layer(volume_control=self._master_volume_control, cue_volume_control=ComboElement((self._shift_button,), self._master_volume_control), select_button=self._master_select_button, selector_button=self._select_button)
+        self._mixer.master_strip().layer = Layer(volume_control=self._master_volume_control, cue_volume_control=ComboElement(self._master_volume_control, [self._shift_button]), select_button=self._master_select_button, selector_button=self._select_button)
         self._mixer.set_enabled(True)
 
     def _init_device(self):
@@ -531,7 +540,7 @@ class Push(ControlSurface):
         self._view_control.set_enabled(False)
         self._view_control.layer = Layer(prev_track_button=self._nav_left_button, next_track_button=self._nav_right_button, prev_scene_button=OptionalElement(self._nav_up_button, self._settings[SETTING_WORKFLOW], False), next_scene_button=OptionalElement(self._nav_down_button, self._settings[SETTING_WORKFLOW], False), prev_scene_list_button=OptionalElement(self._nav_up_button, self._settings[SETTING_WORKFLOW], True), next_scene_list_button=OptionalElement(self._nav_down_button, self._settings[SETTING_WORKFLOW], True))
         self._session_recording = SessionRecordingComponent(self._clip_creator, self._view_control, name='Session_Recording')
-        self._session_recording.layer = Layer(new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], False), scene_list_new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], True), record_button=self._record_button, automation_button=self._automation_button, new_scene_button=ComboElement((self._shift_button,), self._new_button), re_enable_automation_button=ComboElement((self._shift_button,), self._automation_button), delete_automation_button=ComboElement((self._delete_button,), self._automation_button), length_button=self._fixed_length_button)
+        self._session_recording.layer = Layer(new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], False), scene_list_new_button=OptionalElement(self._new_button, self._settings[SETTING_WORKFLOW], True), record_button=self._record_button, automation_button=self._automation_button, new_scene_button=ComboElement(self._new_button, [self._shift_button]), re_enable_automation_button=ComboElement(self._automation_button, [self._shift_button]), delete_automation_button=ComboElement(self._automation_button, [self._delete_button]), length_button=self._fixed_length_button)
         self._session_recording.length_layer = Layer(display_line=self._display_line4, label_display_line=self._display_line3, blank_display_line2=self._display_line2, blank_display_line1=self._display_line1, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, _notification=self._notification.use_single_line(1))
         self._session_recording.length_layer.priority = consts.DIALOG_PRIORITY
         self._transport = SpecialTransportComponent(name='Transport')
@@ -545,7 +554,7 @@ class Push(ControlSurface):
         self._clip_control.layer = Layer(controls=self._global_param_controls, param_display=self._display_line1, value_display=self._display_line2, clip_name_display=self._display_line3, shift_button=self._shift_button)
 
     def _init_browser(self):
-        self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application_view=self.application().view))
+        self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application()))
         self._browser = BrowserComponent(name='Browser')
         self._browser.set_enabled(False)
         self._browser.layer = Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, enter_button=self._in_button, exit_button=self._out_button, shift_button=WithPriority(consts.SHARED_PRIORITY, self._shift_button), _notification=self._notification.use_full_display(2))
@@ -582,9 +591,10 @@ class Push(ControlSurface):
         self._instrument._scales.scales_info_layer.priority = consts.MODAL_DIALOG_PRIORITY
 
     def _init_step_sequencer(self):
-        self._step_sequencer = StepSeqComponent(self._clip_creator, self._c_instance.playhead, self._skin, name='Step_Sequencer')
+        self._step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Step_Sequencer')
         self._step_sequencer._drum_group._do_select_drum_pad = self._selector.on_select_drum_pad
         self._step_sequencer._drum_group._do_quantize_pitch = self._transport._quantization.quantize_pitch
+        self._step_sequencer.set_playhead(self._c_instance.playhead)
         self._step_sequencer.set_enabled(False)
         self._step_sequencer.layer = Layer(button_matrix=self._matrix.submatrix[:8, :4], drum_matrix=self._matrix.submatrix[:4, 4:8], loop_selector_matrix=self._matrix.submatrix[4:8, 4:8], touch_strip=self._touch_strip_control, quantization_buttons=self._side_buttons, mute_button=self._global_mute_button, solo_button=self._global_solo_button, select_button=self._select_button, delete_button=self._delete_button, shift_button=self._shift_button, drum_bank_up_button=self._octave_up_button, drum_bank_down_button=self._octave_down_button, quantize_button=self._quantize_button)
         self._step_sequencer.note_settings_layer = Layer(top_display_line=self._display_line1, bottom_display_line=self._display_line2, clear_display_line1=self._display_line3, clear_display_line2=self._display_line4, encoder_controls=self._global_param_controls, encoder_touch_buttons=self._global_param_touch_buttons, full_velocity_button=self._accent_button)
@@ -594,7 +604,8 @@ class Push(ControlSurface):
         self._audio_loop.layer = Layer(loop_selector_matrix=self._matrix)
 
     def _init_note_repeat(self):
-        self._note_repeat = NoteRepeatComponent(self._c_instance.note_repeat, name='Note_Repeat')
+        self._note_repeat = NoteRepeatComponent(name='Note_Repeat')
+        self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
         self._note_repeat.set_enabled(False)
         self._note_repeat.layer = Layer(toggle_button=self._repeat_button)
         self._note_repeat.options_layer = Layer(select_buttons=self._side_buttons)
@@ -609,13 +620,28 @@ class Push(ControlSurface):
         self._dialog.message_box_layer.priority = consts.MESSAGE_BOX_PRIORITY
         self._dialog.set_enabled(True)
 
-    def _init_global_actions(self):
+    def _init_duplicate_actions(self):
+        capture_element = ChoosingElement(self._duplicate_button, ComboElement(self._duplicate_button, [self._shift_button]), self._settings[SETTING_WORKFLOW])
         self._capture_and_insert_scene = CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene')
         self._capture_and_insert_scene.set_enabled(True)
-        self._capture_and_insert_scene.layer = Layer(action_button=self._duplicate_button)
+        self._capture_and_insert_scene.layer = Layer(action_button=capture_element)
+        duplicate_element = OptionalElement(ComboElement(self._duplicate_button, negative_modifiers=[self._shift_button]), self._settings[SETTING_WORKFLOW], False)
+        self._duplicate_detail_clip = DuplicateDetailClipComponent(name='Duplicate_Detail_Clip')
+        self._duplicate_detail_clip.set_enabled(True)
+        self._duplicate_detail_clip.layer = Layer(action_button=duplicate_element)
         self._duplicate_loop = DuplicateLoopComponent(name='Duplicate_Loop')
         self._duplicate_loop.layer = Layer(action_button=self._double_button)
         self._duplicate_loop.set_enabled(True)
+
+    def _init_delete_actions(self):
+        self._delete_component = DeleteComponent(name='Deleter')
+        self._delete_component.layer = Layer(delete_button=self._delete_button)
+        self._delete_clip = DeleteSelectedClipComponent(name='Selected_Clip_Deleter')
+        self._delete_clip.layer = Layer(action_button=self._delete_button)
+        self._delete_scene = DeleteSelectedSceneComponent(name='Selected_Scene_Deleter')
+        self._delete_scene.layer = Layer(action_button=ComboElement(self._delete_button, [self._shift_button]))
+
+    def _init_value_components(self):
         self._selector = SelectComponent(name='Selector')
         self._selector.layer = Layer(select_button=self._select_button)
         self._selector.selection_display_layer = Layer(display_line=self._display_line3)
@@ -632,20 +658,14 @@ class Push(ControlSurface):
         self._master_vol.layer = Layer(button=self._master_volume_control_tap)
         self._master_vol.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line3, graphic_display=self._display_line2, clear_display2=self._display_line4)
         self._master_vol.display_layer.priority = consts.DIALOG_PRIORITY
-        self._master_cue_vol = ParameterValueComponent(self.song().master_track.mixer_device.cue_volume, display_label='Cue Volume:', display_seg_start=3, name='Cue_Volume_Display', encoder=ComboElement((self._shift_button,), self._master_volume_control))
-        self._master_cue_vol.layer = Layer(button=ComboElement((self._shift_button,), self._master_volume_control_tap))
+        self._master_cue_vol = ParameterValueComponent(self.song().master_track.mixer_device.cue_volume, display_label='Cue Volume:', display_seg_start=3, name='Cue_Volume_Display', encoder=ComboElement(self._master_volume_control, [self._shift_button]))
+        self._master_cue_vol.layer = Layer(button=ComboElement(self._master_volume_control_tap, [self._shift_button]))
         self._master_cue_vol.display_layer = Layer(label_display=self._display_line1, value_display=self._display_line3, graphic_display=self._display_line2, clear_display2=self._display_line4)
         self._master_cue_vol.display_layer.priority = consts.DIALOG_PRIORITY
         self._value_components = [self._swing_amount,
          self._tempo,
          self._master_vol,
          self._master_cue_vol]
-        self._delete_component = DeleteComponent(name='Deleter')
-        self._delete_component.layer = Layer(delete_button=self._delete_button)
-        self._delete_clip = DeleteSelectedClipComponent(name='Selected_Clip_Deleter')
-        self._delete_clip.layer = Layer(action_button=self._delete_button)
-        self._delete_scene = DeleteSelectedSceneComponent(name='Selected_Scene_Deleter')
-        self._delete_scene.layer = Layer(action_button=ComboElement((self._shift_button,), self._delete_button))
 
     def _init_m4l_interface(self):
         self._m4l_interface = M4LInterfaceComponent(self.controls)

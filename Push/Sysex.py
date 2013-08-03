@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
 START = (240, 71, 127, 21)
 CLEAR_LINE1 = START + (28, 0, 0, 247)
 CLEAR_LINE2 = START + (29, 0, 0, 247)

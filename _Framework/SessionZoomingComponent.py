@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionZoomingComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionZoomingComponent.py
 from SubjectSlot import subject_slot
 from CompoundComponent import CompoundComponent
 from ScrollComponent import ScrollComponent

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DrumGroupComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DrumGroupComponent.py
 from itertools import imap
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import find_if, clamp
@@ -170,23 +170,25 @@ class DrumGroupComponent(ScrollComponent):
 
     def scroll_up(self):
         if self.is_enabled() and self._drum_group_device:
-            position = self._drum_group_device.view.drum_pads_scroll_position
-            if position < 25:
+            drum_view = self._drum_group_device.view
+            position = drum_view.drum_pads_scroll_position
+            if self._shift_button != None and self._shift_button.is_pressed():
+                increment = 1
+            else:
                 remainder = (position - 1) % 4
                 increment = 4 - remainder
-                self._drum_group_device.view.drum_pads_scroll_position += increment
-            elif position < 28:
-                self._drum_group_device.view.drum_pads_scroll_position = 28
+            drum_view.drum_pads_scroll_position += min(increment, 28 - position)
 
     def scroll_down(self):
         if self.is_enabled() and self._drum_group_device:
-            position = self._drum_group_device.view.drum_pads_scroll_position
-            if position > 1:
+            drum_view = self._drum_group_device.view
+            position = drum_view.drum_pads_scroll_position
+            if self._shift_button != None and self._shift_button.is_pressed():
+                increment = 1
+            else:
                 remainder = remainder = (position - 1) % 4
                 increment = 4 - remainder
-                self._drum_group_device.view.drum_pads_scroll_position -= increment
-            elif position > 0:
-                self._drum_group_device.view.drum_pads_scroll_position = 0
+            drum_view.drum_pads_scroll_position -= min(increment, position)
 
     @subject_slot('chains')
     def _on_chains_changed(self):

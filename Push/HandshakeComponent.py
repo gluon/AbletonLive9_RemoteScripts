@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/HandshakeComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/HandshakeComponent.py
 """
 Component for handling the initialization process of Push.
 """
@@ -67,6 +67,16 @@ class HandshakeComponent(ControlSurfaceComponent):
     @property
     def hardware_identity(self):
         return self._hardware_identity
+
+    @property
+    def firmware_version(self):
+        version = 0.0
+        if self._hardware_identity != None:
+            version_bytes = self._hardware_identity.firmware
+            major = float((version_bytes[0] << 7) + version_bytes[1])
+            minor = float((version_bytes[2] << 7) + version_bytes[3])
+            version = major + minor / 100.0
+        return version
 
     def on_enabled_changed(self):
         super(HandshakeComponent, self).on_enabled_changed()

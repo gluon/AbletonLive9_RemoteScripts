@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Ozonic/config.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Ozonic/config.py
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
  'PLAY': GENERIC_PLAY,

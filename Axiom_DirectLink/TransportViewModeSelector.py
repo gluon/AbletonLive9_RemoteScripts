@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_DirectLink/TransportViewModeSelector.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_DirectLink/TransportViewModeSelector.py
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement

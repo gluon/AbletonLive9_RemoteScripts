@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceNavigationComponent.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceNavigationComponent.py
 from __future__ import with_statement
 from functools import partial
 import Live.DrumPad
@@ -168,6 +168,7 @@ class DeviceNavigationComponent(CompoundComponent):
     @subject_slot('change_option')
     def _on_selection_changed_in_controller(self, value):
         self._current_node.selected_child = value
+        self._update_hotswap_target()
         self._update_enter_button()
         self._update_exit_button()
 
@@ -192,6 +193,7 @@ class DeviceNavigationComponent(CompoundComponent):
             self._update_enter_button()
             if value:
                 self._set_current_node(self._make_enter_node())
+                self._update_hotswap_target()
 
     @subject_slot('value')
     def _on_exit_value(self, value):
@@ -199,6 +201,15 @@ class DeviceNavigationComponent(CompoundComponent):
             self._update_exit_button()
             if value:
                 self._set_current_node(self._make_exit_node())
+                self._update_hotswap_target()
+
+    def _update_hotswap_target(self):
+        try:
+            browser = self.application().browser
+            if self.selected_object != None and browser.hotswap_target != None:
+                browser.hotswap_target = self.selected_object
+        except RuntimeError:
+            pass
 
     def _make_enter_node(self):
         if self._device_list.selected_option >= 0:

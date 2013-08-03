@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
+#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
 from _Framework.Resource import PrioritizedResource
+import sys
 DISPLAY_LENGTH = 72
 TAPPING_DELAY = 0.4
 SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
@@ -30,14 +31,6 @@ MUSICAL_MODES = ['Major',
   7,
   9,
   10],
-   'raga-sorati',
- [0,
-  2,
-  5,
-  7,
-  9,
-  10,
-  11],
  'Mixolydian',
  [0,
   2,
@@ -269,9 +262,17 @@ class MessageBoxText:
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
 
 
-try:
-    _test_mode = __builtins__.get('TEST_MODE', False)
-    if not _test_mode:
-        from local_consts import PROTO_SONG_IS_ROOT, PROTO_AUDIO_NOTE_MODE, PROTO_FAST_DEVICE_NAVIGATION, PROTO_TOUCH_ENCODER_TO_STRIP
-except ImportError:
-    pass
+_test_mode = __builtins__.get('TEST_MODE', False)
+if not _test_mode:
+    try:
+        _this_module = sys.modules[__name__]
+        _proto_list = filter(lambda a: a.startswith('PROTO_'), dir(_this_module))
+        for attr in _proto_list:
+            try:
+                _local_consts = __import__('local_consts', globals(), locals(), [attr], -1)
+                setattr(_this_module, attr, getattr(_local_consts, attr))
+            except AttributeError:
+                pass
+
+    except ImportError:
+        pass
