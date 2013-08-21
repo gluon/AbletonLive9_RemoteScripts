@@ -85,6 +85,45 @@ class SpecialClipSlotComponent(ClipSlotComponent, Messenger):
             except RuntimeError:
                 self.expect_dialog(MessageBoxText.CLIP_DUPLICATION_FAILED)
 
+    def _feedback_value(self):
+        value_to_send = -1
+        if self._clip_slot != None:
+            slot_or_clip = self._clip_slot
+            if self.has_clip():
+                slot_or_clip = self._clip_slot.clip
+                if self._stopped_value != None:
+                    value_to_send = self._stopped_value
+                else:
+                    try:
+                        value_to_send = self._clip_palette[self._clip_slot.clip.color]
+                    except KeyError:
+                        if self._clip_rgb_table != None:
+                            value_to_send = self._find_nearest_color(self._clip_rgb_table, self._clip_slot.clip.color)
+                        else:
+                            value_to_send = 0
+            else:
+                track = self._clip_slot.canonical_parent
+                if track and track.can_be_armed and (track.arm or track.implicit_arm) and self._clip_slot.has_stop_button and self._record_button_value:
+                    value_to_send = self._record_button_value
+            if slot_or_clip.is_triggered:
+                value_to_send = self._triggered_to_record_value if slot_or_clip.will_record_on_start else self._triggered_to_play_value
+            elif slot_or_clip.is_playing:
+                value_to_send = self._recording_value if slot_or_clip.is_recording else self._started_value
+            elif hasattr(slot_or_clip, 'controls_other_clips') and slot_or_clip.controls_other_clips:
+                track = self._clip_slot.canonical_parent
+                tracklist = list(track.canonical_parent.tracks)
+                trackIndex = tracklist.index(track)
+                clipIndex = list(track.clip_slots).index(slot_or_clip)
+                nextTrack = None
+                nextSlot = None
+                x = 1
+                while x < 8:
+                    nextSlot = tracklist[trackIndex+x].clip_slots[clipIndex]
+                    if nextSlot.has_clip:
+                        value_to_send = self._find_nearest_color(self._clip_rgb_table, nextSlot.clip.color)
+                        break
+                    x = x + 1
+        return value_to_send
 
 class SpecialSceneComponent(SceneComponent, Messenger):
     clip_slot_component_type = SpecialClipSlotComponent
@@ -183,12 +222,14 @@ class SpecialSessionComponent(SessionComponent):
         self._update_stop_clips_led(index)
 
     def _update_stop_clips_led(self, index):
+        """ self.canonical_parent.log_message('update_Stop called with parameter ' + str(index)) """
         track_index = index + self.track_offset()
         tracks_to_use = self.tracks_to_use()
         if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):
             button = self._stop_track_clip_buttons[index]
             if button != None :
                 if track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots:
+                    check_for_group_track = True
                     if tracks_to_use[track_index].fired_slot_index == -2:
                         button.set_light('Mixer.StoppingTrack')
                     elif tracks_to_use[track_index].playing_slot_index >= 0:
@@ -196,19 +237,21 @@ class SpecialSessionComponent(SessionComponent):
                     else:
                         button.turn_off()
                         if tracks_to_use[track_index].is_foldable:
+                            check_for_group_track = False;
                             for actual_slot in tracks_to_use[track_index].clip_slots:
                                 if actual_slot.is_playing:
                                     button.set_light('Mixer.StopTrack')
-                    tracklist = list(tracks_to_use[track_index].canonical_parent.tracks)
-                    trackIndex = tracklist.index(tracks_to_use[track_index])
-                    x = 1
-                    while x < 8:
-                        if trackIndex-x >= 0:                
-                            if tracklist[trackIndex-x].is_foldable:
-                                if index-x >= 0:
-                                    self._update_stop_clips_led(index-x)
-                                    break
-                        x = x + 1
+                    if check_for_group_track:
+                        tracklist = list(tracks_to_use[track_index].canonical_parent.tracks)
+                        tracklist_index = tracklist.index(tracks_to_use[track_index])
+                        x = 1
+                        while x < 8:
+                            if tracklist_index-x >= 0:                
+                                if tracklist[tracklist_index-x].is_foldable:
+                                    if index-x >= 0:
+                                        self._update_stop_clips_led(index-x)
+                                        break
+                            x = x + 1
                 else:
                     button.turn_off()
 
