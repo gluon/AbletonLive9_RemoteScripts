@@ -42,8 +42,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
     def set_clip_slot(self, clip_slot):
         if not (clip_slot == None or isinstance(clip_slot, Live.ClipSlot.ClipSlot)):
             raise AssertionError
-        if clip_slot != None:    
-            clip = clip_slot.clip
+            clip = clip_slot.clip if clip_slot else None
             self._on_playing_state_changed_slot.subject = clip
             self._on_recording_state_changed_slot.subject = clip
             self._on_clip_color_changed.subject = clip
@@ -53,12 +52,10 @@ class ClipSlotComponent(ControlSurfaceComponent):
             self._on_controls_other_changed_slot.subject = clip_slot
             self._on_has_stop_button_changed_slot.subject = clip_slot
             track = clip_slot.canonical_parent if clip_slot else None
-            if(track != None):
-                if track.can_be_armed:
-                    self._on_arm_value_changed_slot.subject = track
-                    self._on_implicit_arm_value_changed_slot.subject = track
-            self._clip_slot = clip_slot
-            self.update()
+            self._on_arm_value_changed_slot.subject = track and track.can_be_armed and track
+            self._on_implicit_arm_value_changed_slot.subject = track
+        self._clip_slot = clip_slot
+        self.update()
 
     def set_launch_button(self, button):
         if button != self._launch_button_value_slot.subject:
@@ -87,8 +84,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self._recording_value = value
 
     def set_stopped_value(self, value):
-        if not in_range(value, -1, 128):
-            raise AssertionError
+        raise in_range(value, -1, 128) or AssertionError
         self._stopped_value = value
         self._clip_palette = []
 
@@ -96,8 +92,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self._record_button_value = value
 
     def set_clip_palette(self, palette):
-        if palette == None:
-            raise AssertionError
+        raise palette != None or AssertionError
         self._stopped_value = INVALID_COLOR
         self._clip_palette = palette
 
@@ -107,8 +102,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self._clip_rgb_table = rgb_table
 
     def has_clip(self):
-        if self._clip_slot == None:
-            raise AssertionError
+        raise self._clip_slot != None or AssertionError
         return self._clip_slot.has_clip
 
     def update(self):
@@ -143,6 +137,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
                             value_to_send = self._find_nearest_color(self._clip_rgb_table, self._clip_slot.clip.color)
                         else:
                             value_to_send = 0
+
             else:
                 track = self._clip_slot.canonical_parent
                 if track and track.can_be_armed and (track.arm or track.implicit_arm) and self._clip_slot.has_stop_button and self._record_button_value:
@@ -151,19 +146,8 @@ class ClipSlotComponent(ControlSurfaceComponent):
                 value_to_send = self._triggered_to_record_value if slot_or_clip.will_record_on_start else self._triggered_to_play_value
             elif slot_or_clip.is_playing:
                 value_to_send = self._recording_value if slot_or_clip.is_recording else self._started_value
-            elif hasattr(slot_or_clip, 'controls_other_clips') and slot_or_clip.controls_other_clips and (True == True):
-                track = self._clip_slot.canonical_parent
-                tracklist = list(track.canonical_parent.tracks)
-                clipIndex = list(track.clip_slots).index(slot_or_clip)
-                nextTrack = None
-                nextSlot = None
-                x = 1
-                while x < 8:
-                    nextSlot = tracklist[tracklist.index(track)+x].clip_slots[clipIndex]
-                    if nextSlot.has_clip:
-                        value_to_send = self._find_nearest_color(self._clip_rgb_table, nextSlot.clip.color)
-                        break
-                    x = x + 1
+            elif hasattr(slot_or_clip, 'controls_other_clips') and slot_or_clip.controls_other_clips:
+                value_to_send = self._stopped_value
         return value_to_send
 
     def _find_nearest_color(self, rgb_table, src_hex_color):
@@ -177,13 +161,12 @@ class ClipSlotComponent(ControlSurfaceComponent):
         return min(rgb_table, key=squared_distance)[0]
 
     def _on_clip_state_changed(self):
-        if self._clip_slot == None:
+        if not self._clip_slot != None:
             raise AssertionError
-        if(self.has_clip()):
-            clip = self._clip_slot.clip
+            clip = self.has_clip() and self._clip_slot.clip
             self._on_playing_state_changed_slot.subject = clip
             self._on_recording_state_changed_slot.subject = clip
-            self.update()
+        self.update()
 
     @subject_slot('color')
     def _on_clip_color_changed(self):
@@ -205,22 +188,24 @@ class ClipSlotComponent(ControlSurfaceComponent):
         self.update()
 
     def _on_slot_triggered_changed(self):
-        if self.has_clip():
+        if not self.has_clip():
             song = self.song()
             view = song.view
-            if song.select_on_launch and self._clip_slot.is_triggered and self._has_fired_slot and self._clip_slot.will_record_on_start and (self._clip_slot != view.highlighted_clip_slot):
+            if song.select_on_launch and self._clip_slot.is_triggered and self._has_fired_slot and self._clip_slot.will_record_on_start and self._clip_slot != view.highlighted_clip_slot:
                 view.highlighted_clip_slot = self._clip_slot
             self.update()
 
     def _launch_value(self, value):
-        if self.is_enabled() and value != None:
-            if self._select_button and self._select_button.is_pressed():
+        if self.is_enabled():
+            if self._select_button and self._select_button.is_pressed() and value:
                 self._do_select_clip(self._clip_slot)
             elif self._clip_slot != None:
                 if self._duplicate_button and self._duplicate_button.is_pressed():
-                    self._do_duplicate_clip()
+                    if value:
+                        self._do_duplicate_clip()
                 elif self._delete_button and self._delete_button.is_pressed():
-                    self._do_delete_clip()
+                    if value:
+                        self._do_delete_clip()
                 else:
                     self._do_launch_clip(value)
 
@@ -244,10 +229,9 @@ class ClipSlotComponent(ControlSurfaceComponent):
                 pass
 
     def _do_launch_clip(self, value):
-        rVal = True
         button = self._launch_button_value_slot.subject
         object_to_launch = self._clip_slot
-        if value != 0 :
+        if not value:
             launch_pressed = not button.is_momentary()
             if self.has_clip():
                 object_to_launch = self._clip_slot.clip
@@ -257,5 +241,4 @@ class ClipSlotComponent(ControlSurfaceComponent):
                 object_to_launch.set_fire_button_state(value != 0)
             elif value != 0:
                 object_to_launch.fire()
-            if (launch_pressed and self.has_clip() and self.song().select_on_launch):
-                self.song().view.highlighted_clip_slot = self._clip_slot
+            self.song().view.highlighted_clip_slot = launch_pressed and self.has_clip() and self.song().select_on_launch and self._clip_slot
