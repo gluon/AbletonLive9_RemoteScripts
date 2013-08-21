@@ -186,13 +186,21 @@ class SpecialSessionComponent(SessionComponent):
         tracks_to_use = self.tracks_to_use()
         if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):
             button = self._stop_track_clip_buttons[index]
-            if button != None:
-                if track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots and tracks_to_use[track_index].fired_slot_index == -2:
-                    button.set_light('Mixer.StoppingTrack')
-                elif track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots and tracks_to_use[track_index].playing_slot_index >= 0:
-                    button.set_light('Mixer.StopTrack')
+            if button != None :
+                if track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots:
+                    if tracks_to_use[track_index].fired_slot_index == -2:
+                        button.set_light('Mixer.StoppingTrack')
+                    elif tracks_to_use[track_index].playing_slot_index >= 0:
+                        button.set_light('Mixer.StopTrack')
+                    elif tracks_to_use[track_index].is_foldable:
+                        for actual_slot in track_to_use[Track_index].clip_slots
+                            if actual_slot.is_playing
+                                button.set_light('Mixer.StopTrack')
+                    else:
+                        button.turn_off()
                 else:
                     button.turn_off()
+
 
     @subject_slot('value')
     def _on_slot_launch_value(self, value):
