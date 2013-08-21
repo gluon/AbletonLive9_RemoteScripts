@@ -34,7 +34,8 @@ class DuplicateSceneComponent(ControlSurfaceComponent, Messenger):
 
     def __init__(self, session = None, *a, **k):
         super(DuplicateSceneComponent, self).__init__(*a, **k)
-        raise session or AssertionError
+        if not session:
+            raise AssertionError
         self._session = session
         self._scene_buttons = None
 
@@ -195,12 +196,21 @@ class SpecialSessionComponent(SessionComponent):
                     else:
                         button.turn_off()
                         if tracks_to_use[track_index].is_foldable:
-                            for actual_slot in track_to_use[track_index].clip_slots
-                                if actual_slot.is_playing
+                            for actual_slot in tracks_to_use[track_index].clip_slots:
+                                if actual_slot.is_playing:
                                     button.set_light('Mixer.StopTrack')
+                    tracklist = list(tracks_to_use[track_index].canonical_parent.tracks)
+                    trackIndex = tracklist.index(tracks_to_use[track_index])
+                    x = 1
+                    while x < 8:
+                        if trackIndex-x >= 0:                
+                            if tracklist[trackIndex-x].is_foldable:
+                                if index-x >= 0:
+                                    self._update_stop_clips_led(index-x)
+                                    break
+                        x = x + 1
                 else:
                     button.turn_off()
-
 
     @subject_slot('value')
     def _on_slot_launch_value(self, value):
