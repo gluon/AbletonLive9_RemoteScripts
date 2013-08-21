@@ -192,12 +192,12 @@ class SpecialSessionComponent(SessionComponent):
                         button.set_light('Mixer.StoppingTrack')
                     elif tracks_to_use[track_index].playing_slot_index >= 0:
                         button.set_light('Mixer.StopTrack')
-                    elif tracks_to_use[track_index].is_foldable:
-                        for actual_slot in track_to_use[Track_index].clip_slots
-                            if actual_slot.is_playing
-                                button.set_light('Mixer.StopTrack')
                     else:
                         button.turn_off()
+                        if tracks_to_use[track_index].is_foldable:
+                            for actual_slot in track_to_use[Track_index].clip_slots
+                                if actual_slot.is_playing
+                                    button.set_light('Mixer.StopTrack')
                 else:
                     button.turn_off()
 
