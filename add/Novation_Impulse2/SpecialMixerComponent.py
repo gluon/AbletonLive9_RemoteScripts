@@ -5,7 +5,8 @@ from _Framework.ButtonElement import ButtonElement
 class SpecialMixerComponent(MixerComponent):
     """ Special mixer class that reassigns buttons to mute or solo based on a toggle """
 
-    def __init__(self, num_tracks):
+    def __init__(self, num_tracks, c_instance):
+        self.c_instance = c_instance
         self._shift_button = None
         self._selected_mute_solo_button = None
         self._strip_mute_solo_buttons = None
@@ -36,20 +37,24 @@ class SpecialMixerComponent(MixerComponent):
             self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
 
     def set_selected_mute_solo_button(self, button):
-        raise isinstance(button, (type(None), ButtonElement)) or AssertionError
+        if not isinstance(button, (type(None), ButtonElement)):
+            raise AssertionError
         self._selected_mute_solo_button = button
         self.selected_strip().set_mute_button(self._selected_mute_solo_button)
         self.selected_strip().set_solo_button(None)
 
     def set_strip_mute_solo_buttons(self, buttons, flip_button):
+        self.log("set_strip_mute_solo_buttons")
         if not (buttons is None or isinstance(buttons, tuple) and len(buttons) == len(self._channel_strips)):
             raise AssertionError
-            if not isinstance(flip_button, (type(None), ButtonElement)):
-                raise AssertionError
-                self._mute_solo_flip_button != None and self._mute_solo_flip_button.remove_value_listener(self._mute_solo_flip_value)
-            self._mute_solo_flip_button = flip_button
-            self._mute_solo_flip_button != None and self._mute_solo_flip_button.add_value_listener(self._mute_solo_flip_value)
+        if not isinstance(flip_button, (type(None), ButtonElement)):
+            raise AssertionError
+        self._mute_solo_flip_button = flip_button
         self._strip_mute_solo_buttons = buttons
+        if self._mute_solo_flip_button != None:
+           self._mute_solo_flip_button.remove_value_listener(self._mute_solo_flip_value)
+        if self._mute_solo_flip_button != None:
+           self._mute_solo_flip_button.add_value_listener(self._mute_solo_flip_value)
         for index in range(len(self._channel_strips)):
             strip = self.channel_strip(index)
             button = None
@@ -64,19 +69,27 @@ class SpecialMixerComponent(MixerComponent):
     def _shift_value(self, value):
         if not self._shift_button != None:
             raise AssertionError
-            raise value in range(128) or AssertionError
-            value > 0 and self.selected_strip().set_mute_button(None)
+        if not value in range(128):
+            raise AssertionError
+        if value > 0:
+            self.selected_strip().set_mute_button(None)
             self.selected_strip().set_solo_button(self._selected_mute_solo_button)
         else:
             self.selected_strip().set_solo_button(None)
             self.selected_strip().set_mute_button(self._selected_mute_solo_button)
 
     def _mute_solo_flip_value(self, value):
-        raise self._mute_solo_flip_button != None or AssertionError
-        raise value in range(128) or AssertionError
+        self.log("_mute_solo_flip_value 1")
+        #self.log(value)
+        if not self._mute_solo_flip_button != None:
+            raise AssertionError
+        if not value in range(128):
+            raise AssertionError
+        self.log("_mute_solo_flip_value 2")
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)
+                self.log("setting strip")
                 if value == 0:
                     strip.set_mute_button(None)
                     strip.set_solo_button(self._strip_mute_solo_buttons[index])
@@ -128,3 +141,6 @@ class SpecialMixerComponent(MixerComponent):
     def _prev_track_value(self, value):
         MixerComponent._prev_track_value(self, value)
         self._selected_tracks.append(self.song().view.selected_track)
+
+    def log(self, message):
+	    self.c_instance.log_message(message)

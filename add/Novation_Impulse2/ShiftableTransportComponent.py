@@ -42,7 +42,8 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("shift handler")
         if not self._shift_button != None:
             raise AssertionError
-            raise value in range(128) or AssertionError
+        if not value in range(128):
+            raise AssertionError
         self.log("shift handler 2")
         self._shift_pressed = self.is_enabled() and value > 0
         self.log("shift handler 3")
@@ -61,7 +62,8 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("ffwd handler main")
         if not self._ffwd_button != None:
             raise AssertionError
-            raise value in range(128) or AssertionError
+        if not value in range(128):
+            raise AssertionError
         else:
             if self._shift_pressed:
                 self.log("ffwd shifted handler")
@@ -74,7 +76,8 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("rwd handler main")
         if not self._rwd_button != None:
             raise AssertionError
-            raise value in range(128) or AssertionError
+        if not value in range(128):
+            raise AssertionError
         else:
             if self._shift_pressed:
                 self.song().current_song_time = self._shift_pressed and 0.0

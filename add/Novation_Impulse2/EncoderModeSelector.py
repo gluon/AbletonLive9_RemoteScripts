@@ -36,11 +36,11 @@ class EncoderModeSelector(ModeSelectorComponent):
         if self._device_button != None:
             if not self._mixer_button != None:
                 raise AssertionError
-                self._device_button.remove_value_listener(self._device_value)
-                self._mixer_button.remove_value_listener(self._mixer_value)
+            self._device_button.remove_value_listener(self._device_value)
+            self._mixer_button.remove_value_listener(self._mixer_value)
             self._device_button = device_button
             self._mixer_button = mixer_button
-            raise self._device_button != None and (self._mixer_button != None or AssertionError)
+            #raise self._device_button != None and (self._mixer_button != None or AssertionError)
             self._device_button.add_value_listener(self._device_value)
             self._mixer_button.add_value_listener(self._mixer_value)
 
@@ -88,23 +88,23 @@ class EncoderModeSelector(ModeSelectorComponent):
     def _bank_down_value(self, value):
         if not value in range(128):
             raise AssertionError
-            if self.is_enabled() and not self._device_mode:
-                new_mode = (value > 0 or not self._bank_down_button.is_momentary()) and max(self._mode_index - 1, 0)
-                self.set_mode(new_mode)
+        if self.is_enabled() and not self._device_mode:
+            new_mode = (value > 0 or not self._bank_down_button.is_momentary()) and max(self._mode_index - 1, 0)
+            self.set_mode(new_mode)
 
     def _bank_up_value(self, value):
         if not value in range(128):
             raise AssertionError
-            if self.is_enabled() and not self._device_mode:
-                new_mode = (value > 0 or not self._bank_up_button.is_momentary()) and min(self._mode_index + 1, self.number_of_modes() - 1)
-                self.set_mode(new_mode)
+        if self.is_enabled() and not self._device_mode:
+            new_mode = (value > 0 or not self._bank_up_button.is_momentary()) and min(self._mode_index + 1, self.number_of_modes() - 1)
+            self.set_mode(new_mode)
 
     def _device_value(self, value):
         if not value in range(128):
             raise AssertionError
-            if self.is_enabled() and not self._device_mode:
-                self._device_mode = (value > 0 or not self._device_button.is_momentary()) and True
-                self.update()
+        if self.is_enabled() and not self._device_mode:
+            self._device_mode = (value > 0 or not self._device_button.is_momentary()) and True
+            self.update()
 
     def _mixer_value(self, value):
         if not value in range(128):

@@ -13,8 +13,8 @@ class PeekableEncoderElement(EncoderElement):
     def set_peek_mode(self, peek_mode):
         if not isinstance(peek_mode, type(False)):
             raise AssertionError
-            self._peek_mode = self._peek_mode != peek_mode and peek_mode
-            self._request_rebuild()
+        self._peek_mode = self._peek_mode != peek_mode and peek_mode
+        self._request_rebuild()
 
     def get_peek_mode(self):
         return self._peek_mode
