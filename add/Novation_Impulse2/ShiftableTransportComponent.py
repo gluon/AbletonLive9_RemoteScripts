@@ -58,26 +58,30 @@ class ShiftableTransportComponent(TransportComponent):
 
 
     def _ffwd_value(self, value):
-        self.log("ffwd handler")
+        self.log("ffwd handler main")
         if not self._ffwd_button != None:
             raise AssertionError
             raise value in range(128) or AssertionError
-            self.log("ffwd shifted handler")
-            self.song().current_song_time = self._shift_pressed and self.song().last_event_time
         else:
-            self.log("ffwd normal handler")
-            TransportComponent._ffwd_value(self, value)
+            if self._shift_pressed:
+                self.log("ffwd shifted handler")
+                self.song().current_song_time = self._shift_pressed and self.song().last_event_time
+            else:
+                self.log("ffwd normal handler")
+                TransportComponent._ffwd_value(self, value)
 
     def _rwd_value(self, value):
-        self.log("rwd handler")
+        self.log("rwd handler main")
         if not self._rwd_button != None:
             raise AssertionError
             raise value in range(128) or AssertionError
-            self.song().current_song_time = self._shift_pressed and 0.0
-            self.log("rwd shifted handler")
         else:
-            self.log("rwd normal handler")
-            TransportComponent._rwd_value(self, value)
+            if self._shift_pressed:
+                self.song().current_song_time = self._shift_pressed and 0.0
+                self.log("rwd shifted handler")
+            else:
+                self.log("rwd normal handler")
+                TransportComponent._rwd_value(self, value)
 
     def log(self, message):
 	    self.c_instance.log_message(message)
