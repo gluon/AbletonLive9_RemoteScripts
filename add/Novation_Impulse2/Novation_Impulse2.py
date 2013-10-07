@@ -212,7 +212,7 @@ class Novation_Impulse2(ControlSurface):
         transport.name = 'Transport'
         transport.set_stop_button(stop_button)
         transport.set_play_button(play_button)
-        transport.set_record_button(rec_button)
+        transport.set_record_buttonOnInit(rec_button)
         transport.set_shift_button(self._shift_button)
         self._transport_view_modes = TransportViewModeSelector(transport, self._session, ffwd_button, rwd_button, loop_button)
         self._transport_view_modes.name = 'Transport_View_Modes'
