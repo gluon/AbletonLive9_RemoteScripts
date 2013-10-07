@@ -36,7 +36,7 @@
     <Compile Include="Nocturn.src\__init__.py" />
     <Compile Include="Nocturn.src\__init__.py2.py" />
     <Compile Include="Novation_Impulse2\EncoderModeSelector.py" />
-    <Compile Include="Novation_Impulse2\Novation_Impulse.py" />
+    <Compile Include="Novation_Impulse2\Novation_Impulse2.py" />
     <Compile Include="Novation_Impulse2\PeekableEncoderElement.py" />
     <Compile Include="Novation_Impulse2\ShiftableTransportComponent.py" />
     <Compile Include="Novation_Impulse2\SpecialMixerComponent.py" />

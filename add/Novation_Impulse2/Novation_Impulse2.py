@@ -34,11 +34,12 @@ GREEN_BLINK = 56
 AMBER_FULL = RED_FULL + GREEN_FULL - 4
 AMBER_BLINK = AMBER_FULL - 4 + 8
 
-class Novation_Impulse(ControlSurface):
+class Novation_Impulse2(ControlSurface):
     """ Script for Novation's Impulse keyboards """
 
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
+        self.c_instance = c_instance
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
             self._device_selection_follows_track_selection = True
@@ -207,7 +208,7 @@ class Novation_Impulse(ControlSurface):
         play_button.name = 'Play_Button'
         stop_button.name = 'Stop_Button'
         rec_button.name = 'Record_Button'
-        transport = ShiftableTransportComponent()
+        transport = ShiftableTransportComponent(self.c_instance)
         transport.name = 'Transport'
         transport.set_stop_button(stop_button)
         transport.set_play_button(play_button)

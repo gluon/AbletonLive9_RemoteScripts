@@ -1,8 +1,8 @@
 #Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/__init__.py
-from Novation_Impulse import Novation_Impulse
+from Novation_Impulse2 import Novation_Impulse2
 
 def create_instance(c_instance):
-    return Novation_Impulse(c_instance)
+    return Novation_Impulse2(c_instance)
 
 
 from _Framework.Capabilities import *
