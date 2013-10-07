@@ -173,6 +173,10 @@ class Novation_Impulse2(ControlSurface):
 
         self._mixer.master_strip().set_mute_button(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 1, 17))
         self._mixer.set_strip_mute_solo_buttons(tuple(self._strip_buttons), mute_solo_flip_button)
+        self._mixer.set_shift_button(self._shift_button)
+
+        self._button9 = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 9 + 8)
+        self._mixer.set_selected_mute_solo_button(self._button9)
 
     def _setup_session(self):
         num_pads = len(PAD_TRANSLATIONS)
@@ -324,7 +328,7 @@ class Novation_Impulse2(ControlSurface):
         selected_track = self.song().view.selected_track
         num_strips = self._session.width()
         for selected_track in all_tracks2:
-            track_index = list(all_tracks).index(selected_track)
+            track_index = list(all_tracks2).index(selected_track)
             new_offset = track_index - track_index % num_strips
             if not new_offset / num_strips == int(new_offset / num_strips):
                 raise AssertionError

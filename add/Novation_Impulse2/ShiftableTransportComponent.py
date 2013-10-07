@@ -19,18 +19,18 @@ class ShiftableTransportComponent(TransportComponent):
         TransportComponent.disconnect(self)
 
     def set_shift_button(self, button):
-        self.log("set_shift_button")
+        self.log("set_shift_button (transport)")
         if not (button == None or isinstance(button, ButtonElement) and button.is_momentary()):
             raise AssertionError
-        self.log("set_shift_button 2")
+        self.log("set_shift_button 2 (transport)")
         if self._shift_button != button:
             if self._shift_button != None:
                 self._shift_button.remove_value_listener(self._shift_value)
                 self._shift_pressed = False
             self._shift_button = button
-            self.log("set_shift_button 3")
+            self.log("set_shift_button 3 (transport)")
             self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
-            self.log("set_shift_button 4")
+            self.log("set_shift_button 4 (transport)")
 
     def set_record_buttonOnInit(self, button):
         self.log("set_record_buttonOnInit 1")
@@ -87,4 +87,5 @@ class ShiftableTransportComponent(TransportComponent):
                 TransportComponent._rwd_value(self, value)
 
     def log(self, message):
-	    self.c_instance.log_message(message)
+        pass
+#	    self.c_instance.log_message(message)
