@@ -272,27 +272,28 @@ class Novation_Impulse2(ControlSurface):
             raise AssertionError
         if self._mixer.is_enabled():
             display_string = ' - '
+            master = self.song().master_track
+            tracks = self.song().tracks
+            returns = self.song().return_tracks
+            track = None
             if sender.mapped_parameter() != None:
-                master = self.song().master_track
-                tracks = self.song().tracks
-                returns = self.song().return_tracks
-                track = None
                 if sender == self._master_slider:
                     track = self._has_sliders and master
                 else:
-                    track = self.song().view.selected_track
+                    track = self._mixer.channel_strip(self._sliders.index(sender))._track
             else:
-                track = self._mixer.channel_strip(self._sliders.index(sender))._track
-            display_string = track == master and 'Master'
-        elif track in tracks:
-            display_string = str(list(tracks).index(track) + 1)
-        elif track in returns:
-            display_string = str(chr(ord('A') + list(returns).index(track)))
-        else:
+                track = self.song().view.selected_track
+            if track == master:
+                display_string  = 'Master'
+            elif track in tracks:
+                display_string = str(list(tracks).index(track) + 1)
+            elif track in returns:
+                display_string = str(chr(ord('A') + list(returns).index(track)))
+            else:
 #            raise False or AssertionError
-            raise AssertionError
-        display_string += ' Volume'
-        self._set_string_to_display(display_string)
+                raise AssertionError
+            display_string += ' Volume'
+            self._set_string_to_display(display_string)
 
     def _mixer_button_value(self, value, sender):
         if not value in range(128):
@@ -342,3 +343,7 @@ class Novation_Impulse2(ControlSurface):
             if not new_offset / num_strips == int(new_offset / num_strips):
                 raise AssertionError
             self._session.set_offsets(new_offset, self._session.scene_offset())
+
+    def log(self, message):
+#        pass
+	    self.c_instance.log_message(message)
