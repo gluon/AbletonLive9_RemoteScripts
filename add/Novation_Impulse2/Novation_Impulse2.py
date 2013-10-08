@@ -252,8 +252,17 @@ class Novation_Impulse2(ControlSurface):
             raise AssertionError
         if not value in range(128):
             raise AssertionError
-        display_string = self._device_component.is_enabled() and ' - '
-        display_string = sender.mapped_parameter() != None and sender.mapped_parameter().name
+#        display_string = self._device_component.is_enabled() and ' - '
+#        display_string = sender.mapped_parameter() != None and sender.mapped_parameter().name
+        display_string = ''
+        if self._device_component.is_enabled():
+#            display_string = sender.name
+#            track = self.song().view.selected_track
+#            display_string = str(list(tracks).index(track) + 1)
+            pass
+        if (sender.mapped_parameter() != None):
+#            display_string = display_string + '-'
+            display_string =  display_string + sender.mapped_parameter().name
         self._set_string_to_display(display_string)
 
     def _slider_value(self, value, sender):
