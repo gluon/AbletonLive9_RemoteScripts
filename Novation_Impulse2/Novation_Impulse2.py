@@ -298,9 +298,10 @@ class Novation_Impulse2(ControlSurface):
     def _mixer_button_value(self, value, sender):
         if not value in range(128):
             raise AssertionError
-        if self._mixer.is_enabled() and value > 0:
+        #if self._mixer.is_enabled() and value > 0:
+        if self._mixer.is_enabled():
             strip = self._mixer.channel_strip(self._strip_buttons.index(sender))
-            self._string_to_display = strip != None and None
+            #self._string_to_display = strip != None and None
             self._name_display.segment(0).set_data_source(strip.track_name_data_source())
             self._name_display.update()
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
