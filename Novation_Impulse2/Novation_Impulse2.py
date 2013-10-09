@@ -346,5 +346,5 @@ class Novation_Impulse2(ControlSurface):
             self._session.set_offsets(new_offset, self._session.scene_offset())
 
     def log(self, message):
-#        pass
-	    self.c_instance.log_message(message)
+        pass
+#	    self.c_instance.log_message(message)
