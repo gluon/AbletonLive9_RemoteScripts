@@ -102,6 +102,7 @@ class Novation_Impulse2(ControlSurface):
             self.request_rebuild_midi_map()
 
     def disconnect(self):
+        self.log('starting disconnect 1')
         self._name_display_data_source.set_display_string('  ')
         for encoder in self._encoders:
             encoder.remove_value_listener(self._encoder_value)
@@ -115,7 +116,9 @@ class Novation_Impulse2(ControlSurface):
             button.remove_value_listener(self._mixer_button_value)
 
         self._preview_button.remove_value_listener(self._preview_value)
+        self.log('starting disconnect 3')
         ControlSurface.disconnect(self)
+        self.log('starting disconnect 3')
         self._encoders = None
         self._sliders = None
         self._strip_buttons = None
@@ -127,7 +130,9 @@ class Novation_Impulse2(ControlSurface):
         self._next_bank_button = None
         self._encoder_modes = None
         self._transport_view_modes = None
+        self.log('starting disconnect 4')
         self._send_midi(SYSEX_START + (6, 0, 0, 0, 247))
+        self.log('starting disconnect 5')
 
     def build_midi_map(self, midi_map_handle):
         self._current_midi_map = midi_map_handle

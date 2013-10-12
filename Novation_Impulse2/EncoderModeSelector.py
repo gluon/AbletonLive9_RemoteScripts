@@ -43,8 +43,10 @@ class EncoderModeSelector(ModeSelectorComponent):
         self._device_button = device_button
         self._mixer_button = mixer_button
         #raise self._device_button != None and (self._mixer_button != None or AssertionError)
-        self._device_button.add_value_listener(self._device_value)
-        self._mixer_button.add_value_listener(self._mixer_value)
+        if self._device_button != None:
+            self._device_button.add_value_listener(self._device_value)
+        if self._mixer_button!= None:
+            self._mixer_button.add_value_listener(self._mixer_value)
 
     def set_provide_volume_mode(self, provide_volume_mode):
         self._number_of_modes = 6 if provide_volume_mode else 5
