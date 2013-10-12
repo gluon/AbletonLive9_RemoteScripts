@@ -10,6 +10,7 @@ class ShiftableTransportComponent(TransportComponent):
         self.c_instance = c_instance
         self._shift_button = None
         self._shift_pressed = False
+        self._mixer9_button = None
         TransportComponent.__init__(self)
 
     def disconnect(self):
@@ -38,6 +39,13 @@ class ShiftableTransportComponent(TransportComponent):
         self.set_record_button(self.record_button)
         self.log("set_record_buttonOnInit 2")
 
+    def set_mixer9_button(self, button):
+        self.log("set_mixer9_button 1")
+        self._mixer9_button = button
+        self.set_overdub_button(self._mixer9_button)
+        self.log("set_mixer9_button 2")
+
+
     def _shift_value(self, value):
         self.log("shift handler")
         if not self._shift_button != None:
@@ -47,14 +55,16 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("shift handler 2")
         self._shift_pressed = self.is_enabled() and value > 0
         self.log("shift handler 3")
-        if self._shift_pressed:
-            self.log("shift handler pressed")
-            self.set_overdub_button(self.record_button)
-            self.set_record_button(None)
-        else:
-            self.log("shift handler unpressed")
-            self.set_overdub_button(None)
-            self.set_record_button(self.record_button)
+#        if self._shift_pressed:
+#            self.log("shift handler pressed")
+#            self.set_overdub_button(None)
+#            self.set_record_button(None)
+#            self.set_session_overdub_button(self._mixer9_button)
+#        else:
+#            self.log("shift handler unpressed")
+#            self.set_overdub_button(None)
+#            self.set_record_button(self.record_button)
+#            self.set_arrangement_overdub_button(self._mixer9_button)
 
 
 

@@ -59,6 +59,7 @@
     <Content Include="Nocturn2\Automap\Mixer.automap" />
     <Content Include="Nocturn2\Automap\User.automap" />
     <Content Include="Nocturn2\readme.txt" />
+    <Content Include="Novation_Impulse2\changelog.txt" />
     <Content Include="Novation_Impulse2\readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />

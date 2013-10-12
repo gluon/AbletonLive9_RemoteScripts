@@ -181,7 +181,6 @@ class Novation_Impulse2(ControlSurface):
         self._mixer.set_shift_button(self._shift_button)
 
         self._button9 = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 9 + 8)
-        self._mixer.set_selected_mute_solo_button(self._button9)
 
     def _setup_session(self):
         num_pads = len(PAD_TRANSLATIONS)
@@ -223,6 +222,7 @@ class Novation_Impulse2(ControlSurface):
         transport.set_play_button(play_button)
         transport.set_record_buttonOnInit(rec_button)
         transport.set_shift_button(self._shift_button)
+        transport.set_mixer9_button(self._button9)
         self._transport_view_modes = TransportViewModeSelector(transport, self._session, ffwd_button, rwd_button, loop_button)
         self._transport_view_modes.name = 'Transport_View_Modes'
 

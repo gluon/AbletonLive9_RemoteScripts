@@ -40,17 +40,6 @@ class SpecialMixerComponent(MixerComponent):
         self._shift_button = shift_button
         self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
 
-    def set_selected_mute_solo_button(self, button):
-        if not isinstance(button, (type(None), ButtonElement)):
-            raise AssertionError
-        self._selected_mute_solo_button = button
-        #self.selected_strip().set_mute_button(self._selected_mute_solo_button)
-        #self.selected_strip().set_solo_button(None)
-        #self.selected_strip().set_arm_button(None)
-        self.selected_strip().set_mute_button(None)
-        self.selected_strip().set_solo_button(None)
-        self.selected_strip().set_arm_button(self._selected_mute_solo_button)
-
     def set_strip_mute_solo_buttons(self, buttons, flip_button):
         self.log("set_strip_mute_solo_buttons")
         if not (buttons is None or isinstance(buttons, tuple) and len(buttons) == len(self._channel_strips)):
