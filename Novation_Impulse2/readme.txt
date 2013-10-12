@@ -16,10 +16,12 @@ Known issues that cannot be fixed
 The reason for these problems is that when you use shift+track or shift+bank, the message "shift off" is not sent.
 This is out of the scope of what I can do
 
-Known issues (todo:)
+Known issues and todo:
 FIXED: 1) impulse does not disconnect properly and does  not send disconnection message. 
 1.5) refactor shift - move it to main class.
-3) when track goes down, the bank is not changed. 
+FIXED: 2)when track goes down, the bank is not changed. 
+3) on initialize mute/solo buttons do not light
+  workaround - press shift button.
 
 
 

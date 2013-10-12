@@ -96,6 +96,7 @@ class SpecialMixerComponent(MixerComponent):
 
 
     def updateMixerButtons(self):
+        self.log("updateMixerButtons")
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)
@@ -115,6 +116,7 @@ class SpecialMixerComponent(MixerComponent):
                         strip.set_arm_button(None)
 
     def _on_timer(self):
+#        self.log("_on_timer")
         sel_track = None
         while len(self._selected_tracks) > 0:
             track = self._selected_tracks[-1]
@@ -150,14 +152,16 @@ class SpecialMixerComponent(MixerComponent):
                 sel_track.arm = True
                 sel_track.view.select_instrument()
         self._selected_tracks = []
-        self.updateMixerButtons()
+#        self.updateMixerButtons()
 
     def _next_track_value(self, value):
+        self.log("_next_track_value "+ str(value))
         MixerComponent._next_track_value(self, value)
         self._selected_tracks.append(self.song().view.selected_track)
         self.updateMixerButtons()
 
     def _prev_track_value(self, value):
+        self.log("_prev_track_value " + str(value))
         MixerComponent._prev_track_value(self, value)
         self._selected_tracks.append(self.song().view.selected_track)
         self.updateMixerButtons()
