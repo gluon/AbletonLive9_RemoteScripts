@@ -30,7 +30,8 @@ class ShiftableTransportComponent(TransportComponent):
                 self._shift_pressed = False
             self._shift_button = button
             self.log("set_shift_button 3 (transport)")
-            self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
+            if self._shift_button != None:
+                self._shift_button.add_value_listener(self._shift_value)
             self.log("set_shift_button 4 (transport)")
 
     def set_record_buttonOnInit(self, button):

@@ -67,6 +67,10 @@ class Novation_Impulse2(ControlSurface):
             self._encoder_modes = EncoderModeSelector(self._device_component, self._mixer, self._next_bank_button, self._prev_bank_button, self._encoders)
             self._encoder_modes.set_device_mixer_buttons(device_button, mixer_button)
             self._string_to_display = None
+            self._shift_pressed = False
+            self._shift_button.add_value_listener(self._shift_value)
+
+
             for component in self.components:
                 component.set_enabled(False)
 
@@ -124,7 +128,6 @@ class Novation_Impulse2(ControlSurface):
         self._strip_buttons = None
         self._master_slider = None
         self._current_midi_map = None
-        self._shift_button = None
         self._name_display = None
         self._prev_bank_button = None
         self._next_bank_button = None
@@ -133,6 +136,11 @@ class Novation_Impulse2(ControlSurface):
         self.log('starting disconnect 4')
         self._send_midi(SYSEX_START + (6, 0, 0, 0, 247))
         self.log('starting disconnect 5')
+
+        if self._shift_button != None:
+            self._shift_button.remove_value_listener(self._shift_value)
+            self._shift_button = None
+        self.log('starting disconnect 6')
 
     def build_midi_map(self, midi_map_handle):
         self._current_midi_map = midi_map_handle
@@ -353,6 +361,34 @@ class Novation_Impulse2(ControlSurface):
             if not new_offset / num_strips == int(new_offset / num_strips):
                 raise AssertionError
             self._session.set_offsets(new_offset, self._session.scene_offset())
+
+
+    def _shift_value(self, value):
+        self.log("root shift handler")
+        if not self._shift_button != None:
+            raise AssertionError
+        if not value in range(128):
+            raise AssertionError
+        self.log("root shift handler 2")
+        self._shift_pressed = value > 0
+        self.log("root shift handler 3")
+#clip stop
+        num_pads = len(PAD_TRANSLATIONS)
+        pads = []
+        for index in range(num_pads):
+            pads.append(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 60 + index))
+            pads[-1].name = 'Pad_' + str(index)
+            clip_slot = self._session.selected_scene().clip_slot(index)
+            if self._shift_pressed:
+                clip_slot.set_launch_button(None)
+            else:
+                clip_slot.set_launch_button(pads[index])
+        if self._shift_pressed:
+            self._session.set_stop_track_clip_buttons(tuple(pads))
+        else:
+            self._session.set_stop_track_clip_buttons(None)
+
+        self.log("root shift handler 3")
 
     def log(self, message):
         pass
