@@ -24,7 +24,7 @@ FIXED: 1) impulse does not disconnect properly and does  not send disconnection 
 FIXED: 2)when track goes down, the bank is not changed. 
 3) on initialize mute/solo buttons do not light
   workaround - press shift button.
-
+4) when arming a single track make the track selected 
 
 
 Future things to implement. 
