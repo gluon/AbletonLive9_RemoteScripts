@@ -39,6 +39,8 @@ DONE 1) mixer9 - overdub
 
 DONE: another parallel feature - Shift + drum pad in clip mode - stop the selected clip. 
 
+think of re-mapping drum pads for another notes.
+
 7) display messages, when
    metronome on/off
    undo
