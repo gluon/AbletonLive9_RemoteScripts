@@ -1,9 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialClipSlotComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialClipSlotComponent.py
 import Live
 import libInterprocessCommsAPIPython
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.InputControlElement import *
-from _Framework.ButtonElement import ButtonElement
+from _Framework.SubjectSlot import subject_slot
 from PySCAClipControl import *
 
 class SpecialClipSlotComponent(ClipSlotComponent):
@@ -79,6 +79,7 @@ class SpecialClipSlotComponent(ClipSlotComponent):
         else:
             self._update_requests += 1
 
+    @subject_slot('has_clip')
     def _on_clip_state_changed(self):
         if not self._clip_slot != None:
             raise AssertionError

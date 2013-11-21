@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/BrowserComponent.py
 from __future__ import with_statement
 from functools import partial
 from itertools import izip, chain, imap
@@ -8,6 +8,7 @@ import consts
 import Live
 FilterType = Live.Browser.FilterType
 DeviceType = Live.Device.DeviceType
+from _Framework import Task
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Util import first, find_if, index_if, clamp, in_range, BooleanContext, nop, const, lazy_attribute, memoize
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -688,6 +689,11 @@ class BrowserComponent(CompoundComponent):
         self.do_load_item(item)
         self._update_load_memory(item)
         self._skip_next_preselection = True
+
+        def reset_skip_next_preselection():
+            self._skip_next_preselection = False
+
+        self._tasks.add(Task.run(reset_skip_next_preselection))
 
     def _update_load_memory(self, item):
         self._last_loaded_item = item

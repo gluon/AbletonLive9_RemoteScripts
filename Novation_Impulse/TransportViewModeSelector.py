@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/TransportViewModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/TransportViewModeSelector.py
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
@@ -9,11 +9,11 @@ class TransportViewModeSelector(ModeSelectorComponent):
     """ Class that reassigns specific buttons based on the views visible in Live """
 
     def __init__(self, transport, session, ffwd_button, rwd_button, loop_button):
-        #raise isinstance(transport, TransportComponent) or AssertionError
-        #raise isinstance(session, SessionComponent) or AssertionError
-        #raise isinstance(ffwd_button, ButtonElement) or AssertionError
-        #raise isinstance(rwd_button, ButtonElement) or AssertionError
-        #raise isinstance(loop_button, ButtonElement) or AssertionError
+        raise isinstance(transport, TransportComponent) or AssertionError
+        raise isinstance(session, SessionComponent) or AssertionError
+        raise isinstance(ffwd_button, ButtonElement) or AssertionError
+        raise isinstance(rwd_button, ButtonElement) or AssertionError
+        raise isinstance(loop_button, ButtonElement) or AssertionError
         ModeSelectorComponent.__init__(self)
         self._transport = transport
         self._session = session

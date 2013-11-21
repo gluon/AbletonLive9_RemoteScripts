@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialPhysicalDisplay.py
-from itertools import ifilter
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialPhysicalDisplay.py
 from _Framework.Util import group, flatten
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
+from consts import DISPLAY_BLOCK_LENGTH
 
 class SpecialPhysicalDisplay(PhysicalDisplayElement):
     """
@@ -138,19 +138,10 @@ class SpecialPhysicalDisplay(PhysicalDisplayElement):
      '\x7f': 127}
 
     def set_num_segments(self, num_segments):
-        PUSH_SEGMENTS = [1,
-         2,
-         4,
-         8]
-        if not num_segments in PUSH_SEGMENTS:
-            raise AssertionError
-            num_segments != self.num_segments and super(SpecialPhysicalDisplay, self).set_num_segments(num_segments, use_delimiters=num_segments > 2)
-            if num_segments == 8:
-                for index in xrange(1, num_segments, 2):
-                    self.segment(index).set_position_identifier((32,))
+        super(SpecialPhysicalDisplay, self).set_num_segments(num_segments)
+        for segment in self._logical_segments:
+            segment.separator = ' '
 
-    def _translate_string(self, string):
-        if len(string) >= 18:
-            without_gaps = flatten([ g[:-1] for g in group(string, 18) ])
-            string = ''.join(ifilter(bool, without_gaps))
-        return super(SpecialPhysicalDisplay, self)._translate_string(string)
+    def _build_inner_message(self, message):
+        message = super(SpecialPhysicalDisplay, self)._build_inner_message(message)
+        return flatten([ g[:-1] for g in group(message, DISPLAY_BLOCK_LENGTH) ])

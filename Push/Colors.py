@@ -1,24 +1,19 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Colors.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Colors.py
 """
 Module for the color interfaces defining all posible ways of turning
 on buttons in the L9C.
 """
 from itertools import izip, repeat
+from _Framework.ButtonElement import ButtonValue
 
 class NotDrawableError(Exception):
     pass
 
 
-class Color(object):
+class Color(ButtonValue):
     """
     Basic interface for the different color types.
     """
-    midi_value = 0
-
-    def __init__(self, midi_value = None, *a, **k):
-        super(Color, self).__init__(*a, **k)
-        if midi_value is not None:
-            self.midi_value = midi_value
 
     def draw(self, interface):
         """
@@ -26,12 +21,6 @@ class Color(object):
         type, interface might be required special capabilities.
         """
         interface.send_value(self.midi_value)
-
-    def __int__(self):
-        return self.midi_value
-
-    def __eq__(self, other):
-        return id(self) == id(other) or self.midi_value == other
 
 
 class RgbColor(Color):

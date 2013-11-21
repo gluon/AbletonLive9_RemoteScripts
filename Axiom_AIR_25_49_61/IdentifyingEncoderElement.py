@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/IdentifyingEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/IdentifyingEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.InputControlElement import *
 
@@ -48,8 +48,8 @@ class IdentifyingEncoderElement(EncoderElement):
     def reset(self):
         self.send_value(self._off_value)
 
-    def send_value(self, value, force_send = False):
-        if force_send or self._force_next_value or value != self._last_sent_value and self._is_being_forwarded:
+    def send_value(self, value, force = False):
+        if force or self._force_next_value or value != self._last_sent_value and self._is_being_forwarded:
             data_byte1 = self._original_identifier + self._identifier_send_offset
             data_byte2 = value
             status_byte = self._send_channel if self._send_channel else self._original_channel
@@ -66,8 +66,7 @@ class IdentifyingEncoderElement(EncoderElement):
 
     def connect_to(self, parameter):
         if parameter != self._parameter_to_map_to and not self.is_mapped_manually():
-            force_send = True
-            self.send_value(self._off_value, force_send)
+            self.send_value(self._off_value, force=True)
         EncoderElement.connect_to(self, parameter)
 
     def release_parameter(self):
@@ -78,10 +77,9 @@ class IdentifyingEncoderElement(EncoderElement):
         return not self._is_mapped and not self._is_being_forwarded
 
     def _update_led(self):
-        force_send = True
         if self.is_mapped_manually():
-            self.send_value(self._on_value, force_send)
+            self.send_value(self._on_value, force=True)
         elif self._parameter_to_map_to != None:
-            self.send_value(self._on_value, force_send)
+            self.send_value(self._on_value, force=True)
         else:
-            self.send_value(self._off_value, force_send)
+            self.send_value(self._off_value, force=True)

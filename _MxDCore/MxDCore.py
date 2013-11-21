@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/MxDCore.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/MxDCore.py
 import Live.Base
 from functools import partial
 import _Framework
@@ -541,7 +541,7 @@ class MxDCore(object):
             result = concatenate_strings(map(self._str_representation_for_object, lom_object))
         elif is_lom_object(lom_object, self.lom_classes):
             result = ('id ' if mark_ids else '') + unicode(self._get_lom_id_by_lom_object(lom_object))
-        elif isinstance(lom_object, type(False)):
+        elif isinstance(lom_object, (int, bool)):
             result = unicode(int(lom_object))
         else:
             result = StringHandler.prepare_outgoing(unicode(lom_object))

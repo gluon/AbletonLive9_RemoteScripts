@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/ConfigurableButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/ConfigurableButtonElement.py
 from _Framework.ButtonElement import ButtonElement
 from _Framework.InputControlElement import MIDI_NOTE_TYPE, MIDI_CC_TYPE, MIDI_CC_STATUS
 from consts import *
@@ -54,8 +54,8 @@ class ConfigurableButtonElement(ButtonElement):
 
         self._pending_listeners = []
 
-    def send_value(self, value, force_send = False):
-        if force_send or self._force_next_value or value != self._last_sent_value:
+    def send_value(self, value, force = False):
+        if force or self._force_next_value or value != self._last_sent_value:
             data_byte1 = self._original_identifier + self._identifier_send_offset
             data_byte2 = value
             status_byte = self._send_channel if self._send_channel else self._original_channel

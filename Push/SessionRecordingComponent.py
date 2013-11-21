@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+from functools import partial
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Util import forward_property, find_if, index_if
@@ -78,9 +79,12 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
         self._new_scene_button = None
         self._fixed_length = self.register_component(ToggleWithOptionsComponent())
         self._length_selector = self._fixed_length.options
-        self._length_selector.default_option_names = LENGTH_OPTION_NAMES
+        self._length_selector.option_names = LENGTH_OPTION_NAMES
         self._length_selector.selected_option = 3
         self._length_selector.labels = LENGTH_LABELS
+        self._on_selected_fixed_length_option_changed.subject = self._length_selector
+        length, _ = self._get_selected_length()
+        self._clip_creator.fixed_length = length
         song = self.song()
         self._automation_toggle, self._re_enable_automation_toggle, self._delete_automation = self.register_components(ToggleComponent('session_automation_record', song), ToggleComponent('re_enable_automation_enabled', song, read_only=True), ToggleComponent('has_envelopes', None, read_only=True))
         self._on_tracks_changed_in_live.subject = song
@@ -340,6 +344,11 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
         else:
             self._on_length_release()
 
+    @subject_slot('selected_option')
+    def _on_selected_fixed_length_option_changed(self, _):
+        length, _ = self._get_selected_length()
+        self._clip_creator.fixed_length = length
+
     def _on_length_press(self):
         song = self.song()
         slot = song_selected_slot(song)
@@ -367,7 +376,7 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
                     clip.end_marker = loop_end
                     clip.loop_start = loop_start
                     clip.start_marker = loop_start
-                    self._tasks.add(Task.sequence(Task.delay(0), Task.run(lambda : slot.fire(force_legato=True, launch_quantization=_Q.q_no_q))))
+                    self._tasks.add(Task.sequence(Task.delay(0), Task.run(partial(slot.fire, force_legato=True, launch_quantization=_Q.q_no_q))))
                     self.song().overdub = False
                 self._fixed_length.is_active = False
         self._length_press_state = None

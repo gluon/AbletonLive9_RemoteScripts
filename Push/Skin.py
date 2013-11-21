@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Skin.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Skin.py
 import SkinDefault
 
 class SkinColorMissingError(Exception):
@@ -30,6 +30,9 @@ class Skin(object):
             return self._colors[key]
         except KeyError:
             raise SkinColorMissingError, 'Skin color missing: %s' % str(key)
+
+    def iteritems(self):
+        return self._colors.iteritems()
 
 
 def make_default_skin():

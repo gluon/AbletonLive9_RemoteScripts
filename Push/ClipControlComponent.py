@@ -1,12 +1,15 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ClipControlComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ClipControlComponent.py
+from __future__ import with_statement
 import Live
+from contextlib import contextmanager
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ModesComponent import ModesComponent
-from _Framework.Util import clamp
+from _Framework.Util import clamp, second
 ONE_THIRTYSECOND_IN_BEATS = 0.125
 ONE_SIXTEENTH_IN_BEATS = 0.25
+ONE_YEAR_AT_120BPM_IN_BEATS = 63072000.0
 GRID_QUANTIZATION_LIST = [Live.Clip.GridQuantization.no_grid,
  Live.Clip.GridQuantization.g_thirtysecond,
  Live.Clip.GridQuantization.g_sixteenth,
@@ -76,6 +79,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._clip_loop_start = None
         self._clip_loop_end = None
         self._clip_loop_length = None
+        self._lowest_note_time = 0.0
         self._encoder_factor = 4.0
         self._shift_button = None
 
@@ -87,6 +91,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._on_looping_changed.subject = clip
         self._on_loop_start_changed.subject = clip
         self._on_loop_end_changed.subject = clip
+        self._on_clip_notes_changed.subject = clip if clip != None and clip.is_midi_clip else None
         self.update()
 
     clip = property(_get_clip, _set_clip)
@@ -124,34 +129,54 @@ class LoopSettingsComponent(ControlSurfaceComponent):
                 self._clip_loop_end = self._clip.loop_end
                 self._update_loop_length()
 
-    @subject_slot('normalized_value')
-    def _on_clip_start_value(self, value):
-        if self._clip != None:
-            self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, 0.0)
-            loop_start = max(0.0, self._round_beats(self._clip_loop_start, value > 0))
-            if loop_start < self._clip.loop_end:
-                self._clip.loop_start = loop_start
-            elif not self._clip.looping:
-                self._clip_loop_start = self._clip.loop_end - ONE_SIXTEENTH_IN_BEATS
-                self._clip.loop_start = self._clip_loop_start
-            else:
-                self._clip_loop_start = self._clip.loop_start
+    def _calc_new_loop_start(self, value):
+        self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, min(0.0, self._clip_loop_start))
+        round_up = value > 0
+        loop_start = self._round_beats(self._clip_loop_start, round_up)
+        if loop_start < 0.0:
+            lowest_event_time = min(0, self._clip.start_marker, self._lowest_note_time)
+            if lowest_event_time >= self._clip_loop_start:
+                loop_start = max(self._clip_loop_start, loop_start)
+        return loop_start
 
     def _round_beats(self, value, round_up = False):
         factor = 0.5 if round_up else -0.5
+        rounded = 0.0
         if self._shift_button and self._shift_button.is_pressed():
-            return int(round(value + factor))
+            rounded = int(round(value + factor))
         else:
             measure = self._one_measure_in_beats()
-            return int(round(value / measure + factor) * measure)
+            rounded = int(round(value / measure + factor) * measure)
+        return float(rounded)
+
+    @contextmanager
+    def _clip_view_update_guard(self):
+        clip = self._clip
+        old_loop_start, old_loop_end = clip.loop_start, clip.loop_end
+        yield
+        if clip.loop_start < old_loop_start or clip.loop_end > old_loop_end:
+            self._clip.view.show_loop()
+
+    @subject_slot('normalized_value')
+    def _on_clip_start_value(self, value):
+        if self._clip != None:
+            with self._clip_view_update_guard():
+                loop_start = self._calc_new_loop_start(value)
+                if loop_start < self._clip.loop_end:
+                    self._clip.loop_start = loop_start
+                elif not self._clip.looping:
+                    self._clip_loop_start = self._clip.loop_end - ONE_SIXTEENTH_IN_BEATS
+                    self._clip.loop_start = self._clip_loop_start
+                else:
+                    self._clip_loop_start = self._clip.loop_start
 
     @subject_slot('normalized_value')
     def _on_clip_position_value(self, value):
         if self._clip != None and not is_new_recording(self._clip):
-            self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, 0.0)
-            self._clip_loop_end = self._clip_loop_start + self._clip_loop_length
-            loop_start = max(0.0, self._round_beats(self._clip_loop_start, value > 0))
+            loop_start = self._calc_new_loop_start(value)
             loop_end = loop_start + self._clip_loop_length
+            self._clip_loop_start = loop_start
+            self._clip_loop_end = loop_end
             if value > 0:
                 self._clip.loop_end = loop_end
                 self._clip.loop_start = loop_start
@@ -185,6 +210,14 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._update_position_source()
         self._update_loop_end_source()
 
+    @subject_slot('notes')
+    def _on_clip_notes_changed(self):
+        self._lowest_note_time = 0.0
+        if self._clip != None and self._clip.is_midi_clip:
+            earliest_time = -ONE_YEAR_AT_120BPM_IN_BEATS
+            negative_notes = self._clip.get_notes(earliest_time, 0, -earliest_time, 128)
+            self._lowest_note_time = min([0.0] + map(second, negative_notes))
+
     @subject_slot('normalized_value')
     def _on_clip_end_value(self, value):
         if self._clip != None and not is_new_recording(self._clip):
@@ -194,8 +227,10 @@ class LoopSettingsComponent(ControlSurfaceComponent):
                     self._clip_loop_end = self._clip.loop_start + ONE_SIXTEENTH_IN_BEATS
                     self._clip.loop_end = self._clip_loop_end
             else:
-                self._clip.loop_end = self._round_beats(self._clip_loop_end, value > 0)
-                self._clip.view.show_loop()
+                loop_end = self._round_beats(self._clip_loop_end, value > 0)
+                if loop_end > self._clip.loop_start:
+                    self._clip.loop_end = loop_end
+                    self._clip.view.show_loop()
 
     @subject_slot('normalized_value')
     def _on_clip_looping_value(self, value):
@@ -242,6 +277,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
             self._on_loop_start_changed()
             self._on_loop_end_changed()
             self._on_looping_changed()
+            self._on_clip_notes_changed()
 
 
 class MidiClipSettingsComponent(ControlSurfaceComponent):

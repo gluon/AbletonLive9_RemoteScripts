@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DeviceComponent.py
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
 from ControlSurfaceComponent import ControlSurfaceComponent
@@ -114,14 +114,13 @@ class DeviceComponent(ControlSurfaceComponent):
             do_update and self.update()
 
     def set_bank_buttons(self, buttons):
-        if not (buttons == None or isinstance(buttons, tuple)):
-            raise AssertionError
-            if self._bank_buttons != None:
-                for button in self._bank_buttons:
-                    button.remove_value_listener(self._bank_value)
+        if self._bank_buttons != None:
+            for button in self._bank_buttons:
+                button.remove_value_listener(self._bank_value)
 
-            self._bank_buttons = buttons
-            identify_sender = self._bank_buttons != None and True
+        self._bank_buttons = buttons
+        if self._bank_buttons != None:
+            identify_sender = True
             for button in self._bank_buttons:
                 button.add_value_listener(self._bank_value, identify_sender)
 

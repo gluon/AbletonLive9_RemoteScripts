@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/LV2_LX2_LC2_LD2/Params.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/LV2_LX2_LC2_LD2/Params.py
 AUTO_FILTER_PARAMS = {'LFO Sync Rate': 'LFO Synced Rate'}
 AUTO_PAN_PARAMS = {'Sync Rate': 'Synced Rate'}
 BEAT_REPEAT_PARAMS = {'Decay': 'Damp Volume',

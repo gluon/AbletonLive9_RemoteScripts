@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SkinDefault.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SkinDefault.py
 from Colors import Basic, Rgb, Pulse, Blink, BiLed
 
 class Colors:
@@ -35,12 +35,11 @@ class Colors:
     class Instrument:
         NoteBase = Rgb.OCEAN
         NoteScale = Rgb.WHITE
-        NoteForeign = Rgb.MAGENTA
+        NoteNotScale = Rgb.BLACK
         NoteInvalid = Rgb.BLACK
-        NoteInactive = Rgb.BLACK
-        NoteOff = Rgb.BLACK
         Feedback = Rgb.GREEN
         FeedbackRecord = Rgb.RED.shade(1)
+        NoteAction = Rgb.RED
 
     class Recording:
         On = Basic.FULL
@@ -80,25 +79,47 @@ class Colors:
         PadSoloed = Rgb.BLUE
         PadSoloedSelected = Rgb.OCEAN.highlight()
         PadInvisible = Rgb.BLACK
+        PadAction = Rgb.RED
 
     class LoopSelector:
         Playhead = Rgb.GREEN
         PlayheadRecord = Rgb.RED
-        SelectedPage = Rgb.OCEAN
+        SelectedPage = Rgb.YELLOW.highlight()
+        InsideLoopStartBar = Rgb.WHITE
         InsideLoop = Rgb.WHITE
-        OutsideLoop = Rgb.DARK_GREY
+        OutsideLoop = Rgb.BLACK
 
     class NoteEditor:
-        Step = Rgb.SKY.highlight()
-        StepHighVelocity = Rgb.OCEAN
-        StepFullVelocity = Rgb.BLUE
-        StepMuted = Rgb.AMBER.shade(2)
+
+        class Step:
+            Low = Rgb.SKY.highlight()
+            High = Rgb.OCEAN
+            Full = Rgb.BLUE
+            Muted = Rgb.AMBER.shade(2)
+
+        class StepEditing:
+            Low = Rgb.YELLOW.highlight()
+            High = Rgb.YELLOW
+            Full = Rgb.AMBER
+            Muted = Rgb.WHITE
+
+        StepSelected = Rgb.WHITE
         StepEmpty = Rgb.BLACK
+        StepEmptyBase = Rgb.OCEAN.shade(2)
+        StepEmptyScale = Rgb.DARK_GREY
         StepDisabled = Rgb.RED.shade(2)
         Playhead = Rgb.GREEN
         PlayheadRecord = Rgb.RED
         QuantizationSelected = BiLed.GREEN
         QuantizationUnselected = BiLed.YELLOW
+        NoteBase = Rgb.OCEAN.shade(2)
+        NoteScale = Rgb.DARK_GREY
+        NoteNotScale = Rgb.BLACK
+        NoteInvalid = Rgb.RED.shade(2)
+
+    class Melodic:
+        Playhead = Rgb.GREEN.shade(1)
+        PlayheadRecord = Rgb.RED.shade(1)
 
     class NoteRepeat:
         RateSelected = BiLed.RED

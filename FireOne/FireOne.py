@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/FireOne/FireOne.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/FireOne/FireOne.py
 import Live
 import MidiRemoteScript
 NOTE_OFF_STATUS = 128

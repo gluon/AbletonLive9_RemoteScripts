@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialTransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialTransportComponent.py
 import Live
 RecordingQuantization = Live.Song.RecordingQuantization
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -9,7 +9,7 @@ from _Framework.Util import recursive_map, clamp, forward_property
 from ActionWithOptionsComponent import ActionWithSettingsComponent
 from MessageBoxComponent import Messenger
 from consts import MessageBoxText
-from MelodicComponent import pitch_index_to_string
+from MelodicPattern import pitch_index_to_string
 INITIAL_SCROLLING_DELAY = 5
 INTERVAL_SCROLLING_DELAY = 1
 QUANTIZATION_OPTIONS = [RecordingQuantization.rec_q_quarter,
@@ -210,7 +210,7 @@ class QuantizationComponent(ActionWithSettingsComponent, Messenger):
         self._cancel_quantize = False
 
 
-class SpecialTransportComponent(TransportComponent):
+class SpecialTransportComponent(TransportComponent, Messenger):
     """ Transport component that takes buttons for Undo and Redo """
 
     def __init__(self, *a, **k):
@@ -268,11 +268,13 @@ class SpecialTransportComponent(TransportComponent):
     def _undo_value(self, value):
         if self.is_enabled():
             if value != 0 or not self._undo_button.is_momentary():
-                if not self._shift_button.is_pressed():
-                    if self.song().can_undo:
-                        self.song().undo()
-                elif self.song().can_redo:
-                    self.song().redo()
+                if self._shift_button and self._shift_button.is_pressed():
+                    if self.song().can_redo:
+                        self.song().redo()
+                        self.show_notification(MessageBoxText.REDO)
+                elif self.song().can_undo:
+                    self.song().undo()
+                    self.show_notification(MessageBoxText.UNDO)
             self._update_undo_button()
 
     def _update_undo_button(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Oxygen_3rd_Gen/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Oxygen_3rd_Gen/SpecialMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 
 class SpecialMixerComponent(MixerComponent):

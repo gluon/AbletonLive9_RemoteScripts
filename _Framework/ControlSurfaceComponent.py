@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurfaceComponent.py
 import Live
 from Dependency import dependency, depends
 from SubjectSlot import SlotManager, Subject
@@ -17,16 +17,19 @@ class ControlSurfaceComponent(SlotManager, Subject):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = '', register_component = None, song = None, *a, **k):
-        raise callable(register_component) or AssertionError
-        super(ControlSurfaceComponent, self).__init__(*a, **k)
-        self.name = name
-        self._is_enabled = True
-        self._explicit_is_enabled = True
-        self._recursive_is_enabled = True
-        self._allow_updates = True
-        self._update_requests = 0
-        self._song = song
+    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, *a, **k):
+        if not callable(register_component):
+            raise AssertionError
+            super(ControlSurfaceComponent, self).__init__(*a, **k)
+            self.name = name
+            raise layer is None or not is_enabled or AssertionError
+            self._explicit_is_enabled = is_enabled
+            self._recursive_is_enabled = True
+            self._is_enabled = self._explicit_is_enabled
+            self._allow_updates = True
+            self._update_requests = 0
+            self._song = song
+            self._layer = layer is not None and layer
         register_component(self)
 
     def disconnect(self):

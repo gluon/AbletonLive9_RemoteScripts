@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/M4LInterfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/M4LInterfaceComponent.py
+from __future__ import with_statement
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 import consts
 
@@ -8,10 +9,11 @@ class M4LInterfaceComponent(ControlSurfaceComponent):
     superposed on top of any L9C functionality.
     """
 
-    def __init__(self, controls, *a, **k):
+    def __init__(self, controls = None, component_guard = None, *a, **k):
         super(M4LInterfaceComponent, self).__init__(self, *a, **k)
         self._controls = dict(map(lambda x: (x.name, x), controls))
         self._grabbed_controls = []
+        self._component_guard = component_guard
 
     def disconnect(self):
         for control in self._grabbed_controls[:]:
@@ -31,16 +33,18 @@ class M4LInterfaceComponent(ControlSurfaceComponent):
         return self._controls[control_name] if control_name in self._controls else None
 
     def grab_control(self, control):
-        if not control in self._controls.values():
-            raise AssertionError
-            control not in self._grabbed_controls and control.resource.grab(self, priority=consts.M4L_PRIORITY)
-            self._grabbed_controls.append(control)
+        raise control in self._controls.values() or AssertionError
+        with self._component_guard():
+            if control not in self._grabbed_controls:
+                control.resource.grab(self, priority=consts.M4L_PRIORITY)
+                self._grabbed_controls.append(control)
 
     def release_control(self, control):
-        if not control in self._controls.values():
-            raise AssertionError
-            control in self._grabbed_controls and self._grabbed_controls.remove(control)
-            control.resource.release(self)
+        raise control in self._controls.values() or AssertionError
+        with self._component_guard():
+            if control in self._grabbed_controls:
+                self._grabbed_controls.remove(control)
+                control.resource.release(self)
 
     def update(self):
         pass

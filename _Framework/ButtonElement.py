@@ -1,8 +1,35 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonElement.py
 import Live
 from InputControlElement import InputControlElement, MIDI_CC_TYPE
-ON_VALUE = int(127)
-OFF_VALUE = int(0)
+from Util import nop
+
+class ButtonValue(object):
+    """
+    Basic type for button values, so global constants are symbolically
+    different from integers.
+    """
+    midi_value = 0
+
+    def __init__(self, midi_value = None, *a, **k):
+        super(ButtonValue, self).__init__(*a, **k)
+        if midi_value is not None:
+            self.midi_value = midi_value
+
+    def __int__(self):
+        return self.midi_value
+
+    def __eq__(self, other):
+        try:
+            return id(self) == id(other) or self.midi_value == other
+        except NotImplementedError:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+ON_VALUE = ButtonValue(127)
+OFF_VALUE = ButtonValue(0)
 
 class DummyUndoStepHandler(object):
 
@@ -36,6 +63,10 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
     Class representing a button a the controller
     """
 
+    class ProxiedInterface(InputControlElement.ProxiedInterface, ButtonElementMixin):
+        is_momentary = nop
+        is_pressed = nop
+
     def __init__(self, is_momentary, msg_type, channel, identifier, undo_step_handler = DummyUndoStepHandler(), *a, **k):
         super(ButtonElement, self).__init__(msg_type, channel, identifier, *a, **k)
         self.__is_momentary = bool(is_momentary)
@@ -51,7 +82,7 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         return Live.MidiMap.MapMode.absolute
 
     def is_pressed(self):
-        return self.__is_momentary and self._last_received_value > 0
+        return self.__is_momentary and int(self._last_received_value) > 0
 
     def receive_value(self, value):
         pressed_before = self.is_pressed()

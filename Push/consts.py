@@ -1,8 +1,8 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
 from _Framework.Resource import PrioritizedResource
 import sys
 DISPLAY_LENGTH = 72
-TAPPING_DELAY = 0.4
+DISPLAY_BLOCK_LENGTH = 18
 SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.Off',
  True: 'DefaultButton.On',
@@ -253,6 +253,7 @@ class MessageBoxText:
     DUPLICATE_CLIP = '                  Clip duplicated:  %s'
     QUANTIZE_CLIP = '                  Quantized to:     %(to)s, %(amount)s'
     QUANTIZE_CLIP_PITCH = '                  Quantized pad to: %(to)s, %(amount)s'
+    DELETE_NOTES = '                  Notes deleted:    %s'
     CAPTURE_AND_INSERT_SCENE = '                      Duplicated to scene %s'
     DUPLICATE_LOOP = '                   New loop length: %(length)s'
     DELETE_SCENE = '                  Scene deleted:    %s'
@@ -260,6 +261,8 @@ class MessageBoxText:
     DELETE_ENVELOPE = '                  Delete automation %(automation)s'
     EMPTY_DEVICE_CHAIN = '\n\n               No Devices.    Press [Browse] to add a device.'
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
+    UNDO = '            Undo:     Reverted last action'
+    REDO = '            Redo: Re-performed last undone action'
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

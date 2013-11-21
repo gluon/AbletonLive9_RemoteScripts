@@ -1,7 +1,7 @@
 InstantMappings HowTo
 =====================
 
-With the file 'UserConfiguration.txt'provided in
+With the file 'UserConfiguration.txt' provided in
 this directory, you can create your own Instant
 Mappings.
 

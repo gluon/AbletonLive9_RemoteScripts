@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceNavigationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceNavigationComponent.py
 from __future__ import with_statement
 from functools import partial
 import Live.DrumPad
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import find_if, in_range, NamedTuple, forward_property
+from _Framework.Util import find_if, in_range, NamedTuple, const
 from _Framework.Disconnectable import disconnectable
 from _Framework.Dependency import depends, inject
 from MessageBoxComponent import MessageBoxComponent
@@ -18,7 +18,7 @@ class DeviceNavigationComponent(CompoundComponent):
     track and navigates in its hierarchy.
     """
 
-    def __init__(self, device_bank_registry = None, *a, **k):
+    def __init__(self, device_bank_registry = None, info_layer = None, *a, **k):
         super(DeviceNavigationComponent, self).__init__(*a, **k)
         self._make_navigation_node = partial(make_navigation_node, device_bank_registry=device_bank_registry)
         self._state_buttons = None
@@ -28,15 +28,12 @@ class DeviceNavigationComponent(CompoundComponent):
         self._on_selection_changed_in_controller.subject = self._device_list
         self._on_state_changed_in_controller.subject = self._device_list
         self._current_node = None
-        self._message_box = self.register_component(MessageBoxComponent())
+        self._message_box = self.register_component(MessageBoxComponent(layer=info_layer, is_enabled=False))
         self._message_box.text = consts.MessageBoxText.EMPTY_DEVICE_CHAIN
-        self._message_box.set_enabled(False)
         self._selected_track = None
         self._on_selected_track_changed.subject = self.song().view
-        with inject(selection=lambda : NamedTuple(selected_device=None)).everywhere():
+        with inject(selection=const(NamedTuple(selected_device=None))).everywhere():
             self._on_selected_track_changed()
-
-    info_layer = forward_property('_message_box')('layer')
 
     @property
     def current_node(self):

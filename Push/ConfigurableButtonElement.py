@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ConfigurableButtonElement.py
-from _Framework.ButtonElement import ButtonElement
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ConfigurableButtonElement.py
+from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 from Skin import Skin, SkinColorMissingError
 from Colors import Basic
 from MatrixMaps import NON_FEEDBACK_CHANNEL
@@ -93,10 +93,18 @@ class ConfigurableButtonElement(ButtonElement):
         except SkinColorMissingError:
             super(ConfigurableButtonElement, self).set_light(value)
 
-    def turn_on(self):
+    def send_value(self, value, **k):
+        if value is ON_VALUE:
+            self._do_send_on_value()
+        elif value is OFF_VALUE:
+            self._do_send_off_value()
+        else:
+            super(ConfigurableButtonElement, self).send_value(value, **k)
+
+    def _do_send_on_value(self):
         self._skin[self._on_value].draw(self)
 
-    def turn_off(self):
+    def _do_send_off_value(self):
         self._skin[self._off_value].draw(self)
 
     def script_wants_forwarding(self):

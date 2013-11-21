@@ -1,9 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ActionWithOptionsComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ActionWithOptionsComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
-from _Framework.Util import in_range
+from _Framework.Util import in_range, clamp
 from _Framework import Task
 from _Framework import Defaults
 import consts
@@ -74,18 +74,29 @@ class OptionsComponent(ControlSurfaceComponent):
     __subject_events__ = ('selected_option',)
     unselected_color = 'Option.Unselected'
     selected_color = 'Option.Selected'
-    default_option_names = []
     _selected_option = None
 
-    def __init__(self, num_options = 8, num_labels = 4, *a, **k):
+    def __init__(self, num_options = 8, num_labels = 4, num_display_segments = None, *a, **k):
         super(OptionsComponent, self).__init__(*a, **k)
-        self._data_sources = [ DisplayDataSource() for _ in xrange(num_options) ]
+        num_display_segments = num_display_segments or num_options
         self._label_data_sources = [ DisplayDataSource() for _ in xrange(num_labels) ]
+        self._data_sources = [ DisplayDataSource() for _ in xrange(num_display_segments) ]
         self._select_buttons = None
+        self._option_names = []
 
-    @property
-    def option_names(self):
-        return self.default_option_names
+    def _get_option_names(self):
+        return self._option_names
+
+    def _set_option_names(self, value):
+        self._option_names = value
+        if self._selected_option:
+            currently_selected_option = self.selected_option
+            self.selected_option = clamp(self._selected_option, 0, len(self._option_names) - 1)
+            if currently_selected_option != self.selected_option:
+                self.notify_selected_option(self.selected_option)
+        self._update_data_sources()
+
+    option_names = property(_get_option_names, _set_option_names)
 
     def _get_selected_option(self):
         return self._selected_option
@@ -161,8 +172,11 @@ class OptionsComponent(ControlSurfaceComponent):
                         button.set_light('DefaultButton.Disabled')
 
     def _update_data_sources(self):
-        for index, (source, name) in enumerate(zip(self._data_sources, self.option_names)):
-            source.set_display_string((consts.CHAR_SELECT if index == self._selected_option else '') + name)
+        for index, (source, name) in enumerate(map(None, self._data_sources, self.option_names)):
+            if name:
+                source.set_display_string((consts.CHAR_SELECT if index == self._selected_option else ' ') + name)
+            else:
+                source.set_display_string('')
 
 
 class ActionWithOptionsComponent(ActionWithSettingsComponent):

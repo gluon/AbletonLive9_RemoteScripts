@@ -1,15 +1,82 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlElement.py
+import traceback
 from Resource import StackingResource
-from Util import lazy_attribute
+from Util import lazy_attribute, nop, const, second, print_message
 from Disconnectable import Disconnectable
 from Dependency import depends
 import Task
+
+class ElementOwnershipHandler(object):
+    """
+    A ControlElementOwnershipHandler deals with the actual delivery of
+    the control element to its clients.
+    """
+
+    def handle_ownership_change(self, control, client, status):
+        client.set_control_element(control, status)
+
+
+class OptimizedOwnershipHandler(ElementOwnershipHandler):
+    """
+    Control element ownership handler that delays notification of
+    ownership changes and minimizes the number of actual owernship
+    changes that are delivered.
+    """
+
+    def __init__(self, *a, **k):
+        super(OptimizedOwnershipHandler, self).__init__(*a, **k)
+        self._ownership_changes = {}
+        self._sequence_number = 0
+
+    def handle_ownership_change(self, control, client, status):
+        if (control, client, not status) in self._ownership_changes:
+            del self._ownership_changes[control, client, not status]
+        else:
+            self._ownership_changes[control, client, status] = self._sequence_number
+        self._sequence_number += 1
+
+    @depends(log_message=const(print_message), traceback=const(traceback))
+    def commit_ownership_changes(self, log_message = None, traceback = None):
+        notify = super(OptimizedOwnershipHandler, self).handle_ownership_change
+        while self._ownership_changes:
+            notifications = sorted(self._ownership_changes.iteritems(), key=second)
+            self._ownership_changes.clear()
+            for (control, client, status), _ in notifications:
+                try:
+                    notify(control, client, status)
+                except Exception:
+                    log_message('Error when trying to give control:', control.name)
+                    traceback.print_exc()
+
+        self._ownership_changes.clear()
+        self._sequence_number = 0
+
 
 class ControlElement(Disconnectable):
     """
     Base class for all classes representing control elements on a
     control surface
     """
+
+    class ProxiedInterface(object):
+        """
+        Declaration of the interface to be used when the
+        ControlElement is wrapped in any form of Proxy object.
+        """
+        send_midi = nop
+
+        def __init__(self, outer = None, *a, **k):
+            super(ControlElement.ProxiedInterface, self).__init__(*a, **k)
+            self._outer = outer
+
+        @property
+        def outer(self):
+            return self._outer
+
+    @lazy_attribute
+    def proxied_interface(self):
+        return self.ProxiedInterface(outer=self)
+
     canonical_parent = None
     name = ''
     optimized_send_midi = True
@@ -59,7 +126,11 @@ class ControlElement(Disconnectable):
         return tasks
 
     def _on_grab_resource(self, client, *a, **k):
-        client.set_control_element(self, True)
+        self.notify_ownership_change(client, True)
 
     def _on_release_resource(self, client):
-        client.set_control_element(self, False)
+        self.notify_ownership_change(client, False)
+
+    @depends(element_ownership_handler=const(ElementOwnershipHandler()))
+    def notify_ownership_change(self, client, grabbed, element_ownership_handler = None):
+        element_ownership_handler.handle_ownership_change(self, client, grabbed)

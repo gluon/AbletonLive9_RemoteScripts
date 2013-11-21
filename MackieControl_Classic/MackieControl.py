@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl_Classic/MackieControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl_Classic/MackieControl.py
 from consts import *
 from MainDisplay import MainDisplay
 from MainDisplayController import MainDisplayController

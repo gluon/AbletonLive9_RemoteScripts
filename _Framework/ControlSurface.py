@@ -1,9 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurface.py
 from __future__ import with_statement
 from functools import partial, wraps
 from itertools import chain
 from contextlib import contextmanager
+import traceback
 import Live
+from Profile import profile
 from Dependency import inject
 from Util import BooleanContext, first, find_if, const, in_range
 from Debug import debug_print
@@ -13,7 +15,6 @@ from PhysicalDisplayElement import PhysicalDisplayElement
 from InputControlElement import InputControlElement, MIDI_CC_TYPE, MIDI_PB_TYPE, MIDI_NOTE_TYPE, MIDI_SYSEX_TYPE, MIDI_PB_STATUS
 import Task
 import Defaults
-CS_LIST_KEY = 'control_surfaces'
 
 class _ModuleLoadedCheck(object):
     """
@@ -42,28 +43,35 @@ def _scheduled_method(method):
     return wrapper
 
 
+CS_LIST_KEY = 'control_surfaces'
+
+def publish_control_surface(control_surface):
+    if isinstance(__builtins__, dict):
+        if CS_LIST_KEY not in __builtins__.keys():
+            __builtins__[CS_LIST_KEY] = []
+        __builtins__[CS_LIST_KEY].append(control_surface)
+    else:
+        if not hasattr(__builtins__, CS_LIST_KEY):
+            setattr(__builtins__, CS_LIST_KEY, [])
+        cs_list = getattr(__builtins__, CS_LIST_KEY)
+        cs_list.append(control_surface)
+
+
 class ControlSurface(SlotManager):
     """
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
     """
 
-    def __init__(self, c_instance, publish_self = True, *a, **k):
+    def __init__(self, c_instance = None, publish_self = True, *a, **k):
         """ Define and Initialize standard behavior """
         super(ControlSurface, self).__init__(*a, **k)
-        self.canonical_parent = None
-        if publish_self:
-            if isinstance(__builtins__, dict):
-                if CS_LIST_KEY not in __builtins__.keys():
-                    __builtins__[CS_LIST_KEY] = []
-                __builtins__[CS_LIST_KEY].append(self)
-            else:
-                if not hasattr(__builtins__, CS_LIST_KEY):
-                    setattr(__builtins__, CS_LIST_KEY, [])
-                cs_list = getattr(__builtins__, CS_LIST_KEY)
-                cs_list.append(self)
-                setattr(__builtins__, CS_LIST_KEY, cs_list)
+        if not c_instance:
+            raise AssertionError
+            self.canonical_parent = None
+            publish_self and publish_control_surface(self)
         self._c_instance = c_instance
+        self.log_message('Initialising...')
         self._pad_translations = None
         self._suggested_input_port = str('')
         self._suggested_output_port = str('')
@@ -87,7 +95,7 @@ class ControlSurface(SlotManager):
         self._midi_message_dict = {}
         self._midi_message_list = []
         self._midi_message_count = 0
-        self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), send_midi=const(self._send_midi), song=self.song).everywhere()
+        self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), send_midi=const(self._send_midi), song=self.song).everywhere()
         with self.setting_listener_caller():
             self.song().add_visible_tracks_listener(self._on_track_list_changed)
             self.song().add_scenes_listener(self._on_scene_list_changed)
@@ -322,6 +330,7 @@ class ControlSurface(SlotManager):
             for component in self._components:
                 component.update()
 
+    @profile
     def update_display(self):
         """ Live -> Script
             Aka on_timer. Called every 100 ms and should be used to update display relevant
@@ -331,6 +340,7 @@ class ControlSurface(SlotManager):
             with self._is_sending_scheduled_messages():
                 self._task_group.update(Defaults.TIMER_DELAY)
 
+    @profile
     def receive_midi(self, midi_bytes):
         """ Live -> Script
             MIDI messages are only received through this function, when explicitly
@@ -348,14 +358,18 @@ class ControlSurface(SlotManager):
         else:
             self.handle_sysex(midi_bytes)
 
-    def handle_nonsysex(self, midi_bytes):
+    def get_recipient_for_nonsysex_midi_message(self, midi_bytes):
         is_pitchbend = midi_bytes[0] & 240 == MIDI_PB_STATUS
         forwarding_key = midi_bytes[:1 if is_pitchbend else 2]
-        value = midi_bytes[1] + (midi_bytes[2] << 7) if is_pitchbend else midi_bytes[2]
         if forwarding_key in self._forwarding_registry:
-            recipient = self._forwarding_registry[forwarding_key]
-            if recipient != None:
-                recipient.receive_value(value)
+            return self._forwarding_registry[forwarding_key]
+
+    def handle_nonsysex(self, midi_bytes):
+        is_pitchbend = midi_bytes[0] & 240 == MIDI_PB_STATUS
+        value = midi_bytes[1] + (midi_bytes[2] << 7) if is_pitchbend else midi_bytes[2]
+        recipient = self.get_recipient_for_nonsysex_midi_message(midi_bytes)
+        if recipient is not None:
+            recipient.receive_value(value)
         else:
             self.log_message('Got unknown message: ' + str(midi_bytes))
 
@@ -454,6 +468,10 @@ class ControlSurface(SlotManager):
         raise track == None or isinstance(track, Live.Track.Track) or AssertionError
         self._c_instance.set_controlled_track(track)
 
+    def release_controlled_track(self):
+        """ Sets that no track will send its feedback to the control surface """
+        self._c_instance.release_controlled_track()
+
     def _register_control(self, control):
         """ puts control into the list of controls for triggering updates """
         if not control != None:
@@ -499,6 +517,7 @@ class ControlSurface(SlotManager):
         finally:
             self._c_instance.set_listener_caller(None)
 
+    @profile
     def _call_guarded_listener(self, listener):
         if _ModuleLoadedCheck == None or self._c_instance == None:
             self.log_message('Disconnecting leaked listener at:', listener.name)
@@ -551,7 +570,13 @@ class ControlSurface(SlotManager):
         self._midi_message_count = 0
 
     def _do_send_midi(self, midi_event_bytes):
-        self._c_instance.send_midi(midi_event_bytes)
+        try:
+            self._c_instance.send_midi(midi_event_bytes)
+        except:
+            self.log_message('Error while sending midi message', midi_event_bytes)
+            traceback.print_exc()
+            return False
+
         return True
 
     def _install_mapping(self, midi_map_handle, control, parameter, feedback_delay, feedback_map):

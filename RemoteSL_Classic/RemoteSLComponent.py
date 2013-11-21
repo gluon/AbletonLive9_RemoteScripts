@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/RemoteSL_Classic/RemoteSLComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/RemoteSL_Classic/RemoteSLComponent.py
 from consts import *
 
 class RemoteSLComponent:

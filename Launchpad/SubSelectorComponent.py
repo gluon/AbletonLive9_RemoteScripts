@@ -1,14 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SubSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SubSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ClipSlotComponent import ClipSlotComponent
-from _Framework.ChannelStripComponent import ChannelStripComponent
-from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from SpecialMixerComponent import SpecialMixerComponent
-from ConfigurableButtonElement import ConfigurableButtonElement
 from PreciseButtonSliderElement import *
 LED_OFF = 4
 RED_FULL = 7

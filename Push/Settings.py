@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Settings.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Settings.py
 from Setting import OnOffSetting, EnumerableSetting
 from PadSensitivity import PadParameters
 import consts
@@ -13,7 +13,7 @@ def make_pad_parameters(curve_value, threshold_value):
     return PadParameters(curve_value, on_threshold=int((1 - t) * consts.MIN_ON_THRESHOLD + t * consts.MAX_ON_THRESHOLD), off_threshold=int((1 - t) * consts.MIN_OFF_THRESHOLD + t * consts.MAX_OFF_THRESHOLD))
 
 
-action_pad_sensitivity = PadParameters(off_threshold=200, on_threshold=270, gain=85000, curve1=120000, curve2=60000)
+action_pad_sensitivity = PadParameters(off_threshold=190, on_threshold=210, gain=85000, curve1=120000, curve2=60000)
 
 def _create_pad_settings():
     return [PadParameters(gain=100000, curve1=45000, curve2=0, name='Linear'),

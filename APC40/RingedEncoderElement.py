@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/RingedEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/RingedEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0
@@ -17,15 +17,13 @@ class RingedEncoderElement(EncoderElement):
     def set_ring_mode_button(self, button):
         if not (button == None or isinstance(button, ButtonElement)):
             raise AssertionError
-            force_send = self._ring_mode_button != None and True
-            self._ring_mode_button.send_value(RING_OFF_VALUE, force_send)
+            self._ring_mode_button != None and self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)
         self._ring_mode_button = button
         self._update_ring_mode()
 
     def connect_to(self, parameter):
         if parameter != self._parameter_to_map_to and not self.is_mapped_manually():
-            force_send = True
-            self._ring_mode_button.send_value(RING_OFF_VALUE, force_send)
+            self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)
         EncoderElement.connect_to(self, parameter)
 
     def release_parameter(self):
@@ -43,19 +41,18 @@ class RingedEncoderElement(EncoderElement):
 
     def _update_ring_mode(self):
         if self._ring_mode_button != None:
-            force_send = True
             if self.is_mapped_manually():
-                self._ring_mode_button.send_value(RING_SIN_VALUE, force_send)
+                self._ring_mode_button.send_value(RING_SIN_VALUE, force=True)
             elif self._parameter_to_map_to != None:
                 param = self._parameter_to_map_to
                 p_range = param.max - param.min
                 value = (param.value - param.min) / p_range * 127
-                self.send_value(int(value), force_send)
+                self.send_value(int(value), force=True)
                 if self._parameter_to_map_to.min == -1 * self._parameter_to_map_to.max:
-                    self._ring_mode_button.send_value(RING_PAN_VALUE, force_send)
+                    self._ring_mode_button.send_value(RING_PAN_VALUE, force=True)
                 elif self._parameter_to_map_to.is_quantized:
-                    self._ring_mode_button.send_value(RING_SIN_VALUE, force_send)
+                    self._ring_mode_button.send_value(RING_SIN_VALUE, force=True)
                 else:
-                    self._ring_mode_button.send_value(RING_VOL_VALUE, force_send)
+                    self._ring_mode_button.send_value(RING_VOL_VALUE, force=True)
             else:
-                self._ring_mode_button.send_value(RING_OFF_VALUE, force_send)
+                self._ring_mode_button.send_value(RING_OFF_VALUE, force=True)

@@ -1,16 +1,17 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/LomTypes.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_MxDCore/LomTypes.py
 import Live
 from _Tools import types
 from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ControlElement import ControlElement
 from _Framework.Util import is_iterable
-HIDDEN_TYPES = Live.Browser.Browser
-HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture')
+HIDDEN_TYPES = (Live.Browser.Browser, Live.Clip.AutomationEnvelope)
+HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture', 'automation_envelope')
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
- Live.Clip.GridQuantization)
+ Live.Clip.GridQuantization,
+ Live.DeviceParameter.AutomationState)
 TUPLE_TYPES = {'tracks': Live.Track.Track,
  'visible_tracks': Live.Track.Track,
  'return_tracks': Live.Track.Track,

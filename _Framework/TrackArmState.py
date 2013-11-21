@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TrackArmState.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TrackArmState.py
 from SubjectSlot import Subject, subject_slot, SlotManager
 
 class TrackArmState(Subject, SlotManager):
@@ -35,7 +35,7 @@ class TrackArmState(Subject, SlotManager):
     def _set_arm(self, new_state):
         if self._track.can_be_armed:
             self._track.arm = new_state
-            if new_state == False:
+            if not new_state:
                 self._track.implicit_arm = False
         self._arm = new_state
 

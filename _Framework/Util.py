@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
 """
 Various utilities.
 """
@@ -35,7 +35,19 @@ def sign(value):
     return 1.0 if value >= 0.0 else -1.0
 
 
-class memoize(object):
+def to_slice(obj):
+    return obj if isinstance(obj, slice) else (slice(obj, obj + 1) if obj != -1 else slice(obj, None))
+
+
+def slice_size(slice, width):
+    return len(range(width)[slice])
+
+
+def maybe(fn):
+    return lambda x: fn(x) if x is not None else None
+
+
+def memoize(function):
     """
     Decorator to use automatic memoization on a given function, such
     that results are chached and, if called a second time, the
@@ -66,22 +78,22 @@ class memoize(object):
     Note that every computed value is cached in global state, so this
     can be inapropiate when the function domain is very big.
     """
+    memoized = {}
 
-    def __init__(self, function):
-        self.function = function
-        self.memoized = {}
-
-    def __call__(self, *args):
+    @wraps(function)
+    def wrapper(*args):
         try:
-            ret = self.memoized[args]
+            ret = memoized[args]
         except KeyError:
-            ret = self.memoized[args] = self.function(*args)
+            ret = memoized[args] = function(*args)
 
         return ret
 
+    return wrapper
+
 
 @memoize
-def mixin(one, two, *args):
+def mixin(one, *args):
     """
     Dynamically creates a class that inherits from all the classes
     passed as parameters. Example::
@@ -97,14 +109,17 @@ def mixin(one, two, *args):
     
         assert mixin(A, B) == mixin(A, B)
     """
+    if not args:
+        return one
+    two, rest = args[0], args[1:]
 
     class Mixin(one, two):
 
         def __init__(self, *args, **kws):
             super(Mixin, self).__init__(*args, **kws)
 
-    if args:
-        return mixin(Mixin, *args)
+    if rest:
+        return mixin(Mixin, *rest)
     return Mixin
 
 
@@ -413,6 +428,16 @@ def recursive_map(fn, element, sequence_type = None):
         return fn(element)
 
 
+def chain_from_iterable(iterables):
+    """
+    Alternate constructor for chain(). Gets chained inputs from a single iterable
+    argument that is evaluated lazily.
+    """
+    for it in iterables:
+        for element in it:
+            yield element
+
+
 def first(seq):
     return seq[0]
 
@@ -503,11 +528,11 @@ class BooleanContext(object):
     def __bool__(self):
         return bool(self._current_value)
 
-    def __call__(self):
+    def __call__(self, update_value = None):
         """
         Makes a context manager for the boolean context
         """
-        return self.Manager(self)
+        return self.Manager(self, update_value)
 
     @property
     def value(self):
@@ -515,14 +540,15 @@ class BooleanContext(object):
 
     class Manager(object):
 
-        def __init__(self, managed = None, *a, **k):
+        def __init__(self, managed = None, update_value = None, *a, **k):
             super(BooleanContext.Manager, self).__init__(*a, **k)
             self._managed = managed
+            self._update_value = update_value if update_value is not None else not managed.default_value
 
         def __enter__(self):
             managed = self._managed
             self._old_value = managed._current_value
-            managed._current_value = not managed.default_value
+            managed._current_value = self._update_value
             return self
 
         def __exit__(self, *a, **k):
@@ -558,7 +584,7 @@ class NamedTuple(object):
             self.__dict__.update(diff)
 
         self.__dict__.update(k)
-        if hasattr(self, '_eq_dict'):
+        if '_eq_dict' in self.__dict__:
             self._eq_dict.update(k)
 
     def __setattr__(self, name, value):
@@ -632,6 +658,8 @@ class Slicer(object):
         return self
 
 
+get_slice = Slicer()
+
 def slicer(dimensions):
     """
     Slicer decorator.  Returns a decorator that will decorate a
@@ -647,6 +675,10 @@ def slicer(dimensions):
         return make_slicer
 
     return decorator
+
+
+def print_message(*messages):
+    print ' '.join(map(str, messages))
 
 
 def trace_value(value, msg = 'Value: '):
@@ -696,6 +728,7 @@ class CallCounter(Bindable):
         wraps(fn)(self)
         self.fn = fn
         self.count = 0
+        self.last_args = None
         self.current_self = current_self
 
     def bind(self, obj):
@@ -703,6 +736,7 @@ class CallCounter(Bindable):
 
     def __call__(self, *a, **k):
         self.count += 1
+        self.last_args = a
         if self.current_self is not None:
             return self.fn(self.current_self, *a, **k)
         else:

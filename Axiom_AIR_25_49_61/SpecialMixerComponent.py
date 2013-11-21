@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/SpecialMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from DisplayingChanStripComponent import DisplayingChanStripComponent
 

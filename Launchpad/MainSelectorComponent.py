@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/MainSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/MainSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -213,7 +213,7 @@ class MainSelectorComponent(ModeSelectorComponent):
 
         if release_buttons:
             self._config_button.send_value(2)
-        self._config_button.send_value(32, force_send=True)
+        self._config_button.send_value(32, force=True)
 
     def _init_session(self):
         self._session.set_stop_track_clip_value(AMBER_BLINK)

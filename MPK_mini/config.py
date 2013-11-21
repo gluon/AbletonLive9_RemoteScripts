@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MPK_mini/config.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/MPK_mini/config.py
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': -1,
  'PLAY': -1,

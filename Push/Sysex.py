@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Sysex.py
 START = (240, 71, 127, 21)
 CLEAR_LINE1 = START + (28, 0, 0, 247)
 CLEAR_LINE2 = START + (29, 0, 0, 247)
@@ -9,6 +9,8 @@ WRITE_LINE2 = START + (25, 0, 69, 0)
 WRITE_LINE3 = START + (26, 0, 69, 0)
 WRITE_LINE4 = START + (27, 0, 69, 0)
 SET_AFTERTOUCH_MODE = START + (92, 0, 1)
+POLY_AFTERTOUCH = (0,)
+MONO_AFTERTOUCH = (1,)
 CONTRAST_PREFIX = START + (122, 0, 1)
 CONTRAST_ENQUIRY = START + (122, 0, 0, 247)
 BRIGHTNESS_PREFIX = START + (124, 0, 1)

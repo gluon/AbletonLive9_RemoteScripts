@@ -1,15 +1,15 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/MessageBoxComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/MessageBoxComponent.py
 from functools import partial
 from _Framework.Dependency import dependency
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import forward_property, const, nop
+from _Framework.Util import forward_property, const, nop, maybe
 from _Framework import Task
 from _Framework.ControlElement import ControlElement
 from _Framework.Layer import Layer
 from BackgroundComponent import BackgroundComponent
-from consts import MessageBoxText, DISPLAY_LENGTH
+from consts import MessageBoxText, DISPLAY_LENGTH, DISPLAY_BLOCK_LENGTH
 import consts
 from _Framework.CompoundElement import CompoundElement
 
@@ -37,10 +37,6 @@ class MessageBoxComponent(BackgroundComponent):
         self._top_row_buttons = None
         self.data_sources = map(DisplayDataSource, ('',) * self.num_lines)
         self._notification_display = None
-
-    @property
-    def can_cancel(self):
-        return self._can_cancel
 
     def _set_display_line(self, n, display_line):
         if display_line:
@@ -116,6 +112,7 @@ class MessageBoxComponent(BackgroundComponent):
 
 
 class _CallbackControl(CompoundElement):
+    _is_resource_based = True
 
     def __init__(self, token = None, callback = None, *a, **k):
         super(_CallbackControl, self).__init__(*a, **k)
@@ -135,6 +132,27 @@ class _TokenControlElement(ControlElement):
         pass
 
 
+BLANK_BLOCK = ' ' * DISPLAY_BLOCK_LENGTH
+
+def align_none(width, text):
+    return text
+
+
+def align_left(width, text):
+    while text.startswith(BLANK_BLOCK):
+        text = text[DISPLAY_BLOCK_LENGTH:]
+
+    return text
+
+
+def align_right(width, text):
+    text = text.ljust(width)
+    while text.endswith(BLANK_BLOCK):
+        text = BLANK_BLOCK + text[:1 - DISPLAY_BLOCK_LENGTH]
+
+    return text
+
+
 class NotificationComponent(CompoundComponent):
     """
     Displays notifications to the user for a given amount of time.
@@ -148,11 +166,13 @@ class NotificationComponent(CompoundComponent):
         my_component.layer = Layer(
             _notification = notification_component.use_single_line(1))
     """
+    _default_align_text_fn = partial(maybe(partial(align_none, DISPLAY_LENGTH)))
 
     def __init__(self, notification_time = 2.5, blinking_time = 0.3, display_lines = [], *a, **k):
         super(NotificationComponent, self).__init__(*a, **k)
         self._display_lines = display_lines
         self._token_control = _TokenControlElement()
+        self._align_text_fn = self._default_align_text_fn
         self._message_box = self.register_component(MessageBoxComponent())
         self._message_box.set_enabled(False)
         self._notification_timeout_task = self._tasks.add(Task.sequence(Task.wait(notification_time), Task.run(self.hide_notification))).kill()
@@ -166,6 +186,8 @@ class NotificationComponent(CompoundComponent):
         """
         Triggers a notification with the given text.
         """
+        text = self._align_text_fn(text)
+        blink_text = self._align_text_fn(blink_text)
         if blink_text is not None:
             self._original_text = text
             self._blink_text = blink_text
@@ -181,30 +203,29 @@ class NotificationComponent(CompoundComponent):
         self._blink_text_task.kill()
         self._message_box.set_enabled(False)
 
-    def use_single_line(self, line_index):
+    def use_single_line(self, line_index, line_slice = None, align = align_none):
         """
         Returns a control, that will change the notification to a single line view,
         if it is grabbed.
         """
-        return _CallbackControl(self._token_control, partial(self._set_single_line, line_index))
+        if not (line_index >= 0 and line_index < len(self._display_lines)):
+            raise AssertionError
+            display = self._display_lines[line_index]
+            display = line_slice is not None and display.subdisplay[line_slice]
+        layer = Layer(priority=consts.MESSAGE_BOX_PRIORITY, display_line1=display)
+        return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer, maybe(partial(align, display.width))))
 
     def use_full_display(self, message_line_index = 2):
         """
         Returns a control, that will change the notification to use the whole display,
         if it is grabbed.
         """
-        return _CallbackControl(self._token_control, partial(self._set_full_display, message_line_index=message_line_index))
+        layer = Layer(priority=consts.MESSAGE_BOX_PRIORITY, **dict([ ('display_line1' if i == message_line_index else 'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
+        return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer))
 
-    def _set_single_line(self, line_index):
-        raise line_index >= 0 and line_index < len(self._display_lines) or AssertionError
-        layer = Layer(**{'display_line1': self._display_lines[line_index]})
-        layer.priority = consts.MESSAGE_BOX_PRIORITY
+    def _set_message_box_layout(self, layer, align_text_fn = None):
         self._message_box.layer = layer
-
-    def _set_full_display(self, message_line_index = 2):
-        layer = Layer(**dict([ ('display_line1' if i == message_line_index else 'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
-        layer.priority = consts.MESSAGE_BOX_PRIORITY
-        self._message_box.layer = layer
+        self._align_text_fn = partial(align_text_fn or self._default_align_text_fn)
 
     def update(self):
         pass

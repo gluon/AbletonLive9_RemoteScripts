@@ -1,8 +1,6 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
-from _Framework.SubjectSlot import subject_slot, SlotManager, SubjectEvent
-from _Framework import Task
-import consts
+from _Framework.SubjectSlot import subject_slot, SlotManager
 
 class TouchEncoderObserver(object):
     """ Interface for observing the state of one or more TouchEncoderElements """
@@ -16,29 +14,30 @@ class TouchEncoderObserver(object):
 
 class TouchEncoderElement(EncoderElement, SlotManager):
     """ Class representing an encoder that is touch sensitive """
-    __subject_events__ = (SubjectEvent(name='double_tap'),)
+    __subject_events__ = ('touch_value',)
 
     def __init__(self, msg_type, channel, identifier, map_mode, undo_step_handler = None, delete_handler = None, touch_button = None, *a, **k):
         super(TouchEncoderElement, self).__init__(msg_type, channel, identifier, map_mode, *a, **k)
+        raise touch_button is not None or AssertionError
+        self.touch_button = touch_button
         self._trigger_undo_step = False
         self._undo_step_open = False
         self._undo_step_handler = undo_step_handler
         self._delete_handler = delete_handler
-        self._tap_count = 0
-        self._tap_task = self._tasks.add(Task.sequence(Task.wait(consts.TAPPING_DELAY), Task.run(self._reset_tapping)))
-        self._tap_task.kill()
         self.set_touch_button(touch_button)
         self.set_observer(None)
 
     def is_pressed(self):
-        button = self._on_touch_button.subject
-        return button and button.is_pressed()
+        return self.touch_button and self.touch_button.is_pressed()
 
     def set_touch_button(self, touch_button):
+        self.touch_button = touch_button
         self._on_touch_button.subject = touch_button
 
     def set_observer(self, observer):
-        self._observer = observer or TouchEncoderObserver()
+        if observer is None:
+            observer = TouchEncoderObserver()
+        self._observer = observer
 
     def _delete_clip_automation(self):
         mapped_parameter = self.mapped_parameter()
@@ -60,23 +59,17 @@ class TouchEncoderElement(EncoderElement, SlotManager):
             else:
                 self.begin_gesture()
                 self._observer.on_encoder_touch(self)
+                self.notify_touch_value(value)
         else:
-            if self._undo_step_open:
+            if self._undo_step_handler and self._undo_step_open:
                 self._undo_step_handler.end_undo_step()
             self._observer.on_encoder_touch(self)
+            self.notify_touch_value(value)
             self.end_gesture()
-            self._tap_count += 1
-            if self._tap_count > 1:
-                self.notify_double_tap()
-                self._reset_tapping()
-            else:
-                self._tap_task.restart()
-
-    def _reset_tapping(self):
-        self._tap_count = 0
 
     def connect_to(self, parameter):
         if parameter != self.mapped_parameter():
+            self.last_mapped_parameter = parameter
             super(TouchEncoderElement, self).connect_to(parameter)
             self._observer.on_encoder_parameter(self)
 
@@ -86,8 +79,7 @@ class TouchEncoderElement(EncoderElement, SlotManager):
             self._observer.on_encoder_parameter(self)
 
     def receive_value(self, value):
-        self._reset_tapping()
-        if self._trigger_undo_step:
+        if self._undo_step_handler and self._trigger_undo_step:
             self._undo_step_handler.begin_undo_step()
             self._trigger_undo_step = False
             self._undo_step_open = True

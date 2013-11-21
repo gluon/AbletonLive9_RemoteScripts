@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SubjectSlot.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SubjectSlot.py
 """
 Family of classes for maintaining connections with optional subjects.
 """
 from itertools import izip, repeat
 from functools import partial, wraps
 from Signal import Signal
-from Util import instance_decorator, monkeypatch, monkeypatch_extend, NamedTuple
+from Util import instance_decorator, monkeypatch, monkeypatch_extend, NamedTuple, mixin
 from Disconnectable import Disconnectable, CompoundDisconnectable
 
 class SubjectSlotError(Exception):
@@ -218,13 +218,12 @@ class CallableSlotMixin(object):
     subjectslot.
     """
 
+    def __init__(self, function = None, *a, **k):
+        super(CallableSlotMixin, self).__init__(*a, **k)
+        self.function = function
+
     def __call__(self, *a, **k):
-        raise self.listener or AssertionError
-        return self.listener(*a, **k)
-
-
-class CallableSubjectSlot(SubjectSlot, CallableSlotMixin):
-    pass
+        return self.function(*a, **k)
 
 
 class SubjectSlotGroup(SlotManager):
@@ -268,20 +267,65 @@ class SubjectSlotGroup(SlotManager):
         return lambda *a, **k: self.listener and self.listener(*(a + (identifier,)), **k)
 
 
-class CallableSubjectSlotGroup(SubjectSlotGroup, CallableSlotMixin):
-    pass
+class MultiSubjectSlot(SlotManager, SubjectSlot):
+    """
+    A subject slot that takes a string describing the path to the event to listen to.
+    It will make sure that any changes to the elements of this path notify the given
+    listener and will follow the changing subjects.
+    """
+
+    def __init__(self, subject = None, listener = None, event = None, extra_kws = None, extra_args = None, *a, **k):
+        self._original_listener = listener
+        self._slot_subject = None
+        self._nested_slot = None
+        super(MultiSubjectSlot, self).__init__(event=event[0], listener=self._event_fired, subject=subject, extra_kws=extra_kws, extra_args=extra_args)
+        if len(event) > 1:
+            self._nested_slot = self.register_disconnectable(MultiSubjectSlot(event=event[1:], listener=listener, subject=subject, extra_kws=extra_kws, extra_args=extra_args))
+            self._update_nested_subject()
+
+    def _get_subject(self):
+        return super(MultiSubjectSlot, self)._get_subject()
+
+    def _set_subject(self, subject):
+        try:
+            super(MultiSubjectSlot, self)._set_subject(subject)
+        except SubjectSlotError:
+            if self._nested_slot == None:
+                raise 
+        finally:
+            self._slot_subject = subject
+            self._update_nested_subject()
+
+    subject = property(_get_subject, _set_subject)
+
+    def _event_fired(self, *a, **k):
+        self._update_nested_subject()
+        self._original_listener(*a, **k)
+
+    def _update_nested_subject(self):
+        if self._nested_slot != None:
+            self._nested_slot.subject = getattr(self._slot_subject, self._event) if self._slot_subject != None else None
 
 
-def subject_slot(event, *a, **k):
+def subject_slot(events, *a, **k):
 
     @instance_decorator
     def decorator(self, method):
         raise isinstance(self, SlotManager) or AssertionError
-        slot = wraps(method)(CallableSubjectSlot(event=event, extra_kws=k, extra_args=a, listener=partial(method, self)))
+        function = partial(method, self)
+        event_list = events.split('.')
+        num_events = len(event_list)
+        event = event_list if num_events > 1 else events
+        base_class = MultiSubjectSlot if num_events > 1 else SubjectSlot
+        slot = wraps(method)(mixin(base_class, CallableSlotMixin)(event=event, extra_kws=k, extra_args=a, listener=function, function=function))
         self.register_slot(slot)
         return slot
 
     return decorator
+
+
+class CallableSubjectSlotGroup(SubjectSlotGroup, CallableSlotMixin):
+    pass
 
 
 def subject_slot_group(event, *a, **k):
@@ -289,7 +333,8 @@ def subject_slot_group(event, *a, **k):
     @instance_decorator
     def decorator(self, method):
         raise isinstance(self, SlotManager) or AssertionError
-        slot = wraps(method)(CallableSubjectSlotGroup(event=event, extra_kws=k, extra_args=a, listener=partial(method, self)))
+        function = partial(method, self)
+        slot = wraps(method)(CallableSubjectSlotGroup(event=event, extra_kws=k, extra_args=a, listener=function, function=function))
         self.register_slot_manager(slot)
         return slot
 

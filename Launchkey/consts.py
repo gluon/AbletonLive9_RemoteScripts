@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/consts.py
 SIZE_QUERY = (240, 126, 127, 6, 1, 247)
 SIZE_RESPONSE = (240, 126, 127, 6, 2, 0, 32, 41, 0, 25, 0)
 LIVE_MODE_ON = (144, 12, 127)

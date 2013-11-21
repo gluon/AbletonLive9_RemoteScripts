@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Layer.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Layer.py
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
 from Util import nop
 from itertools import repeat, izip
-from Resource import ExclusiveResource
+from Resource import ExclusiveResource, CompoundResource
 
 class LayerError(Exception):
     pass
@@ -13,6 +13,67 @@ class LayerError(Exception):
 
 class UnhandledControlError(LayerError):
     pass
+
+
+class ControlClient(object):
+    """
+    Client of the indivial controls that delivers the controls to the
+    layer owner.
+    """
+
+    def __init__(self, layer = None, layer_client = None, *a, **k):
+        super(ControlClient, self).__init__(*a, **k)
+        raise layer_client or AssertionError
+        raise layer or AssertionError
+        self.layer_client = layer_client
+        self.layer = layer
+
+    def __eq__(self, other):
+        return self.layer == getattr(other, 'layer', None) and self.layer_client == getattr(other, 'layer_client', None)
+
+    def set_control_element(self, control, grabbed):
+        layer = self.layer
+        owner = self.layer_client
+        raise owner or AssertionError
+        if not control in layer._control_to_names:
+            raise AssertionError, 'Control not in layer: %s' % (control,)
+            names = layer._control_to_names[control]
+            control = grabbed or None
+        for name in names:
+            try:
+                handler = getattr(owner, 'set_' + name)
+            except AttributeError:
+                if name[0] != '_':
+                    raise UnhandledControlError, 'Component %s has no handler for control %s' % (str(owner), name)
+                else:
+                    handler = nop
+
+            handler(control)
+            layer._name_to_controls[name] = control
+
+
+class CompoundLayer(CompoundResource):
+    """
+    A compound resource takes two layers and makes them look like one,
+    grabbing both of them.  Both can have different priorities
+    thought.
+    """
+
+    def _get_priority(self):
+        raise self.first.priority == self.second.priority or AssertionError
+        return self.first.priority
+
+    def _set_priority(self, priority):
+        self.first.priority = priority
+        self.second.priority = priority
+
+    priority = property(_get_priority, _set_priority)
+
+    def __getattr__(self, key):
+        try:
+            return getattr(self.first, key)
+        except AttributeError:
+            return getattr(self.second, key)
 
 
 class Layer(ExclusiveResource):
@@ -31,16 +92,25 @@ class Layer(ExclusiveResource):
     layer.  This way, layers are a convenient way to provide controls
     to components indirectly, with automatic handling of competition
     for them.
+    
+    Note that [control-name] can not be any of the following reserved
+    names: priority, grab, release, on_grab, on_release, owner,
+    get_owner
+    
+    If [control-name] starts with an underscore (_) it is considered
+    private.  It is grabbed but it is not delivered to the client.
     """
 
-    def __init__(self, *a, **controls):
-        super(Layer, self).__init__(*a)
-        self._layer_owner = None
-        self._priority = None
+    def __init__(self, priority = None, **controls):
+        super(Layer, self).__init__()
+        self._priority = priority
         self._name_to_controls = dict(izip(controls.iterkeys(), repeat(None)))
         self._control_to_names = dict()
         for name, control in controls.iteritems():
             self._control_to_names.setdefault(control, []).append(name)
+
+    def __add__(self, other):
+        return CompoundLayer(self, other)
 
     def _get_priority(self):
         return self._priority
@@ -48,8 +118,8 @@ class Layer(ExclusiveResource):
     def _set_priority(self, priority):
         if priority != self._priority:
             self._priority = priority
-            if self._layer_owner:
-                self.grab(self._layer_owner)
+            if self.owner:
+                self.grab(self.owner)
 
     priority = property(_get_priority, _set_priority)
 
@@ -60,30 +130,6 @@ class Layer(ExclusiveResource):
         except KeyError:
             raise AttributeError
 
-    def set_control_element(self, control, grabbed):
-        """
-        Client interface of the ControlElement resource. Please do not
-        call this method directly, nor use a layer to grab controls
-        directly -- do it implicitly by grabing the layer.
-        """
-        if not self._layer_owner:
-            raise AssertionError
-            raise control in self._control_to_names or AssertionError, 'Control not in layer.'
-            owner = self._layer_owner
-            names = self._control_to_names[control]
-            control = grabbed or None
-        for name in names:
-            try:
-                handler = getattr(owner, 'set_' + name)
-            except AttributeError:
-                if name[0] != '_':
-                    raise UnhandledControlError, 'Component %s has no handler for control %s' % (str(owner), name)
-                else:
-                    handler = nop
-
-            handler(control)
-            self._name_to_controls[name] = control
-
     def grab(self, client, *a, **k):
         if client == self.owner:
             self.on_grab(client, *a, **k)
@@ -92,14 +138,11 @@ class Layer(ExclusiveResource):
 
     def on_grab(self, client, *a, **k):
         """ Override from ExclusiveResource """
-        self._layer_owner = client
         for control in self._control_to_names.iterkeys():
             k.setdefault('priority', self._priority)
-            control.resource.grab(self, *a, **k)
+            control.resource.grab(ControlClient(layer_client=client, layer=self), *a, **k)
 
     def on_release(self, client):
         """ Override from ExclusiveResource """
         for control in self._control_to_names.iterkeys():
-            control.resource.release(self)
-
-        self._layer_owner = None
+            control.resource.release(ControlClient(layer_client=client, layer=self))

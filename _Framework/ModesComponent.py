@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ModesComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ModesComponent.py
 """
 Mode handling components.
 """
@@ -124,7 +124,6 @@ class LayerMode(Mode):
     def __init__(self, component = None, layer = None, *a, **k):
         super(LayerMode, self).__init__(*a, **k)
         raise component is not None or AssertionError
-        raise layer is not None or AssertionError
         self._component = component
         self._layer = layer
 
@@ -296,7 +295,7 @@ class ReenterBehaviour(LatchingBehaviour):
             self.on_reenter = on_reenter
 
     def press_immediate(self, component, mode):
-        was_active = mode in component.active_modes
+        was_active = component.selected_mode == mode
         super(ReenterBehaviour, self).press_immediate(component, mode)
         if was_active:
             self.on_reenter()
@@ -543,7 +542,7 @@ class ModesComponent(CompoundComponent):
 
     @property
     def active_modes(self):
-        return self._mode_stack.stack_clients
+        return self._mode_stack.clients
 
     def push_mode(self, mode):
         """
@@ -565,7 +564,9 @@ class ModesComponent(CompoundComponent):
         """
         if not isinstance(groups, set):
             groups = set(groups)
-        self._mode_stack.release_if(lambda client: self.get_mode_groups(client) & groups)
+        for client in self._mode_stack.clients:
+            if self.get_mode_groups(client) & groups:
+                self._mode_stack.release(client)
 
     def pop_unselected_modes(self):
         """
@@ -628,11 +629,15 @@ class ModesComponent(CompoundComponent):
         return entry.groups if entry else set()
 
     def set_toggle_button(self, button):
+        if button and self.is_enabled():
+            button.reset()
         self._mode_toggle = button
         self._on_toggle_value.subject = button
         self._update_buttons(self.selected_mode)
 
     def set_mode_button(self, name, button):
+        if button and self.is_enabled():
+            button.reset()
         self._mode_map[name].subject_slot.subject = button
         self._update_buttons(self.selected_mode)
 
@@ -677,13 +682,13 @@ class ModesComponent(CompoundComponent):
                 is_press = value and not self._last_toggle_value
                 is_release = not value and self._last_toggle_value
                 can_latch = self._mode_toggle_task.is_killed and self.selected_mode != self._mode_list[0]
-                (not self._mode_toggle.is_momentary() or is_press) and self._cycle_mode(1)
+                (not self._mode_toggle.is_momentary() or is_press) and self.cycle_mode(1)
                 self._mode_toggle_task.restart()
             elif is_release and (self.momentary_toggle or can_latch):
-                self._cycle_mode(-1)
+                self.cycle_mode(-1)
             self._last_toggle_value = value
 
-    def _cycle_mode(self, delta):
+    def cycle_mode(self, delta = 1):
         current_index = self._mode_list.index(self.selected_mode) if self.selected_mode else -delta
         current_index = (current_index + delta) % len(self._mode_list)
         self.selected_mode = self._mode_list[current_index]
@@ -708,6 +713,7 @@ class DisplayingModesComponent(ModesComponent):
         self._mode_data_sources[name] = (data_source, data_source.display_string())
 
     def update(self):
+        super(DisplayingModesComponent, self).update()
         self._update_data_sources(self.selected_mode)
 
     def _do_enter_mode(self, name):
@@ -718,3 +724,17 @@ class DisplayingModesComponent(ModesComponent):
         if self.is_enabled():
             for name, (source, string) in self._mode_data_sources.iteritems():
                 source.set_display_string('*' + string if name == selected else string)
+
+
+class EnablingModesComponent(ModesComponent):
+    """
+    Adds the two modes 'enabled' and 'disabled'. The provided component will be
+    enabled while the 'enabled' mode is active.
+    """
+
+    def __init__(self, component = None, toggle_value = False, *a, **k):
+        super(EnablingModesComponent, self).__init__(*a, **k)
+        component.set_enabled(False)
+        self.add_mode('disabled', None)
+        self.add_mode('enabled', component, toggle_value)
+        self.selected_mode = 'disabled'

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ValueComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ValueComponent.py
 from functools import partial
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -7,7 +7,7 @@ from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
 from _Framework.InputControlElement import ParameterSlot
 from _Framework import Task
-from DisplayingDeviceComponent import convert_parameter_value_to_graphic
+from DeviceParameterComponent import convert_parameter_value_to_graphic
 import consts
 NUM_SEGMENTS = 4
 

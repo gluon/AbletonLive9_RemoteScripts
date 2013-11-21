@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/AutoArmComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/AutoArmComponent.py
 """
 Component that automatically arms the selected track.
 """
@@ -6,7 +6,7 @@ from itertools import ifilter
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ModesComponent import LatchingBehaviour
-from _Framework.Util import forward_property
+from _Framework.Util import forward_property, mixin
 from MessageBoxComponent import NotificationComponent
 
 class AutoArmRestoreBehaviour(LatchingBehaviour):
@@ -24,6 +24,7 @@ class AutoArmRestoreBehaviour(LatchingBehaviour):
         super(AutoArmRestoreBehaviour, self).__init__(*a, **k)
         self._auto_arm = auto_arm
         self._last_update_params = None
+        self._skip_super = False
 
     def _mode_is_active(self, component, mode, selected_mode):
         groups = component.get_mode_groups(mode)
@@ -31,9 +32,28 @@ class AutoArmRestoreBehaviour(LatchingBehaviour):
         return mode == selected_mode or bool(groups & selected_groups)
 
     def press_immediate(self, component, mode):
-        super(AutoArmRestoreBehaviour, self).press_immediate(component, mode)
+        called_super = False
+        if component.selected_mode != mode:
+            called_super = True
+            super(AutoArmRestoreBehaviour, self).press_immediate(component, mode)
         if self._auto_arm.needs_restore_auto_arm:
             self._auto_arm.restore_auto_arm()
+        elif not called_super:
+            called_super = True
+            super(AutoArmRestoreBehaviour, self).press_immediate(component, mode)
+        self._skip_super = not called_super
+
+    def press_delayed(self, component, mode):
+        if not self._skip_super:
+            super(AutoArmRestoreBehaviour, self).press_delayed(component, mode)
+
+    def release_immediate(self, component, mode):
+        if not self._skip_super:
+            super(AutoArmRestoreBehaviour, self).release_immediate(component, mode)
+
+    def release_delayed(self, component, mode):
+        if not self._skip_super:
+            super(AutoArmRestoreBehaviour, self).release_delayed(component, mode)
 
     def update_button(self, component, mode, selected_mode):
         self._last_update_params = (component, mode, selected_mode)
@@ -57,7 +77,7 @@ class AutoArmComponent(CompoundComponent):
 
     def __init__(self, *a, **k):
         super(AutoArmComponent, self).__init__(*a, **k)
-        self._auto_arm_restore_behaviour = AutoArmRestoreBehaviour(auto_arm=self)
+        self._auto_arm_restore_behaviour = None
         self._notification = self.register_component(NotificationComponent(notification_time=10.0))
         self._on_tracks_changed.subject = self.song()
         self._on_exclusive_arm_changed.subject = self.song()
@@ -65,8 +85,11 @@ class AutoArmComponent(CompoundComponent):
 
     notification_layer = forward_property('_notification')('message_box_layer')
 
-    @property
-    def auto_arm_restore_behaviour(self):
+    def auto_arm_restore_behaviour(self, *extra_classes, **extra_params):
+        if not self._auto_arm_restore_behaviour:
+            self._auto_arm_restore_behaviour = mixin(AutoArmRestoreBehaviour, *extra_classes)(auto_arm=self, **extra_params)
+        else:
+            raise not extra_params and not extra_classes or AssertionError
         return self._auto_arm_restore_behaviour
 
     def can_auto_arm_track(self, track):
@@ -83,13 +106,14 @@ class AutoArmComponent(CompoundComponent):
 
     def update(self):
         song = self.song()
-        enabled = self.is_enabled() and not self.needs_restore_auto_arm
-        selected_track = song.view.selected_track
-        for track in song.tracks:
-            if self.can_auto_arm_track(track):
-                track.implicit_arm = enabled and selected_track == track
+        if self.is_enabled():
+            enabled = not self.needs_restore_auto_arm
+            selected_track = song.view.selected_track
+            for track in song.tracks:
+                if self.can_auto_arm_track(track):
+                    track.implicit_arm = enabled and selected_track == track
 
-        self._auto_arm_restore_behaviour.update()
+            self._auto_arm_restore_behaviour and self._auto_arm_restore_behaviour.update()
         self._update_notification()
 
     def restore_auto_arm(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
 from _Framework.Util import flatten
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
@@ -179,7 +179,7 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
 
     def _select_value_without_modifier(self, value):
         if value and self.song().view.selected_track == self._track:
-            self._do_toggle_arm(exclusive=True)
+            self._do_toggle_arm(exclusive=self.song().exclusive_arm)
         else:
             super(SpecialChanStripComponent, self)._select_value(value)
         if value and self._track.is_foldable and self._select_button.is_momentary():

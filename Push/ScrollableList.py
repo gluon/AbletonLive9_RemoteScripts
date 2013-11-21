@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ScrollableList.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ScrollableList.py
 from __future__ import with_statement
 from functools import partial
 from _Framework.CompoundComponent import CompoundComponent
@@ -50,6 +50,7 @@ class ScrollableList(Subject, Scrollable):
     """
     __subject_events__ = ('selected_item', 'item_activated', 'scroll')
     item_type = ScrollableListItem
+    fixed_offset = None
 
     def __init__(self, num_visible_items = 1, item_type = None, *a, **k):
         super(ScrollableList, self).__init__(*a, **k)
@@ -117,7 +118,9 @@ class ScrollableList(Subject, Scrollable):
         Selects an item with an index. Moves the view if the selection would exceed the
         border of the current view.
         """
-        if index >= 0 and index < len(self._items):
+        if self.fixed_offset is not None:
+            self.select_item_index_with_offset(index, self.fixed_offset)
+        elif index >= 0 and index < len(self._items):
             if not in_range(index, self._offset + border_size, self._offset + self._num_visible_items - border_size):
                 offset = index - (self._num_visible_items - 2 * border_size) if self.selected_item_index < index else index - border_size
                 self._offset = clamp(offset, 0, len(self._items))
@@ -310,28 +313,33 @@ class ListComponent(CompoundComponent):
         self.set_select_prev_button(prev_button)
         self.set_select_next_button(next_button)
 
+    def _set_scroll_button_colors(self, button):
+        if button:
+            button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
+
     def set_select_prev_button(self, prev_button):
-        if prev_button:
-            prev_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
         self._scroller.set_scroll_up_button(prev_button)
+        self._set_scroll_button_colors(prev_button)
+        self._scroller.update()
 
     def set_select_next_button(self, next_button):
-        if next_button:
-            next_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
         self._scroller.set_scroll_down_button(next_button)
+        self._set_scroll_button_colors(next_button)
+        self._scroller.update()
 
     def set_next_page_button(self, next_button):
-        if next_button:
-            next_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
         self._pager.set_scroll_down_button(next_button)
+        self._set_scroll_button_colors(next_button)
+        self._pager.update()
 
     def set_prev_page_button(self, prev_button):
-        if prev_button:
-            prev_button.set_on_off_values(self.DIRECTION_ON_COLOR, self.DIRECTION_OFF_COLOR)
         self._pager.set_scroll_up_button(prev_button)
+        self._set_scroll_button_colors(prev_button)
+        self._pager.update()
 
     def set_action_button(self, button):
         if button:
+            button.reset()
             button.set_on_off_values('Browser.Load', 'Browser.LoadNotPossible')
         self._on_action_button_value.subject = button
         self._update_action_feedback()

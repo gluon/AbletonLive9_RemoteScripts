@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/CompoundElement.py
 from __future__ import with_statement
+from itertools import ifilter
 from SubjectSlot import subject_slot_group, SlotManager
 from NotifyingControlElement import NotifyingControlElement
-from Util import BooleanContext
+from Util import BooleanContext, first, second
 
 class CompoundElement(NotifyingControlElement, SlotManager):
     """
@@ -10,6 +11,7 @@ class CompoundElement(NotifyingControlElement, SlotManager):
     to nested elements, hiding the complexity oif making sure that
     resource ownership rules are preserved.
     """
+    _is_resource_based = False
 
     def __init__(self, *a, **k):
         super(CompoundElement, self).__init__(*a, **k)
@@ -51,10 +53,11 @@ class CompoundElement(NotifyingControlElement, SlotManager):
             self._nested_control_elements[element] = False
             if self._listen_nested_requests > 0:
                 self._on_nested_control_element_value.add_subject(element)
-            priority = self._has_resource and self.resource.owner and self.get_control_element_priority(element)
+            priority = self._is_resource_based and self.resource.owner and self.get_control_element_priority(element)
             element.resource.grab(self, priority=priority)
-        else:
-            self._on_nested_control_element_grabbed(element)
+        elif not self._is_resource_based:
+            with self._disable_notify_owner_on_button_ownership_change():
+                element.notify_ownership_change(self, True)
         return element
 
     def unregister_control_elements(self, *elements):
@@ -63,10 +66,11 @@ class CompoundElement(NotifyingControlElement, SlotManager):
     def unregister_control_element(self, element):
         if not element in self._nested_control_elements:
             raise AssertionError
-            if self._has_resource and self.resource.owner:
+            if self._is_resource_based and self.resource.owner:
                 element.resource.release(self)
-            else:
-                self._on_nested_control_element_released(element)
+            elif not self._is_resource_based:
+                with self._disable_notify_owner_on_button_ownership_change():
+                    element.notify_ownership_change(self, False)
             self._listen_nested_requests > 0 and self._on_nested_control_element_value.remove_subject(element)
         del self._nested_control_elements[element]
         return element
@@ -77,10 +81,15 @@ class CompoundElement(NotifyingControlElement, SlotManager):
     def owns_control_element(self, control):
         return self._nested_control_elements.get(control, False)
 
+    def owned_control_elements(self):
+        return map(first, ifilter(second, self._nested_control_elements.iteritems()))
+
+    def nested_control_elements(self):
+        return self._nested_control_elements.iterkeys()
+
     def reset(self):
-        for element, owned in self._nested_control_elements.iteritems():
-            if owned:
-                element.reset()
+        for element in self.owned_control_elements():
+            element.reset()
 
     def add_value_listener(self, *a, **k):
         if self.value_listener_count() == 0:
@@ -124,16 +133,16 @@ class CompoundElement(NotifyingControlElement, SlotManager):
         self._on_nested_control_element_value.replace_subjects([])
 
     def _on_nested_control_element_grabbed(self, control):
-        if not control in self._nested_control_elements:
-            raise AssertionError
-            self._nested_control_elements[control] = self._nested_control_elements[control] or True
-            self.on_nested_control_element_grabbed(control)
+        if control in self._nested_control_elements:
+            if not self._nested_control_elements[control]:
+                self._nested_control_elements[control] = True
+        self.on_nested_control_element_grabbed(control)
 
     def _on_nested_control_element_released(self, control):
-        if not control in self._nested_control_elements:
-            raise AssertionError
-            self._nested_control_elements[control] = self._nested_control_elements[control] and False
-            self.on_nested_control_element_released(control)
+        if control in self._nested_control_elements:
+            if self._nested_control_elements[control]:
+                self._nested_control_elements[control] = False
+        self.on_nested_control_element_released(control)
 
     @subject_slot_group('value')
     def _on_nested_control_element_value(self, value, sender):
@@ -141,26 +150,29 @@ class CompoundElement(NotifyingControlElement, SlotManager):
             self.on_nested_control_element_value(value, sender)
 
     def set_control_element(self, control, grabbed):
-        if grabbed or self._resource.stack_size == 0:
+        if grabbed:
             self._on_nested_control_element_grabbed(control)
         else:
             self._on_nested_control_element_released(control)
         owner = self._resource.owner
         if owner and not self._disable_notify_owner_on_button_ownership_change:
-            owner.set_control_element(self, True)
+            self.notify_ownership_change(owner, True)
 
     def _on_grab_resource(self, client, *a, **k):
+        was_resource_based = self._is_resource_based
+        self._is_resource_based = True
         with self._disable_notify_owner_on_button_ownership_change():
             for element in self._nested_control_elements:
-                self._on_nested_control_element_released(element)
+                if not was_resource_based:
+                    element.notify_ownership_change(self, False)
                 priority = self.get_control_element_priority(element)
                 element.resource.grab(self, priority=priority, *a, **k)
 
             super(CompoundElement, self)._on_grab_resource(client, *a, **k)
 
     def _on_release_resource(self, client):
+        raise self._is_resource_based or AssertionError
         with self._disable_notify_owner_on_button_ownership_change():
             super(CompoundElement, self)._on_release_resource(client)
-            for element in self._nested_control_elements:
+            for element in self._nested_control_elements.keys():
                 element.resource.release(self)
-                self._on_nested_control_element_grabbed(element)

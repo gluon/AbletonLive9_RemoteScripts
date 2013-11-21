@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Actions.py
+#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Actions.py
 import Live
 _Q = Live.Song.Quantization
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -307,7 +307,7 @@ class CreateDefaultTrackComponent(CompoundComponent, Messenger):
         super(CreateDefaultTrackComponent, self).__init__(*a, **k)
         self.options = self.register_component(OptionsComponent())
         self.options.selected_option = None
-        self.options.default_option_names = ('Audio', 'Midi', 'Return')
+        self.options.option_names = ('Audio', 'Midi', 'Return')
         self.options.labels = ('Create track:', '', '', '')
         self.options.selected_color = 'Browser.Load'
         self.options.unselected_color = 'Browser.Load'
