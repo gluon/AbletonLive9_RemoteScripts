@@ -43,11 +43,19 @@
     <Compile Include="Novation_Impulse2\SpecialMixerComponent.py" />
     <Compile Include="Novation_Impulse2\TransportViewModeSelector.py" />
     <Compile Include="Novation_Impulse2\__init__.py" />
+    <Compile Include="Novation_Impulse\EncoderModeSelector.py" />
+    <Compile Include="Novation_Impulse\Novation_Impulse.py" />
+    <Compile Include="Novation_Impulse\PeekableEncoderElement.py" />
+    <Compile Include="Novation_Impulse\ShiftableTransportComponent.py" />
+    <Compile Include="Novation_Impulse\SpecialMixerComponent.py" />
+    <Compile Include="Novation_Impulse\TransportViewModeSelector.py" />
+    <Compile Include="Novation_Impulse\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Nocturn2\" />
     <Folder Include="Nocturn2\Automap\" />
     <Folder Include="Novation_Impulse2" />
+    <Folder Include="Novation_Impulse\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Nocturn2\.DS_Store" />

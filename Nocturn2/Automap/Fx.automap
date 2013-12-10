@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AutomapFile>
+    <PlugID PlugID="722721511" PlugID3="1444606871" PlugID2="121931358" PlugID1="1500714846" />
+    <DeviceID DeviceID="-1215975765" DeviceID3="-1866063922" DeviceID2="1279478674" DeviceID1="2136172004" />
+    <Type Type="1" />
+    <BrowserHint Value="0" />
+    <Group name="Controls">
+        <Group name="Page 1 Encoders">
+            <Param name="CC# 0" shortName="1 Send A" id="0" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 1" shortName="2 Send A" id="1" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 2" shortName="3 Send A" id="2" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 3" shortName="4 Send A" id="3" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 4" shortName="5 Send A" id="4" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 5" shortName="6 Send A" id="5" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 6" shortName="7 Send A" id="6" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 7" shortName="8 Send A" id="7" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pots">
+            <Param name="Note 032 (Ab0)" shortName="Tracks 1-8" id="161" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 033 (A0)" shortName="Tracks 9-16" id="162" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 034 (Bb0)" shortName="Tracks 17-24" id="163" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 035 (B0)" shortName="Tracks 25-32" id="164" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 036 (C1)" shortName="Tracks 33-40" id="165" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 037 (C#1)" shortName="Tracks 41-48" id="166" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 038 (D1)" shortName="Tracks 49-56" id="167" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 039 (Eb1)" shortName="Tracks 57-64" id="168" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Sliders">
+            <Param name="CC# 8" shortName="1 Send B" id="8" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 9" shortName="2 Send B" id="9" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 10" shortName="3 Send B" id="10" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 11" shortName="4 Send B" id="11" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 12" shortName="5 Send B" id="12" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 13" shortName="6 Send B" id="13" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 14" shortName="7 Send B" id="14" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 15" shortName="8 Send B" id="15" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Encoder Buttons">
+            <Param name="Note 032 (Ab0)" shortName="Tracks 1-8" id="161" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 033 (A0)" shortName="Tracks 9-16" id="162" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 034 (Bb0)" shortName="Tracks 17-24" id="163" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 035 (B0)" shortName="Tracks 25-32" id="164" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 036 (C1)" shortName="Tracks 33-40" id="165" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 037 (C#1)" shortName="Tracks 41-48" id="166" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 038 (D1)" shortName="Tracks 49-56" id="167" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 039 (Eb1)" shortName="Tracks 57-64" id="168" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pot Buttons">
+            <Param name="CC# 16" shortName="1 Send C" id="16" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 17" shortName="2 Send C" id="17" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 18" shortName="3 Send C" id="18" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 19" shortName="4 Send C" id="19" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 20" shortName="5 Send C" id="20" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 21" shortName="6 Send C" id="21" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 22" shortName="7 Send C" id="22" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 23" shortName="8 Send C" id="23" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Slider Buttons">
+            <Param name="Note 032 (Ab0)" shortName="Tracks 1-8" id="161" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 033 (A0)" shortName="Tracks 9-16" id="162" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 034 (Bb0)" shortName="Tracks 17-24" id="163" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 035 (B0)" shortName="Tracks 25-32" id="164" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 036 (C1)" shortName="Tracks 33-40" id="165" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 037 (C#1)" shortName="Tracks 41-48" id="166" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 038 (D1)" shortName="Tracks 49-56" id="167" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 039 (Eb1)" shortName="Tracks 57-64" id="168" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 2 Encoders">
+            <Param name="CC# 24" shortName="1 Send D" id="24" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 25" shortName="2 Send D" id="25" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 26" shortName="3 Send D" id="26" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 27" shortName="4 Send D" id="27" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 28" shortName="5 Send D" id="28" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 29" shortName="6 Send D" id="29" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 30" shortName="7 Send D" id="30" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 31" shortName="8 Send D" id="31" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 2 Pots">
+            <Param name="Note 032 (Ab0)" shortName="Tracks 1-8" id="161" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 033 (A0)" shortName="Tracks 9-16" id="162" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 034 (Bb0)" shortName="Tracks 17-24" id="163" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 035 (B0)" shortName="Tracks 25-32" id="164" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 036 (C1)" shortName="Tracks 33-40" id="165" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 037 (C#1)" shortName="Tracks 41-48" id="166" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 038 (D1)" shortName="Tracks 49-56" id="167" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 039 (Eb1)" shortName="Tracks 57-64" id="168" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 2 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+    </Group>
+</AutomapFile>
