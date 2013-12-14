@@ -2,9 +2,13 @@ Features
 
 Mixer  button 9 = OverDub
 
+Shift + PLay = Undo
+
 Shift changes mixer buttons to be arm the specific track button. 
 
 Shift + Clip buttons are now clip stop.
+
+
 
 Known issues that cannot be fixed 
 1) After moving track with Shift+Track buttons are not returned to inital condition. 
@@ -33,7 +37,7 @@ DONE 1) mixer9 - overdub
    
 4) Shift+Rec - metronome on/off (as metronome has much to do with recording)
 5) Shift + Loop switch session/arrangement (as loop is the button that also changes in this case)
-6) Shift + play Undo (as play is like backspace but turned opposite)
+FIXED: 6) Shift + play Undo (as play is like backspace but turned opposite)
 
 DONE: another parallel feature - Shift + drum pad in clip mode - stop the selected clip. 
 

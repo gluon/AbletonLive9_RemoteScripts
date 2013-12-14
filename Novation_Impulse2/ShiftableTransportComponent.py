@@ -14,6 +14,10 @@ class ShiftableTransportComponent(TransportComponent):
         TransportComponent.__init__(self)
 
     def disconnect(self):
+        if self._play_button != None:
+            self._play_button.remove_value_listener(self._play_pressed)
+            self._play_button = None
+
         TransportComponent.disconnect(self)
 
     def set_record_buttonOnInit(self, button):
@@ -31,7 +35,19 @@ class ShiftableTransportComponent(TransportComponent):
 
     def set_play_button(self, button):
         self._play_button = button
+        self._play_button.add_value_listener(self._play_pressed)
         self._play_toggle.set_toggle_button(button)
+
+    def _play_pressed(self, value):
+        self.log("_play_pressed " + str(value))
+        if not value in range(128):
+            raise AssertionError
+        if self._shift_pressed:
+            if value != 0:
+                if self.song().can_undo:
+                    self.song().undo()
+                    self.log("undoing")
+
 
     def _shift_value(self, value):
         self.log("shift handler transport component " + str(value))
@@ -76,20 +92,6 @@ class ShiftableTransportComponent(TransportComponent):
                 self.log("rwd normal handler")
                 TransportComponent._rwd_value(self, value)
 
-    def _play_toggle_value(self, value):
-        self.log("play toggle " + str(value))
-        if not self._play_toggle != None:
-            raise AssertionError
-        if not value in range(128):
-            raise AssertionError
-        else:
-            if self._shift_pressed:
-                self.log("play shifted handler")
-                TransportComponent._play_toggle_value(self, value)
-            else:
-                self.log("play normal handler")
-                TransportComponent._play_toggle_value(self, value)
-
     def log(self, message):
-#        pass
-        self.c_instance.log_message(message)
+        pass
+#        self.c_instance.log_message(message)
