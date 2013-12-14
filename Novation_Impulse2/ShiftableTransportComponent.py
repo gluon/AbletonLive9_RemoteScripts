@@ -54,8 +54,12 @@ class ShiftableTransportComponent(TransportComponent):
         if self._shift_pressed:
             if value != 0:
                 if self.song().can_undo:
+                    #todo: add message
                     self.song().undo()
                     self.log("undoing")
+                else:
+                    #todo: add message
+                    pass
 
 
     def _shift_value(self, value):
