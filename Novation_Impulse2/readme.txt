@@ -3,6 +3,7 @@ Features
 Mixer  button 9 = OverDub
 
 Shift + PLay = Undo
+Shift + Stop = Stop all clips
 
 Shift changes mixer buttons to be arm the specific track button. 
 
