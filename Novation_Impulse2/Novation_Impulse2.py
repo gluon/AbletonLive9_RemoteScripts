@@ -395,5 +395,5 @@ class Novation_Impulse2(ControlSurface):
         self.log("root shift handler 4")
 
     def log(self, message):
-#        pass
-	    self.c_instance.log_message(message)
+        pass
+#	    self.c_instance.log_message(message)

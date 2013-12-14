@@ -145,5 +145,5 @@ class SpecialMixerComponent(MixerComponent):
         self.updateMixerButtons()
 
     def log(self, message):
-#        pass
-	    self.c_instance.log_message(message)
+        pass
+#	    self.c_instance.log_message(message)
