@@ -16,7 +16,7 @@ Known issues that cannot be fixed
    Workaround - do not do that, if you have done that, just press and release shift.
 
 The reason for these problems is that when you use shift+track or shift+bank, the message "shift off" is not sent.
-This is out of the scope of what I can do
+This is out of the scope of what I can do. The bug report is sent to Novation.
 
 Known issues and todo:
 FIXED: 1) impulse does not disconnect properly and does  not send disconnection message. 

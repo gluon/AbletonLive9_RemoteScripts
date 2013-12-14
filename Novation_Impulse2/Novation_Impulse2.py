@@ -186,7 +186,7 @@ class Novation_Impulse2(ControlSurface):
 
         self._mixer.master_strip().set_mute_button(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 1, 17))
         self._mixer.set_strip_mute_solo_buttons(tuple(self._strip_buttons), mute_solo_flip_button)
-        self._mixer.set_shift_button(self._shift_button)
+        #self._mixer.set_shift_button(self._shift_button)
         self._mixer.updateMixerButtons()
 
         self._button9 = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 9 + 8)
@@ -372,6 +372,9 @@ class Novation_Impulse2(ControlSurface):
         self.log("root shift handler 2")
         self._shift_pressed = value > 0
         self.log("root shift handler 3")
+# calling other handlers
+        self._mixer._shift_value(value)
+
 #clip stop
         num_pads = len(PAD_TRANSLATIONS)
         pads = []
@@ -388,8 +391,8 @@ class Novation_Impulse2(ControlSurface):
         else:
             self._session.set_stop_track_clip_buttons(None)
 
-        self.log("root shift handler 3")
+        self.log("root shift handler 4")
 
     def log(self, message):
-        pass
-#	    self.c_instance.log_message(message)
+#        pass
+	    self.c_instance.log_message(message)

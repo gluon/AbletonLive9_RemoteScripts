@@ -68,6 +68,7 @@
     <Content Include="Nocturn2\Automap\Mixer.automap" />
     <Content Include="Nocturn2\Automap\User.automap" />
     <Content Include="Nocturn2\readme.txt" />
+    <Content Include="Novation_Impulse2\debug.bat" />
     <Content Include="Novation_Impulse2\deploy.bat" />
     <Content Include="Novation_Impulse2\readme.txt" />
   </ItemGroup>

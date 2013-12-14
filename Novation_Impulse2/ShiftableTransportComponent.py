@@ -48,7 +48,7 @@ class ShiftableTransportComponent(TransportComponent):
 
 
     def _shift_value(self, value):
-        self.log("shift handler")
+        self.log("shift handler transport component")
         if not self._shift_button != None:
             raise AssertionError
         if not value in range(128):
@@ -98,5 +98,5 @@ class ShiftableTransportComponent(TransportComponent):
                 TransportComponent._rwd_value(self, value)
 
     def log(self, message):
-        pass
-#	    self.c_instance.log_message(message)
+#        pass
+	    self.c_instance.log_message(message)
