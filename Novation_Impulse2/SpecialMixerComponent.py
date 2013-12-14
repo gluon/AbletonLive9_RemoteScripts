@@ -7,7 +7,6 @@ class SpecialMixerComponent(MixerComponent):
 
     def __init__(self, num_tracks, c_instance):
         self.c_instance = c_instance
-        #self._shift_button = None
         self._selected_mute_solo_button = None
         self._strip_mute_solo_buttons = None
         self._mute_solo_flip_button = None
@@ -30,15 +29,6 @@ class SpecialMixerComponent(MixerComponent):
             self._mute_solo_flip_button = None
         self._selected_mute_solo_button = None
         self._strip_mute_solo_buttons = None
-
-    #def set_shift_button(self, shift_button):
-    #    self.log("set_shift_button - mixer")
-    #    if not (shift_button == None or shift_button.is_momentary()):
-    #        raise AssertionError
-    #    if self._shift_button != None:
-    #        self._shift_button.remove_value_listener(self._shift_value)
-    #    self._shift_button = shift_button
-    #    self._shift_button != None and self._shift_button.add_value_listener(self._shift_value)
 
     def set_strip_mute_solo_buttons(self, buttons, flip_button):
         self.log("set_strip_mute_solo_buttons")
@@ -64,7 +54,7 @@ class SpecialMixerComponent(MixerComponent):
         return tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)
 
     def _shift_value(self, value):
-        self.log("calling mixer shift value" + str(value))
+        self.log("calling mixer shift value " + str(value))
         if (value > 0):
             self._shift_pressed = True
         else:
@@ -72,20 +62,7 @@ class SpecialMixerComponent(MixerComponent):
         self.updateMixerButtons()
         pass
         return
-        self.log("_shift_value " + str(value))
-        #if not self._shift_button != None:
-        #    raise AssertionError
-        if not value in range(128):
-            raise AssertionError
-        if value > 0:
-            self.selected_strip().set_mute_button(None)
-#            self.selected_strip().set_solo_button(self._selected_mute_solo_button)
-            self.selected_strip().set_arm_button(self._selected_mute_solo_button)
-        else:
-#            self.selected_strip().set_solo_button(None)
-            self.selected_strip().set_arm_button(None)
-            self.selected_strip().set_mute_button(self._selected_mute_solo_button)
-
+    
     def _mute_solo_flip_value(self, value):
         #self.log(value)
         if not self._mute_solo_flip_button != None:

@@ -1,7 +1,5 @@
 Features
 
-Shift + Rec = Overdub
-
 Mixer  button 9 = OverDub
 
 Shift changes mixer buttons to be arm the specific track button. 
@@ -20,7 +18,7 @@ This is out of the scope of what I can do. The bug report is sent to Novation.
 
 Known issues and todo:
 FIXED: 1) impulse does not disconnect properly and does  not send disconnection message. 
-1.5) refactor shift - move it to main class.
+FIXED  1.5) refactor shift - move it to main class.
 FIXED: 2)when track goes down, the bank is not changed. 
 3) on initialize mute/solo buttons do not light
   workaround - press shift button.

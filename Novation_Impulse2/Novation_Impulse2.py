@@ -225,14 +225,14 @@ class Novation_Impulse2(ControlSurface):
         play_button.name = 'Play_Button'
         stop_button.name = 'Stop_Button'
         rec_button.name = 'Record_Button'
-        transport = ShiftableTransportComponent(self.c_instance)
-        transport.name = 'Transport'
-        transport.set_stop_button(stop_button)
-        transport.set_play_button(play_button)
-        transport.set_record_buttonOnInit(rec_button)
-        transport.set_shift_button(self._shift_button)
-        transport.set_mixer9_button(self._button9)
-        self._transport_view_modes = TransportViewModeSelector(transport, self._session, ffwd_button, rwd_button, loop_button)
+        self._transport = ShiftableTransportComponent(self.c_instance)
+        self._transport.name = 'Transport'
+        self._transport.set_stop_button(stop_button)
+        self._transport.set_play_button(play_button)
+        self._transport.set_record_buttonOnInit(rec_button)
+#        self._transport.set_shift_button(self._shift_button)
+        self._transport.set_mixer9_button(self._button9)
+        self._transport_view_modes = TransportViewModeSelector(self._transport, self._session, ffwd_button, rwd_button, loop_button)
         self._transport_view_modes.name = 'Transport_View_Modes'
 
     def _setup_device(self):
@@ -371,11 +371,12 @@ class Novation_Impulse2(ControlSurface):
             raise AssertionError
         self.log("root shift handler 2")
         self._shift_pressed = value > 0
-        self.log("root shift handler 3")
 # calling other handlers
         self._mixer._shift_value(value)
+        self._transport._shift_value(value)
 
 #clip stop
+        self.log("root shift handler 3")
         num_pads = len(PAD_TRANSLATIONS)
         pads = []
         for index in range(num_pads):

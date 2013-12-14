@@ -8,31 +8,12 @@ class ShiftableTransportComponent(TransportComponent):
 
     def __init__(self, c_instance):
         self.c_instance = c_instance
-        self._shift_button = None
         self._shift_pressed = False
         self._mixer9_button = None
         TransportComponent.__init__(self)
 
     def disconnect(self):
-        if self._shift_button != None:
-            self._shift_button.remove_value_listener(self._shift_value)
-            self._shift_button = None
         TransportComponent.disconnect(self)
-
-    def set_shift_button(self, button):
-        self.log("set_shift_button (transport)")
-        if not (button == None or isinstance(button, ButtonElement) and button.is_momentary()):
-            raise AssertionError
-        self.log("set_shift_button 2 (transport)")
-        if self._shift_button != button:
-            if self._shift_button != None:
-                self._shift_button.remove_value_listener(self._shift_value)
-                self._shift_pressed = False
-            self._shift_button = button
-            self.log("set_shift_button 3 (transport)")
-            if self._shift_button != None:
-                self._shift_button.add_value_listener(self._shift_value)
-            self.log("set_shift_button 4 (transport)")
 
     def set_record_buttonOnInit(self, button):
         self.log("set_record_buttonOnInit 1")
@@ -48,25 +29,12 @@ class ShiftableTransportComponent(TransportComponent):
 
 
     def _shift_value(self, value):
-        self.log("shift handler transport component")
-        if not self._shift_button != None:
-            raise AssertionError
+        self.log("shift handler transport component " + str(value))
         if not value in range(128):
             raise AssertionError
         self.log("shift handler 2")
         self._shift_pressed = self.is_enabled() and value > 0
         self.log("shift handler 3")
-#        if self._shift_pressed:
-#            self.log("shift handler pressed")
-#            self.set_overdub_button(None)
-#            self.set_record_button(None)
-#            self.set_session_overdub_button(self._mixer9_button)
-#        else:
-#            self.log("shift handler unpressed")
-#            self.set_overdub_button(None)
-#            self.set_record_button(self.record_button)
-#            self.set_arrangement_overdub_button(self._mixer9_button)
-
 
 
     def _ffwd_value(self, value):
@@ -99,4 +67,4 @@ class ShiftableTransportComponent(TransportComponent):
 
     def log(self, message):
 #        pass
-	    self.c_instance.log_message(message)
+        self.c_instance.log_message(message)
