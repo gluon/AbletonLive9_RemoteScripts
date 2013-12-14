@@ -32,7 +32,7 @@ FIXED: 2)when track goes down, the bank is not changed.
 Future things to implement. 
 
 DONE 1) mixer9 - overdub
-3) Shift + Stop - stop all clips.
+DONE 3) Shift + Stop - stop all clips.
    
    
 4) Shift+Rec - metronome on/off (as metronome has much to do with recording)

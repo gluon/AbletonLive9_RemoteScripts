@@ -6,11 +6,13 @@ from _Framework.TransportComponent import TransportComponent
 class ShiftableTransportComponent(TransportComponent):
     """ Special transport class handling the seek buttons differently based on a shift button"""
 
-    def __init__(self, c_instance):
+    def __init__(self, c_instance, session):
         self.c_instance = c_instance
         self._shift_pressed = False
         self._mixer9_button = None
         self._play_button = None
+        self._record_button = None
+        self._session = session
         TransportComponent.__init__(self)
 
     def disconnect(self):
@@ -20,10 +22,17 @@ class ShiftableTransportComponent(TransportComponent):
 
         TransportComponent.disconnect(self)
 
+    def set_stop_buttonOnInit(self, button):
+        self.log("set_stop_buttonOnInit 1")
+        self._stop_button = button
+        self.set_stop_button(self._stop_button)
+        self.log("set_stopbuttonOnInit 2")
+
+
     def set_record_buttonOnInit(self, button):
         self.log("set_record_buttonOnInit 1")
-        self.record_button = button
-        self.set_record_button(self.record_button)
+        self._record_button = button
+        self.set_record_button(self._record_button)
         self.log("set_record_buttonOnInit 2")
 
     def set_mixer9_button(self, button):
@@ -58,8 +67,12 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("shift handler 3")
         if self._shift_pressed:
             self._play_toggle.set_toggle_button(None)
+            self._session.set_stop_all_clips_button(self._stop_button)
+            self.set_stop_button(None)
         else:
             self._play_toggle.set_toggle_button(self._play_button)
+            self._session.set_stop_all_clips_button(None)
+            self.set_stop_button(self._stop_button)
         self.log("shift handler 4")
             
 
@@ -95,3 +108,4 @@ class ShiftableTransportComponent(TransportComponent):
     def log(self, message):
         pass
 #        self.c_instance.log_message(message)
+
