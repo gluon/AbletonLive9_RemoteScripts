@@ -73,10 +73,14 @@ class ShiftableTransportComponent(TransportComponent):
             self._play_toggle.set_toggle_button(None)
             self._session.set_stop_all_clips_button(self._stop_button)
             self.set_stop_button(None)
+            self.set_overdub_button(None)
+            self.set_metronome_button(self._mixer9_button)
         else:
             self._play_toggle.set_toggle_button(self._play_button)
             self._session.set_stop_all_clips_button(None)
             self.set_stop_button(self._stop_button)
+            self.set_overdub_button(self._mixer9_button)
+            self.set_metronome_button(None)
         self.log("shift handler 4")
             
 

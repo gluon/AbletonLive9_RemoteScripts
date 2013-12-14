@@ -1,6 +1,7 @@
 Features
 
 Mixer  button 9 = OverDub
+Shift + Mixer  button 9  = Metronome on/off
 
 Shift + PLay = Undo
 Shift + Stop = Stop all clips
@@ -36,7 +37,7 @@ DONE 1) mixer9 - overdub
 DONE 3) Shift + Stop - stop all clips.
    
    
-4) Shift+Rec - metronome on/off (as metronome has much to do with recording)
+FIXED:4) Shift+Mixer9 - metronome on/off 
 5) Shift + Loop switch session/arrangement (as loop is the button that also changes in this case)
 FIXED: 6) Shift + play Undo (as play is like backspace but turned opposite)
 
