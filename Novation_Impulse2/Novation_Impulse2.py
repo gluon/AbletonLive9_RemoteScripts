@@ -14,8 +14,8 @@ from SpecialMixerComponent import SpecialMixerComponent
 from ShiftableTransportComponent import ShiftableTransportComponent
 from PeekableEncoderElement import PeekableEncoderElement
 from EncoderModeSelector import EncoderModeSelector
-INITIAL_DISPLAY_DELAY = 30
-STANDARD_DISPLAY_DELAY = 20
+INITIAL_DISPLAY_DELAY = 20
+STANDARD_DISPLAY_DELAY = 15
 IS_MOMENTARY = True
 SYSEX_START = (240, 0, 32, 41, 103)
 PAD_TRANSLATIONS = ((0, 3, 60, 0),
@@ -225,7 +225,7 @@ class Novation_Impulse2(ControlSurface):
         play_button.name = 'Play_Button'
         stop_button.name = 'Stop_Button'
         rec_button.name = 'Record_Button'
-        self._transport = ShiftableTransportComponent(self.c_instance,self._session)
+        self._transport = ShiftableTransportComponent(self.c_instance,self._session, self)
         self._transport.name = 'Transport'
         self._transport.set_stop_buttonOnInit(stop_button)
         self._transport.set_play_button(play_button)

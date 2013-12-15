@@ -7,7 +7,7 @@ from _Framework.ToggleComponent import ToggleComponent
 class ShiftableTransportComponent(TransportComponent):
     """ Special transport class handling the seek buttons differently based on a shift button"""
 
-    def __init__(self, c_instance, session):
+    def __init__(self, c_instance, session, parent):
         TransportComponent.__init__(self)
         self.c_instance = c_instance
         self._shift_pressed = False
@@ -15,6 +15,7 @@ class ShiftableTransportComponent(TransportComponent):
         self._play_button = None
         self._record_button = None
         self._session = session
+        self._parent = parent
         song = self.song()
 #        self._automation_toggle= self.register_component(ToggleComponent('session_automation_record', song))
         self._automation_toggle, self._re_enable_automation_toggle, self._delete_automation = self.register_components(ToggleComponent('session_automation_record', song), ToggleComponent('re_enable_automation_enabled', song, read_only=True), ToggleComponent('has_envelopes', None, read_only=True))
@@ -64,9 +65,11 @@ class ShiftableTransportComponent(TransportComponent):
                     #todo: add message
                     self.song().undo()
                     self.log("undoing")
+                    self._parent._set_string_to_display('undoing')
+
                 else:
                     #todo: add message
-                    pass
+                    self._parent._set_string_to_display('cannot undo')
 
 
     def _shift_value(self, value):
