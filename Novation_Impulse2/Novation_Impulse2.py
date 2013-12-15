@@ -280,6 +280,7 @@ class Novation_Impulse2(ControlSurface):
         self._set_string_to_display(display_string)
 
     def _slider_value(self, value, sender):
+        self.log ('_slider_value ' + str(value) + ' ' +str(sender))
         if not sender in tuple(self._sliders) + (self._master_slider,):
             raise AssertionError
         if not value in range(128):
@@ -291,12 +292,22 @@ class Novation_Impulse2(ControlSurface):
             returns = self.song().return_tracks
             track = None
             if sender.mapped_parameter() != None:
+                self.log ('1')
                 if sender == self._master_slider:
-                    track = self._has_sliders and master
+                    self.log ('2')
+#                    track = self._has_sliders and master
+                    if self._has_sliders:
+                        track = master
+                    else:
+                        self.log ('2.1')
+                        track = self.song().view.selected_track
                 else:
+                    self.log ('3')
                     track = self._mixer.channel_strip(self._sliders.index(sender))._track
             else:
+                self.log ('4')
                 track = self.song().view.selected_track
+            self.log('track='+str(track))
             if track == master:
                 display_string  = 'Master'
             elif track in tracks:
