@@ -7,7 +7,7 @@ Shift + Rec  = Metronome on/off
 Shift + PLay = Undo
 Shift + Stop = Stop all clips
 
-Shift changes mixer buttons to be arm the specific track button. 
+Shift + track mixer button = rec this track.. 
 
 Shift + Clip buttons are now clip stop.
 
@@ -38,7 +38,8 @@ DONE 1) mixer9 - overdub
 DONE 3) Shift + Stop - stop all clips.
    
    
-FIXED:4) Shift+Mixer9 - metronome on/off 
+FIXED:4) Shift+Mixer9 - Automation record on/off
+4.5) Shift + Rec = metronome
 5) Shift + Loop switch session/arrangement (as loop is the button that also changes in this case)
 FIXED: 6) Shift + play Undo (as play is like backspace but turned opposite)
 
