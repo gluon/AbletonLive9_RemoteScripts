@@ -1,7 +1,8 @@
 Features
 
 Mixer  button 9 = OverDub
-Shift + Mixer  button 9  = Metronome on/off
+Shift + Mixer  button 9  = Automation record on/off
+Shift + Rec  = Metronome on/off
 
 Shift + PLay = Undo
 Shift + Stop = Stop all clips

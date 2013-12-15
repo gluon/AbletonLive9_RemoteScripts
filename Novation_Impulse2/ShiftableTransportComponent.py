@@ -2,18 +2,24 @@
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.TransportComponent import TransportComponent
+from _Framework.ToggleComponent import ToggleComponent
 
 class ShiftableTransportComponent(TransportComponent):
     """ Special transport class handling the seek buttons differently based on a shift button"""
 
     def __init__(self, c_instance, session):
+        TransportComponent.__init__(self)
         self.c_instance = c_instance
         self._shift_pressed = False
         self._mixer9_button = None
         self._play_button = None
         self._record_button = None
         self._session = session
-        TransportComponent.__init__(self)
+        song = self.song()
+#        self._automation_toggle= self.register_component(ToggleComponent('session_automation_record', song))
+        self._automation_toggle, self._re_enable_automation_toggle, self._delete_automation = self.register_components(ToggleComponent('session_automation_record', song), ToggleComponent('re_enable_automation_enabled', song, read_only=True), ToggleComponent('has_envelopes', None, read_only=True))
+
+
 
     def disconnect(self):
         if self._play_button != None:
@@ -39,6 +45,7 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("set_mixer9_button 1")
         self._mixer9_button = button
         self.set_overdub_button(self._mixer9_button)
+        #self._automation_toggle.set_toggle_button(self._mixer9_button)
         self.log("set_mixer9_button 2")
 
 
@@ -74,13 +81,17 @@ class ShiftableTransportComponent(TransportComponent):
             self._session.set_stop_all_clips_button(self._stop_button)
             self.set_stop_button(None)
             self.set_overdub_button(None)
-            self.set_metronome_button(self._mixer9_button)
+            self._automation_toggle.set_toggle_button(self._mixer9_button)
+            self.set_metronome_button(self._record_button)
+            self.set_record_button(None)
         else:
             self._play_toggle.set_toggle_button(self._play_button)
             self._session.set_stop_all_clips_button(None)
             self.set_stop_button(self._stop_button)
             self.set_overdub_button(self._mixer9_button)
+            self._automation_toggle.set_toggle_button(None)
             self.set_metronome_button(None)
+            self.set_record_button(self._record_button)
         self.log("shift handler 4")
             
 
