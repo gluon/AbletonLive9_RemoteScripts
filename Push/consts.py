@@ -263,6 +263,10 @@ class MessageBoxText:
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
     UNDO = '            Undo:     Reverted last action'
     REDO = '            Redo: Re-performed last undone action'
+    TRACK_FROZEN_INFO = '                    ' + 'Cannot modify a frozen track'
+    SELECTED_CLIP_BLINK = ' Press            to edit playing   clip'
+    PLAYING_CLIP_ABOVE_SELECTED_CLIP = ' Press Up Arrow   to edit playing   clip'
+    PLAYING_CLIP_BELOW_SELECTED_CLIP = ' Press Down Arrow to edit playing   clip'
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

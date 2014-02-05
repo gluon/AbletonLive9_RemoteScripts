@@ -1,7 +1,7 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DrumGroupComponent.py
-from itertools import imap
+from itertools import imap, ifilter
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import find_if
+from _Framework.Util import find_if, first
 from consts import MessageBoxText
 from MatrixMaps import PAD_FEEDBACK_CHANNEL
 from MessageBoxComponent import Messenger
@@ -143,14 +143,13 @@ class DrumGroupComponent(SlideComponent, Slideable, Messenger):
         """ update hardware LEDs for drum pads """
         if self.is_enabled() and self._drum_matrix and self._drum_group_device:
             soloed_pads = find_if(lambda pad: pad.solo, self._all_drum_pads)
-            for button, (col, row) in self._drum_matrix.iterbuttons():
-                if button:
-                    index = (self._drum_matrix.height() - 1 - row) * self._drum_matrix.width() + col
-                    if self._visible_drum_pads:
-                        pad = self._visible_drum_pads[index]
-                        self._update_pad_led(pad, button, soloed_pads)
-                    else:
-                        button.set_light('DrumGroup.PadInvisible')
+            for button, (col, row) in ifilter(first, self._drum_matrix.iterbuttons()):
+                index = (self._drum_matrix.height() - 1 - row) * self._drum_matrix.width() + col
+                if self._visible_drum_pads:
+                    pad = self._visible_drum_pads[index]
+                    self._update_pad_led(pad, button, soloed_pads)
+                else:
+                    button.set_light('DrumGroup.PadInvisible')
 
     def _update_pad_led(self, pad, button, soloed_pads):
         button_color = 'DrumGroup.PadEmpty'
@@ -278,9 +277,8 @@ class DrumGroupComponent(SlideComponent, Slideable, Messenger):
         takeover_drums = self._takeover_drums or self._selected_pads
         profile = 'default' if takeover_drums else 'drums'
         if self._drum_matrix:
-            for button, _ in self._drum_matrix.iterbuttons():
-                if button:
-                    translation_channel = PAD_FEEDBACK_CHANNEL
-                    button.set_channel(translation_channel)
-                    button.set_enabled(takeover_drums)
-                    button.sensitivity_profile = profile
+            for button, _ in ifilter(first, self._drum_matrix.iterbuttons()):
+                translation_channel = PAD_FEEDBACK_CHANNEL
+                button.set_channel(translation_channel)
+                button.set_enabled(takeover_drums)
+                button.sensitivity_profile = profile

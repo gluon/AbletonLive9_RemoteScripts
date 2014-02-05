@@ -155,7 +155,8 @@ def align_right(width, text):
 
 class NotificationComponent(CompoundComponent):
     """
-    Displays notifications to the user for a given amount of time.
+    Displays notifications to the user for a given amount of time. A notification time
+    of -1 creates an infinite duration notification.
     
     To adjust the way notifications are shown in special cases, assign a generated
     control using use_single_line or use_full_display to a layer. If the layer is on
@@ -175,7 +176,7 @@ class NotificationComponent(CompoundComponent):
         self._align_text_fn = self._default_align_text_fn
         self._message_box = self.register_component(MessageBoxComponent())
         self._message_box.set_enabled(False)
-        self._notification_timeout_task = self._tasks.add(Task.sequence(Task.wait(notification_time), Task.run(self.hide_notification))).kill()
+        self._notification_timeout_task = self._tasks.add(Task.sequence(Task.wait(notification_time), Task.run(self.hide_notification))).kill() if notification_time != -1 else self._tasks.add(Task.Task())
         self._blink_text_task = self._tasks.add(Task.loop(Task.sequence(Task.run(lambda : self._message_box.__setattr__('text', self._original_text)), Task.wait(blinking_time), Task.run(lambda : self._message_box.__setattr__('text', self._blink_text)), Task.wait(blinking_time)))).kill()
         self._original_text = None
         self._blink_text = None
@@ -278,6 +279,24 @@ class DialogComponent(CompoundComponent):
         self._message_box.text = message
         self._message_box.can_cancel = can_cancel
         self._message_box.set_enabled(self.application().open_dialog_count > 0 or not open_dialog_changed and self._next_message)
+
+    def update(self):
+        pass
+
+
+class InfoComponent(BackgroundComponent):
+    """
+    Component that will show an info text and grab all components that should be unusable.
+    """
+
+    def __init__(self, info_text = '', *a, **k):
+        super(InfoComponent, self).__init__(*a, **k)
+        self._data_source = DisplayDataSource()
+        self._data_source.set_display_string(info_text)
+
+    def set_display(self, display):
+        if display:
+            display.set_data_sources([self._data_source])
 
     def update(self):
         pass

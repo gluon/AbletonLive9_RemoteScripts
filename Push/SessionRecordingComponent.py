@@ -187,8 +187,10 @@ class SessionRecordingComponent(CompoundComponent, Messenger):
     def _on_delete_automation_value(self, value):
         if self.is_enabled() and value:
             clip = self._get_playing_clip()
-            if clip:
-                clip.clear_all_envelopes()
+            selected_track = self.song().view.selected_track
+            if selected_track:
+                track_frozen = selected_track.is_frozen
+                clip and not track_frozen and clip.clear_all_envelopes()
 
     def _get_playing_clip(self):
         playing_clip = None

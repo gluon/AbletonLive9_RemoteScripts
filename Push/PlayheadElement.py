@@ -6,12 +6,9 @@ class NullPlayhead(object):
     notes = []
     start_time = 0.0
     step_length = 1.0
-    clip_start_time = 0.0
-    clip_start_marker = 0.0
-    clip_loop = (0.0, 0.0)
     velocity = 0.0
-    enabled = False
     wrap_around = False
+    track = None
 
 
 class ProxyElement(Proxy, ControlElement):
@@ -29,4 +26,4 @@ class PlayheadElement(ProxyElement):
         super(PlayheadElement, self).__init__(proxied_object=playhead, proxied_interface=NullPlayhead())
 
     def reset(self):
-        self.enabled = False
+        self.track = None

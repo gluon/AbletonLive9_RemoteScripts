@@ -4,7 +4,7 @@ from functools import partial
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ModesComponent import DisplayingModesComponent, EnablingModesComponent
 from _Framework.DisplayDataSource import DisplayDataSource, adjust_string_crop
-from _Framework.Util import recursive_map, index_if, forward_property
+from _Framework.Util import recursive_map, index_if, forward_property, first
 from _Framework.SubjectSlot import subject_slot
 from MessageBoxComponent import Messenger
 from ScrollableList import ListComponent
@@ -507,7 +507,7 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
             self._matrix.reset()
             pattern = self._pattern
             max_j = self._matrix.width() - 1
-            for button, (i, j) in ifilter(None, self._matrix.iterbuttons()):
+            for button, (i, j) in ifilter(first, self._matrix.iterbuttons()):
                 profile = 'default' if self._takeover_pads else 'instrument'
                 button.sensitivity_profile = profile
                 note_info = pattern.note(i, max_j - j)

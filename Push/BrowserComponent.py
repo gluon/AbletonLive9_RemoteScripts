@@ -500,6 +500,7 @@ def make_stem_cleaner(stem):
 @memoize
 def _memoized_stem_cleaner(stem):
     ellipsis = consts.CHAR_ELLIPSIS
+    stem = re.escape(stem)
     rule1 = re.compile(u'([a-z])' + stem + u's?([ A-Z])')
     rule2 = re.compile(u'[' + ellipsis + ' \\-]' + stem + u's?([\\-' + ellipsis + u' A-Z])')
     rule3 = re.compile(u'' + stem + u's?$')

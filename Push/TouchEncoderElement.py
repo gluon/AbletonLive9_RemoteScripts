@@ -39,16 +39,6 @@ class TouchEncoderElement(EncoderElement, SlotManager):
             observer = TouchEncoderObserver()
         self._observer = observer
 
-    def _delete_clip_automation(self):
-        mapped_parameter = self.mapped_parameter()
-        if mapped_parameter:
-            selected_track = self._undo_step_handler.view.selected_track
-            playing_slot_index = selected_track.playing_slot_index
-            if playing_slot_index >= 0:
-                playing_clip = selected_track.clip_slots[playing_slot_index].clip
-                if playing_clip:
-                    playing_clip.clear_envelope(mapped_parameter)
-
     @subject_slot('value')
     def _on_touch_button(self, value):
         self._trigger_undo_step = value

@@ -6,7 +6,7 @@ from _Framework.SubjectSlot import subject_slot, subject_slot_group, Subject, Sl
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.ModesComponent import ModesComponent, Mode, AddLayerMode
-from _Framework.Util import find_if, forward_property, chain_from_iterable, sign
+from _Framework.Util import find_if, forward_property, chain_from_iterable, sign, clamp
 from _Framework import Task, Defaults
 from AutomationComponent import AutomationComponent
 from ActionWithOptionsComponent import OptionsComponent
@@ -66,7 +66,7 @@ def step_offset_min_max_to_string(step_length, min_value, max_value):
 def convert_value_to_graphic(value, value_range):
     value_bar = GRAPH_VOL
     graph_range = float(len(value_bar))
-    value = int(value / value_range * graph_range)
+    value = clamp(int(value / value_range * graph_range), 0, len(value_bar) - 1)
     display_string = value_bar[value]
     return display_string
 

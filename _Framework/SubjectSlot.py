@@ -169,7 +169,10 @@ class SubjectSlot(Disconnectable):
         if not self.is_connected and self._subject != None and self._listener != None:
             add_method = getattr(self._subject, 'add_' + self._event + '_listener')
             all_args = tuple(self._extra_args) + (self._listener,)
-            add_method(*all_args, **self._extra_kws)
+            try:
+                add_method(*all_args, **self._extra_kws)
+            except RuntimeError:
+                pass
 
     def soft_disconnect(self):
         """
@@ -179,12 +182,21 @@ class SubjectSlot(Disconnectable):
         if self.is_connected and self._subject != None and self._listener != None:
             all_args = tuple(self._extra_args) + (self._listener,)
             remove_method = getattr(self._subject, 'remove_' + self._event + '_listener')
-            remove_method(*all_args)
+            try:
+                remove_method(*all_args)
+            except RuntimeError:
+                pass
 
     @property
     def is_connected(self):
         all_args = tuple(self._extra_args) + (self._listener,)
-        return bool(self._subject != None and self._listener != None and getattr(self._subject, self._event + '_has_listener')(*all_args))
+        connected = False
+        try:
+            connected = bool(self._subject != None and self._listener != None and getattr(self._subject, self._event + '_has_listener')(*all_args))
+        except RuntimeError:
+            pass
+
+        return connected
 
     def _get_subject(self):
         return self._subject

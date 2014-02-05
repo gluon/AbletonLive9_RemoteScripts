@@ -1,10 +1,10 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
 from __future__ import with_statement
 from functools import partial
-from itertools import chain, imap
+from itertools import chain, imap, ifilter
 from _Framework.SubjectSlot import subject_slot, Subject
 from _Framework.CompoundComponent import CompoundComponent
-from _Framework.Util import sign, product, in_range, clamp, forward_property
+from _Framework.Util import sign, product, in_range, clamp, forward_property, first
 from _Framework import Task, Defaults
 from LoopSelectorComponent import create_clip_in_selected_slot
 from MatrixMaps import PAD_FEEDBACK_CHANNEL
@@ -210,9 +210,8 @@ class NoteEditorComponent(CompoundComponent, Subject):
             self._width = matrix.width()
             self._height = matrix.height()
             matrix.reset()
-            for button, _ in matrix.iterbuttons():
-                if button:
-                    button.set_channel(PAD_FEEDBACK_CHANNEL)
+            for button, _ in ifilter(first, matrix.iterbuttons()):
+                button.set_channel(PAD_FEEDBACK_CHANNEL)
 
         for task in self._step_tap_tasks.itervalues():
             task.kill()

@@ -27,27 +27,12 @@ class PlayheadComponent(ControlSurfaceComponent):
 
     def set_clip(self, clip):
         self._clip = clip
-        self._on_loop_start_changed.subject = clip
-        self._on_loop_end_changed.subject = clip
-        self._on_start_marker_changed.subject = clip
         self._on_playing_status_changed.subject = clip
         self._on_song_is_playing_changed.subject = self.song() if clip else None
         self.update()
 
     @subject_slot('page')
     def _on_page_changed(self):
-        self.update()
-
-    @subject_slot('loop_start')
-    def _on_loop_start_changed(self):
-        self.update()
-
-    @subject_slot('loop_end')
-    def _on_loop_end_changed(self):
-        self.update()
-
-    @subject_slot('start_marker')
-    def _on_start_marker_changed(self):
         self.update()
 
     @subject_slot('playing_status')
@@ -68,11 +53,13 @@ class PlayheadComponent(ControlSurfaceComponent):
 
     def update(self):
         if self._playhead:
-            if self.is_enabled() and bool(self._clip) and self.song().is_playing:
-                self._playhead.enabled = self._clip.is_playing
-                self._playhead.clip_start_marker = self._playhead.enabled and self._clip.start_marker
-                self._playhead.clip_start_time = self._clip.start_time
-                self._playhead.clip_loop = (self._clip.loop_start, self._clip.loop_end - self._clip.loop_start)
+            if self.is_enabled() and self.song().is_playing and self._clip and self._clip.is_playing:
+                clip_slot = self._clip.canonical_parent
+                track = clip_slot.canonical_parent if clip_slot else None
+            else:
+                track = None
+            self._playhead.track = track
+            if track:
                 is_triplet = self._grid_resolution.clip_grid[1]
                 notes = self._triplet_notes if is_triplet else self._notes
                 self._playhead.notes = list(notes)

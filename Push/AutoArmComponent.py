@@ -92,8 +92,11 @@ class AutoArmComponent(CompoundComponent):
             raise not extra_params and not extra_classes or AssertionError
         return self._auto_arm_restore_behaviour
 
-    def can_auto_arm_track(self, track):
+    def track_can_be_armed(self, track):
         return track.can_be_armed and track.has_midi_input
+
+    def can_auto_arm_track(self, track):
+        return self.track_can_be_armed(track)
 
     def on_selected_track_changed(self):
         self.update()
@@ -110,8 +113,8 @@ class AutoArmComponent(CompoundComponent):
             enabled = not self.needs_restore_auto_arm
             selected_track = song.view.selected_track
             for track in song.tracks:
-                if self.can_auto_arm_track(track):
-                    track.implicit_arm = enabled and selected_track == track
+                if self.track_can_be_armed(track):
+                    track.implicit_arm = enabled and selected_track == track and self.can_auto_arm_track(track)
 
             self._auto_arm_restore_behaviour and self._auto_arm_restore_behaviour.update()
         self._update_notification()
@@ -135,6 +138,7 @@ class AutoArmComponent(CompoundComponent):
         tracks = filter(lambda t: t.can_be_armed, self.song().tracks)
         self._on_arm_changed.replace_subjects(tracks)
         self._on_current_input_routing_changed.replace_subjects(tracks)
+        self._on_frozen_state_changed.replace_subjects(tracks)
 
     @subject_slot('exclusive_arm')
     def _on_exclusive_arm_changed(self):
@@ -146,4 +150,8 @@ class AutoArmComponent(CompoundComponent):
 
     @subject_slot_group('current_input_routing')
     def _on_current_input_routing_changed(self, track):
+        self.update()
+
+    @subject_slot_group('is_frozen')
+    def _on_frozen_state_changed(self, track):
         self.update()
