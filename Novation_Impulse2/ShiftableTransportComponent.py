@@ -147,6 +147,6 @@ class ShiftableTransportComponent(TransportComponent):
             view.scroll_view(direction, 'Detail/DeviceChain', False)
 
     def log(self, message):
-#        pass
-        self.c_instance.log_message(message)
+        pass
+#       self.c_instance.log_message(message)
 

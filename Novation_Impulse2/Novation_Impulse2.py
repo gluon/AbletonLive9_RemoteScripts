@@ -239,7 +239,7 @@ class Novation_Impulse2(ControlSurface):
         self._transport.set_record_buttonOnInit(rec_button)
 #        self._transport.set_shift_button(self._shift_button)
         self._transport.set_mixer9_button(self._button9)
-        self._transport_view_modes = TransportViewModeSelector(self._transport, self._session, ffwd_button, rwd_button, loop_button)
+        self._transport_view_modes = TransportViewModeSelector(self.c_instance,self._transport, self._session, ffwd_button, rwd_button, loop_button)
         self._transport_view_modes.name = 'Transport_View_Modes'
 
     def _setup_device(self):
@@ -392,6 +392,7 @@ class Novation_Impulse2(ControlSurface):
 # calling other handlers
         self._mixer._shift_value(value)
         self._transport._shift_value(value)
+        self._transport_view_modes._shift_value(value)
 
 #clip stop
         self.log("root shift handler 3")
