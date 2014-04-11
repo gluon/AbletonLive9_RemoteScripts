@@ -1,11 +1,3 @@
-IMPORTANT!
-
-since Ableton 9.1.2 some API has been changed
-
-the new version is for Ableton 9.1.2 and higher
-
-for old version please use version from a folder Novation_Impulse2_9_1
-
 Features
 
 Mixer  button 9 = OverDub

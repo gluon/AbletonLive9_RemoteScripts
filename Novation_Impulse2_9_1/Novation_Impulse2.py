@@ -197,15 +197,8 @@ class Novation_Impulse2(ControlSurface):
         self._session.name = 'Session_Control'
         self._session.selected_scene().name = 'Selected_Scene'
         self._session.set_mixer(self._mixer)
-        # for ableton 9.1.1 and lower
-        #self._session.set_track_banking_increment(num_pads)
-        #self._session.set_track_bank_buttons(ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 35), ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 36))
-        # for ableton 9.1.1 and higher
-        self._track_left_button = ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 36)
-        self._track_right_button = ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 35)
-        self._session.set_page_left_button(self._track_left_button)
-        self._session.set_page_right_button(self._track_right_button)
-
+        self._session.set_track_banking_increment(num_pads)
+        self._session.set_track_bank_buttons(ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 35), ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 36))
         pads = []
         for index in range(num_pads):
             pads.append(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 60 + index))

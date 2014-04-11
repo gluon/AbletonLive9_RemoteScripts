@@ -36,6 +36,13 @@
     <Compile Include="Nocturn2\SceneController.py" />
     <Compile Include="Nocturn2\__init__.py" />
     <Compile Include="Nocturn2\__init__.py2.py" />
+    <Compile Include="Novation_Impulse2_9_1\EncoderModeSelector.py" />
+    <Compile Include="Novation_Impulse2_9_1\Novation_Impulse2.py" />
+    <Compile Include="Novation_Impulse2_9_1\PeekableEncoderElement.py" />
+    <Compile Include="Novation_Impulse2_9_1\ShiftableTransportComponent.py" />
+    <Compile Include="Novation_Impulse2_9_1\SpecialMixerComponent.py" />
+    <Compile Include="Novation_Impulse2_9_1\TransportViewModeSelector.py" />
+    <Compile Include="Novation_Impulse2_9_1\__init__.py" />
     <Compile Include="Novation_Impulse2\EncoderModeSelector.py" />
     <Compile Include="Novation_Impulse2\Novation_Impulse2.py" />
     <Compile Include="Novation_Impulse2\PeekableEncoderElement.py" />
@@ -107,6 +114,7 @@
     <Folder Include="Nocturn2\" />
     <Folder Include="Nocturn2\Automap\" />
     <Folder Include="Novation_Impulse2" />
+    <Folder Include="Novation_Impulse2_9_1\" />
     <Folder Include="Novation_Impulse\" />
     <Folder Include="_Framework\" />
     <Folder Include="_Generic\" />
@@ -122,6 +130,9 @@
     <Content Include="Nocturn2\Automap\Mixer.automap" />
     <Content Include="Nocturn2\Automap\User.automap" />
     <Content Include="Nocturn2\readme.txt" />
+    <Content Include="Novation_Impulse2_9_1\debug.bat" />
+    <Content Include="Novation_Impulse2_9_1\deploy.bat" />
+    <Content Include="Novation_Impulse2_9_1\readme.txt" />
     <Content Include="Novation_Impulse2\debug.bat" />
     <Content Include="Novation_Impulse2\deploy.bat" />
     <Content Include="Novation_Impulse2\readme.txt" />
