@@ -19,6 +19,7 @@ Shift + track mixer button = rec this track..
 
 Shift + Clip buttons are now clip stop.
 
+Shift + Ffwd/Back  - next/previous device 
 
 
 Known issues that cannot be fixed 
