@@ -1,5 +1,6 @@
 #Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/ShiftableTransportComponent.py
 import Live
+NavDirection = Live.Application.Application.View.NavDirection
 from _Framework.ButtonElement import ButtonElement
 from _Framework.TransportComponent import TransportComponent
 from _Framework.ToggleComponent import ToggleComponent
@@ -7,7 +8,7 @@ from _Framework.ToggleComponent import ToggleComponent
 class ShiftableTransportComponent(TransportComponent):
     """ Special transport class handling the seek buttons differently based on a shift button"""
 
-    def __init__(self, c_instance, session, parent):
+    def __init__(self, c_instance, session, parent, ffwd_button, rwd_button):
         TransportComponent.__init__(self)
         self.c_instance = c_instance
         self._shift_pressed = False
@@ -16,6 +17,8 @@ class ShiftableTransportComponent(TransportComponent):
         self._record_button = None
         self._session = session
         self._parent = parent
+        self._ffwd_button = ffwd_button
+        self._rwd_button = rwd_button
         song = self.song()
 #        self._automation_toggle= self.register_component(ToggleComponent('session_automation_record', song))
         self._automation_toggle, self._re_enable_automation_toggle, self._delete_automation = self.register_components(ToggleComponent('session_automation_record', song), ToggleComponent('re_enable_automation_enabled', song, read_only=True), ToggleComponent('has_envelopes', None, read_only=True))
@@ -87,6 +90,7 @@ class ShiftableTransportComponent(TransportComponent):
             self._automation_toggle.set_toggle_button(self._mixer9_button)
             self.set_metronome_button(self._record_button)
             self.set_record_button(None)
+
         else:
             self._play_toggle.set_toggle_button(self._play_button)
             self._session.set_stop_all_clips_button(None)
@@ -95,12 +99,12 @@ class ShiftableTransportComponent(TransportComponent):
             self._automation_toggle.set_toggle_button(None)
             self.set_metronome_button(None)
             self.set_record_button(self._record_button)
+
         self.log("shift handler 4")
-            
 
 
     def _ffwd_value(self, value):
-        self.log("ffwd handler main")
+        self.log("ffwd handler main" + str(value))
         if not self._ffwd_button != None:
             raise AssertionError
         if not value in range(128):
@@ -108,26 +112,41 @@ class ShiftableTransportComponent(TransportComponent):
         else:
             if self._shift_pressed:
                 self.log("ffwd shifted handler")
-                self.song().current_song_time = self._shift_pressed and self.song().last_event_time
+#                    self.song().current_song_time = self.song().last_event_time
+                if value == 1:
+                    self._scroll_device_chain(NavDirection.right)
             else:
                 self.log("ffwd normal handler")
                 TransportComponent._ffwd_value(self, value)
 
     def _rwd_value(self, value):
-        self.log("rwd handler main")
+        self.log("rwd handler main" + str(value))
         if not self._rwd_button != None:
             raise AssertionError
         if not value in range(128):
             raise AssertionError
         else:
             if self._shift_pressed:
-                self.song().current_song_time = self._shift_pressed and 0.0
                 self.log("rwd shifted handler")
+#                    self.song().current_song_time = 0.0
+                if value == 1:
+                    self._scroll_device_chain(NavDirection.left)
             else:
                 self.log("rwd normal handler")
                 TransportComponent._rwd_value(self, value)
 
+
+    def _scroll_device_chain(self, direction):
+        self.log("_scroll_device_chain 1")
+        view = self._parent.application().view
+        self.log("_scroll_device_chain 2")
+        if not view.is_view_visible('Detail') or not view.is_view_visible('Detail/DeviceChain'):
+            view.show_view('Detail')
+            view.show_view('Detail/DeviceChain')
+        else:
+            view.scroll_view(direction, 'Detail/DeviceChain', False)
+
     def log(self, message):
-        pass
-#        self.c_instance.log_message(message)
+#        pass
+        self.c_instance.log_message(message)
 

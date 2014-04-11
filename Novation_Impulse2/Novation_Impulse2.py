@@ -232,7 +232,7 @@ class Novation_Impulse2(ControlSurface):
         play_button.name = 'Play_Button'
         stop_button.name = 'Stop_Button'
         rec_button.name = 'Record_Button'
-        self._transport = ShiftableTransportComponent(self.c_instance,self._session, self)
+        self._transport = ShiftableTransportComponent(self.c_instance,self._session, self, ffwd_button, rwd_button)
         self._transport.name = 'Transport'
         self._transport.set_stop_buttonOnInit(stop_button)
         self._transport.set_play_button(play_button)
