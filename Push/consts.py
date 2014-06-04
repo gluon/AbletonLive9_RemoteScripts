@@ -7,7 +7,7 @@ SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.Off',
  True: 'DefaultButton.On',
  False: 'DefaultButton.Disabled'}
-MUSICAL_MODES = ['Major',
+MUSICAL_MODES = ['Major Ionian',
  [0,
   2,
   4,
