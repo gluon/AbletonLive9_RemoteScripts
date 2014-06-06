@@ -249,6 +249,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         return 4.0 * self.song().signature_numerator / self.song().signature_denominator
 
     def update(self):
+        super(LoopSettingsComponent, self).update()
         if self.is_enabled():
             for index, label in enumerate(['Start',
              'Position',
@@ -444,6 +445,7 @@ class AudioClipSettingsComponent(ControlSurfaceComponent):
         self._value_sources[2].set_display_string(value)
 
     def update(self):
+        super(AudioClipSettingsComponent, self).update()
         if self.is_enabled():
             for index, label in enumerate(['WarpMode',
              'Detune',
@@ -503,6 +505,7 @@ class ClipNameComponent(ControlSurfaceComponent):
         self._name_data_sources[1].set_display_string(self._name_for_clip(self._clip))
 
     def update(self):
+        super(ClipNameComponent, self).update()
         if self.is_enabled():
             self._update_clip_name()
 
@@ -533,17 +536,16 @@ class ClipControlComponent(ModesComponent):
         self._update_clip()
 
     def update(self):
+        super(ClipControlComponent, self).update()
         if self.is_enabled():
             self._update_clip()
 
     def _update_mode(self):
-        selected_track = self.song().view.selected_track
-        if selected_track.has_midi_input and selected_track.can_be_armed:
-            self.selected_mode = 'midi'
-        elif selected_track.has_audio_input and selected_track.can_be_armed:
-            self.selected_mode = 'audio'
-        else:
-            self.selected_mode = 'no_clip'
+        track = self.song().view.selected_track
+        new_mode = 'no_clip'
+        if track.clip_slots and (track.has_midi_input or track.has_audio_input):
+            new_mode = 'midi' if track.has_midi_input else 'audio'
+        self.selected_mode = new_mode
 
     def _update_clip(self):
         self._update_mode()

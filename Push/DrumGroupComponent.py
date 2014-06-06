@@ -14,7 +14,6 @@ class DrumGroupComponent(SlideComponent, Slideable, Messenger):
     __subject_events__ = ('pressed_pads',)
 
     def __init__(self, *a, **k):
-        super(DrumGroupComponent, self).__init__(dragging_enabled=True, *a, **k)
         self._select_button = None
         self._quantize_button = None
         self._delete_button = None
@@ -26,8 +25,9 @@ class DrumGroupComponent(SlideComponent, Slideable, Messenger):
         self._all_drum_pads = []
         self._selected_drum_pad = None
         self._selected_pads = []
-        self._visible_drum_pad_slots = self.register_slot_manager()
         self._takeover_drums = False
+        super(DrumGroupComponent, self).__init__(dragging_enabled=True, *a, **k)
+        self._visible_drum_pad_slots = self.register_slot_manager()
 
     position_count = 32
     page_length = 4

@@ -62,6 +62,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(ViewTogglerComponent, self).update()
         if self.is_enabled():
             self._update_buttons()
         else:

@@ -45,6 +45,7 @@ class NoteRepeatComponent(CompoundComponent):
             self._disable_note_repeat()
 
     def update(self):
+        super(NoteRepeatComponent, self).update()
         self._update_aftertouch()
 
     def _update_aftertouch(self):
@@ -56,7 +57,7 @@ class NoteRepeatComponent(CompoundComponent):
         self._update_aftertouch()
 
     def set_select_buttons(self, buttons):
-        self._options.set_select_buttons(buttons)
+        self._options.select_buttons.set_control_element(buttons)
 
     def set_note_repeat(self, note_repeat):
         if not note_repeat:

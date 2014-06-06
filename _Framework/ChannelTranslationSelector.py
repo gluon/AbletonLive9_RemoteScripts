@@ -5,8 +5,8 @@ from InputControlElement import InputControlElement
 class ChannelTranslationSelector(ModeSelectorComponent):
     """ Class switches modes by translating the given controls' message channel """
 
-    def __init__(self, num_modes = 0):
-        ModeSelectorComponent.__init__(self)
+    def __init__(self, num_modes = 0, *a, **k):
+        super(ChannelTranslationSelector, self).__init__(*a, **k)
         self._controls_to_translate = None
         self._initial_num_modes = num_modes
 
@@ -30,6 +30,7 @@ class ChannelTranslationSelector(ModeSelectorComponent):
         return result
 
     def update(self):
+        super(ChannelTranslationSelector, self).update()
         if self._controls_to_translate != None:
             for control in self._controls_to_translate:
                 control.use_default_message()

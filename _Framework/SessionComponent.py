@@ -1,8 +1,9 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionComponent.py
+from itertools import count
 import Live
 from CompoundComponent import CompoundComponent
 from SceneComponent import SceneComponent
-from SubjectSlot import subject_slot
+from SubjectSlot import subject_slot, subject_slot_group
 from ScrollComponent import ScrollComponent
 from Util import in_range, product
 
@@ -20,7 +21,7 @@ class SessionComponent(CompoundComponent):
     _session_component_ends_initialisation = True
     scene_component_type = SceneComponent
 
-    def __init__(self, num_tracks = 0, num_scenes = 0, *a, **k):
+    def __init__(self, num_tracks = 0, num_scenes = 0, auto_name = False, enable_skinning = False, *a, **k):
         super(SessionComponent, self).__init__(*a, **k)
         raise num_tracks >= 0 or AssertionError
         if not num_scenes >= 0:
@@ -29,7 +30,7 @@ class SessionComponent(CompoundComponent):
             self._scene_offset = -1
             self._num_tracks = num_tracks
             self._num_scenes = num_scenes
-            self._vertical_banking, self._horizontal_banking = self.register_components(ScrollComponent(), ScrollComponent())
+            self._vertical_banking, self._horizontal_banking, self._vertical_paginator, self._horizontal_paginator = self.register_components(ScrollComponent(), ScrollComponent(), ScrollComponent(), ScrollComponent())
             self._vertical_banking.can_scroll_up = self._can_bank_up
             self._vertical_banking.can_scroll_down = self._can_bank_down
             self._vertical_banking.scroll_up = self._bank_up
@@ -38,20 +39,33 @@ class SessionComponent(CompoundComponent):
             self._horizontal_banking.can_scroll_down = self._can_bank_right
             self._horizontal_banking.scroll_up = self._bank_left
             self._horizontal_banking.scroll_down = self._bank_right
-            self._track_banking_increment = 1
+            self._vertical_paginator.can_scroll_up = self._can_scroll_page_up
+            self._vertical_paginator.can_scroll_down = self._can_scroll_page_down
+            self._vertical_paginator.scroll_up = self._scroll_page_up
+            self._vertical_paginator.scroll_down = self._scroll_page_down
+            self._horizontal_paginator.can_scroll_up = self._can_scroll_page_left
+            self._horizontal_paginator.can_scroll_down = self._can_scroll_page_right
+            self._horizontal_paginator.scroll_up = self._scroll_page_left
+            self._horizontal_paginator.scroll_down = self._scroll_page_right
+            self._page_left_button = None
+            self._page_right_button = None
             self._stop_all_button = None
             self._next_scene_button = None
             self._prev_scene_button = None
             self._stop_track_clip_buttons = None
-            self._stop_track_clip_value = 127
-            self._stop_track_clip_slots = self.register_slot_manager()
+            self._stop_clip_triggered_value = 127
+            self._stop_clip_value = None
             self._highlighting_callback = None
-            self._show_highlight = num_tracks > 0 and num_scenes > 0
-            self._mixer = None
-            self._track_slots = self.register_slot_manager()
-            self._selected_scene = self.register_component(self._create_scene())
-            self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
-            self._session_component_ends_initialisation and self._end_initialisation()
+            if num_tracks > 0:
+                self._show_highlight = num_scenes > 0
+                self._mixer = None
+                self._track_slots = self.register_slot_manager()
+                self._selected_scene = self.register_component(self._create_scene())
+                self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
+                if self._session_component_ends_initialisation:
+                    self._end_initialisation()
+                auto_name and self._auto_name()
+            enable_skinning and self._enable_skinning()
 
     def _end_initialisation(self):
         self.on_selected_scene_changed()
@@ -78,6 +92,37 @@ class SessionComponent(CompoundComponent):
     def selected_scene(self):
         return self._selected_scene
 
+    def _enable_skinning(self):
+        self.set_stop_clip_triggered_value('Session.StopClipTriggered')
+        self.set_stop_clip_value('Session.StopClip')
+        for scene_index in xrange(self._num_scenes):
+            scene = self.scene(scene_index)
+            scene.set_scene_value('Session.Scene')
+            scene.set_no_scene_value('Session.NoScene')
+            scene.set_triggered_value('Session.SceneTriggered')
+            for track_index in xrange(self._num_tracks):
+                clip_slot = scene.clip_slot(track_index)
+                clip_slot.set_triggered_to_play_value('Session.ClipTriggeredPlay')
+                clip_slot.set_triggered_to_record_value('Session.ClipTriggeredRecord')
+                clip_slot.set_record_button_value('Session.RecordButton')
+                clip_slot.set_stopped_value('Session.ClipStopped')
+                clip_slot.set_started_value('Session.ClipStarted')
+                clip_slot.set_recording_value('Session.ClipRecording')
+
+    def _auto_name(self):
+        self.name = 'Session_Control'
+        self.selected_scene().name = 'Selected_Scene'
+        for track_index in xrange(self._num_tracks):
+            clip_slot = self.selected_scene().clip_slot(track_index)
+            clip_slot.name = 'Selected_Scene_Clip_Slot_%d' % track_index
+
+        for scene_index in xrange(self._num_scenes):
+            scene = self.scene(scene_index)
+            scene.name = 'Scene_%d' % scene_index
+            for track_index in xrange(self._num_tracks):
+                clip_slot = scene.clip_slot(track_index)
+                clip_slot.name = '%d_Clip_Slot_%d' % (track_index, scene_index)
+
     def set_scene_bank_buttons(self, down_button, up_button):
         self.set_scene_bank_up_button(up_button)
         self.set_scene_bank_down_button(down_button)
@@ -102,27 +147,85 @@ class SessionComponent(CompoundComponent):
         self._bank_right_button = button
         self._horizontal_banking.set_scroll_down_button(button)
 
+    def set_page_up_button(self, page_up_button):
+        self._vertical_paginator.set_scroll_up_button(page_up_button)
+
+    def set_page_down_button(self, page_down_button):
+        self._vertical_paginator.set_scroll_down_button(page_down_button)
+
+    def set_page_left_button(self, page_left_button):
+        self._page_left_button = page_left_button
+        self._horizontal_paginator.set_scroll_up_button(page_left_button)
+
+    def set_page_right_button(self, page_right_button):
+        self._page_right_button = page_right_button
+        self._horizontal_paginator.set_scroll_down_button(page_right_button)
+
+    def _can_scroll_page_up(self):
+        return self.scene_offset() > 0
+
+    def _can_scroll_page_down(self):
+        return self.scene_offset() < len(self.song().scenes) - self.height()
+
+    def _scroll_page_up(self):
+        height = self.height()
+        track_offset = self.track_offset()
+        scene_offset = self.scene_offset()
+        if scene_offset > 0:
+            new_scene_offset = scene_offset
+            if scene_offset % height > 0:
+                new_scene_offset -= scene_offset % height
+            else:
+                new_scene_offset = max(0, scene_offset - height)
+            self.set_offsets(track_offset, new_scene_offset)
+
+    def _scroll_page_down(self):
+        height = self.height()
+        track_offset = self.track_offset()
+        scene_offset = self.scene_offset()
+        new_scene_offset = scene_offset + height - scene_offset % height
+        self.set_offsets(track_offset, new_scene_offset)
+
+    def _can_scroll_page_left(self):
+        return self.track_offset() > 0
+
+    def _can_scroll_page_right(self):
+        return self.track_offset() < len(self.tracks_to_use()) - self.width()
+
+    def _scroll_page_left(self):
+        width = self.width()
+        track_offset = self.track_offset()
+        scene_offset = self.scene_offset()
+        if track_offset > 0:
+            new_track_offset = track_offset
+            if track_offset % width > 0:
+                new_track_offset -= track_offset % width
+            else:
+                new_track_offset = max(0, track_offset - width)
+            self.set_offsets(new_track_offset, scene_offset)
+
+    def _scroll_page_right(self):
+        width = self.width()
+        track_offset = self.track_offset()
+        scene_offset = self.scene_offset()
+        new_track_offset = track_offset + width - track_offset % width
+        self.set_offsets(new_track_offset, scene_offset)
+
     def set_stop_all_clips_button(self, button):
         self._stop_all_button = button
         self._on_stop_all_value.subject = button
         self._update_stop_all_clips_button()
 
     def set_stop_track_clip_buttons(self, buttons):
-        self._stop_track_clip_slots.disconnect()
         self._stop_track_clip_buttons = buttons
-        if self._stop_track_clip_buttons != None:
-            for index, button in enumerate(self._stop_track_clip_buttons):
-                if button:
-                    self._stop_track_clip_slots.register_slot(button, self._on_stop_track_value, 'value', extra_kws={'identify_sender': True})
-                self._on_fired_slot_index_changed(index)
+        self._on_stop_track_value.replace_subjects(buttons or [])
+        self._update_stop_track_clip_buttons()
 
-    def set_track_banking_increment(self, increment):
-        raise increment > 0 or AssertionError
-        self._track_banking_increment = increment
+    def set_stop_clip_triggered_value(self, value):
+        self._stop_clip_triggered_value = value
 
-    def set_stop_track_clip_value(self, value):
-        raise in_range(value, 0, 128) or AssertionError
-        self._stop_track_clip_value = value
+    def set_stop_clip_value(self, value):
+        self._stop_clip_value = value
 
     def set_select_buttons(self, next_button, prev_button):
         self.set_select_next_button(next_button)
@@ -189,11 +292,32 @@ class SessionComponent(CompoundComponent):
             self._show_highlight = show_highlight
             self._do_show_highlight()
 
+    def set_rgb_mode(self, color_palette, color_table, clip_slots_only = False):
+        """
+        Put the session into rgb mode by providing a color table and a color palette.
+        color_palette is a dictionary, mapping custom Live colors to MIDI ids. This can be
+        used to map a color directly to a CC value.
+        The color_table is a list of tuples, where the first element is a MIDI CC and the
+        second is the RGB color is represents. The table will be used to find the nearest
+        matching color for a custom color. The table is used if there is no entry in the
+        palette.
+        """
+        for y in xrange(self._num_scenes):
+            scene = self.scene(y)
+            if not clip_slots_only:
+                scene.set_color_palette(color_palette)
+                scene.set_color_table(color_table)
+            for x in xrange(self._num_tracks):
+                slot = scene.clip_slot(x)
+                slot.set_clip_palette(color_palette)
+                slot.set_clip_rgb_table(color_table)
+
     def on_enabled_changed(self):
         self.update()
         self._do_show_highlight()
 
     def update(self):
+        super(SessionComponent, self).update()
         if self._allow_updates:
             self._update_select_buttons()
             self._update_stop_track_clip_buttons()
@@ -204,18 +328,21 @@ class SessionComponent(CompoundComponent):
     def _update_stop_track_clip_buttons(self):
         if self.is_enabled():
             for index in xrange(self._num_tracks):
-                self._on_fired_slot_index_changed(index)
+                self._update_stop_clips_led(index)
 
     def on_scene_list_changed(self):
         if not self._update_scene_offset():
             self._reassign_scenes()
+
+    def _snap_track_offset(self):
+        return self._page_left_button or self._page_right_button
 
     def on_track_list_changed(self):
         num_tracks = len(self.tracks_to_use())
         new_track_offset = self.track_offset()
         if new_track_offset >= num_tracks:
             new_track_offset = num_tracks - 1
-            new_track_offset -= new_track_offset % self._track_banking_increment
+            new_track_offset -= new_track_offset % (self.width() if self._snap_track_offset() else 1)
         self._reassign_tracks()
         self.set_offsets(new_track_offset, self.scene_offset())
 
@@ -269,10 +396,10 @@ class SessionComponent(CompoundComponent):
         return self.set_offsets(self.track_offset(), self.scene_offset() + 1)
 
     def _bank_right(self):
-        return self.set_offsets(self.track_offset() + self._track_banking_increment, self.scene_offset())
+        return self.set_offsets(self.track_offset() + 1, self.scene_offset())
 
     def _bank_left(self):
-        return self.set_offsets(max(self.track_offset() - self._track_banking_increment, 0), self.scene_offset())
+        return self.set_offsets(max(self.track_offset() - 1, 0), self.scene_offset())
 
     def _update_stop_all_clips_button(self):
         button = self._stop_all_button
@@ -322,19 +449,16 @@ class SessionComponent(CompoundComponent):
         if self._selected_scene != None:
             self._selected_scene.set_track_offset(self._track_offset)
         self._vertical_banking.update()
+        self._vertical_paginator.update()
 
     def _reassign_tracks(self):
-        self._track_slots.disconnect()
         tracks_to_use = self.tracks_to_use()
-        for index in range(self._num_tracks):
-            listener = lambda index = index: self._on_fired_slot_index_changed(index)
-            if self._track_offset + index < len(tracks_to_use):
-                track = tracks_to_use[self._track_offset + index]
-                if track in self.song().tracks:
-                    self._track_slots.register_slot(track, listener, 'fired_slot_index')
-            listener()
-
+        self._on_fired_slot_index_changed.replace_subjects(tracks_to_use, count())
+        self._on_playing_slot_index_changed.replace_subjects(tracks_to_use, count())
         self._horizontal_banking.update()
+        self._horizontal_paginator.update()
+        self._update_stop_all_clips_button()
+        self._update_stop_track_clip_buttons()
 
     @subject_slot('value')
     def _on_stop_all_value(self, value):
@@ -366,12 +490,12 @@ class SessionComponent(CompoundComponent):
                     index = list(all_scenes).index(selected_scene)
                     self.song().view.selected_scene = all_scenes[index - 1]
 
-    @subject_slot('value')
-    def _on_stop_track_value(self, value, sender):
+    @subject_slot_group('value')
+    def _on_stop_track_value(self, value, button):
         if self.is_enabled():
-            if value is not 0 or not sender.is_momentary():
+            if value is not 0 or not button.is_momentary():
                 tracks = self.tracks_to_use()
-                track_index = list(self._stop_track_clip_buttons).index(sender) + self.track_offset()
+                track_index = list(self._stop_track_clip_buttons).index(button) + self.track_offset()
                 if in_range(track_index, 0, len(tracks)) and tracks[track_index] in self.song().tracks:
                     tracks[track_index].stop_all_clips()
 
@@ -384,16 +508,35 @@ class SessionComponent(CompoundComponent):
             else:
                 self._highlighting_callback(-1, -1, -1, -1, include_returns)
 
-    def _on_fired_slot_index_changed(self, index):
+    @subject_slot_group('fired_slot_index')
+    def _on_fired_slot_index_changed(self, track_index):
+        button_index = track_index - self.track_offset()
+        self._update_stop_clips_led(button_index)
+
+    @subject_slot_group('playing_slot_index')
+    def _on_playing_slot_index_changed(self, track_index):
+        button_index = track_index - self.track_offset()
+        self._update_stop_clips_led(button_index)
+
+    def _update_stop_clips_led(self, index):
         tracks_to_use = self.tracks_to_use()
         track_index = index + self.track_offset()
-        if self.is_enabled() and self._stop_track_clip_buttons != None:
-            if index < len(self._stop_track_clip_buttons):
-                button = self._stop_track_clip_buttons[index]
-                if button != None:
-                    track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots and tracks_to_use[track_index].fired_slot_index == -2 and button.send_value(self._stop_track_clip_value)
-                else:
+        button = self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons) and self._stop_track_clip_buttons[index]
+        if button != None:
+            value_to_send = None
+            if track_index < len(tracks_to_use):
+                if tracks_to_use[track_index].clip_slots:
+                    track = tracks_to_use[track_index]
+                    if track.fired_slot_index == -2:
+                        value_to_send = self._stop_clip_triggered_value
+                    elif track.playing_slot_index >= 0:
+                        value_to_send = self._stop_clip_value
+                if value_to_send == None:
                     button.turn_off()
+                elif in_range(value_to_send, 0, 128):
+                    button.send_value(value_to_send)
+                else:
+                    button.set_light(value_to_send)
 
     def _is_linked(self):
         return self in SessionComponent._linked_session_instances

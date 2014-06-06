@@ -55,6 +55,7 @@ class QuantizationSettingsComponent(ControlSurfaceComponent):
         self._update_quantize_amount_display()
 
     def update(self):
+        super(QuantizationSettingsComponent, self).update()
         self._update_record_quantization_button()
 
     def set_display_line1(self, line):

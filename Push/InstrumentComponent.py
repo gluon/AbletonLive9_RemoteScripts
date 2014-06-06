@@ -189,13 +189,13 @@ class InstrumentScalesComponent(CompoundComponent):
             self.set_key_center_buttons([])
 
     def set_modus_down_button(self, button):
-        self._modus_list.set_select_next_button(button)
+        self._modus_list.select_next_button.set_control_element(button)
 
     def set_modus_up_button(self, button):
-        self._modus_list.set_select_prev_button(button)
+        self._modus_list.select_prev_button.set_control_element(button)
 
     def set_encoder_controls(self, encoders):
-        self._modus_list.set_encoder_controls([encoders[0]] if encoders else [])
+        self._modus_list.encoders.set_control_element([encoders[0]] if encoders else [])
 
     def set_key_center_buttons(self, buttons):
         if not (not buttons or len(buttons) == 12):
@@ -252,6 +252,7 @@ class InstrumentScalesComponent(CompoundComponent):
         self.notify_scales_changed()
 
     def update(self):
+        super(InstrumentScalesComponent, self).update()
         if self.is_enabled():
             self._update_key_center_buttons()
             self._update_absolute_relative_button()
@@ -296,10 +297,6 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
     def __init__(self, *a, **k):
         super(InstrumentComponent, self).__init__(*a, **k)
         self._scales = self.register_component(InstrumentScalesComponent())
-        self._scales_menu = self.register_component(EnablingModesComponent(component=self._scales, toggle_value='DefaultButton.On'))
-        self._slider = self.register_component(SlideComponent(self))
-        self._on_scales_changed.subject = self._scales
-        self._on_scales_mode_changed.subject = self._scales._presets
         self._matrix = None
         self._delete_button = None
         self._first_note = self.page_length * 3 + self.page_offset
@@ -311,6 +308,10 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
         self._has_notes_pattern = self._get_pattern(0)
         self._takeover_pads = False
         self._aftertouch_control = None
+        self._scales_menu = self.register_component(EnablingModesComponent(component=self._scales, toggle_value='DefaultButton.On'))
+        self._slider = self.register_component(SlideComponent(self))
+        self._on_scales_changed.subject = self._scales
+        self._on_scales_mode_changed.subject = self._scales._presets
         self._update_pattern()
 
     def set_detail_clip(self, clip):
@@ -491,6 +492,7 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
         self.notify_contents()
 
     def update(self):
+        super(InstrumentComponent, self).update()
         if self.is_enabled():
             self._update_matrix()
             self._update_aftertouch()

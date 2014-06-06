@@ -55,9 +55,6 @@ class SpecialSessionComponent(SessionComponent):
             list_of_tracks = self.song().visible_tracks
         return list_of_tracks
 
-    def track_banking_increment(self):
-        return self._track_banking_increment
-
     def _change_offsets(self, track_increment, scene_increment):
         if not track_increment != 0:
             offsets_changed = scene_increment != 0

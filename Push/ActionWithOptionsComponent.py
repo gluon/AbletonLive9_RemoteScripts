@@ -1,27 +1,21 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ActionWithOptionsComponent.py
 from _Framework.CompoundComponent import CompoundComponent
+from _Framework.Control import ButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
-from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.Util import in_range, clamp
 from _Framework import Task
 from _Framework import Defaults
 import consts
 
 class ActionWithSettingsComponent(CompoundComponent):
+    action_button = ButtonControl(**consts.SIDE_BUTTON_COLORS)
     SETTINGS_DELAY = Defaults.MOMENTARY_DELAY
 
     def __init__(self, *a, **k):
         super(ActionWithSettingsComponent, self).__init__(*a, **k)
         self._is_showing_settings = False
-        self._action_button = None
         self._settings_task = Task.Task()
-
-    def set_action_button(self, action_button):
-        raise not action_button or action_button.is_momentary() or AssertionError
-        self._action_button = action_button
-        self._on_action_button_value.subject = action_button
-        self._update_action_button()
 
     def show_settings(self):
         """ Please override. Returns True if succeeded to show settings """
@@ -47,27 +41,20 @@ class ActionWithSettingsComponent(CompoundComponent):
         self.hide_settings()
         self._is_showing_settings = False
 
-    @subject_slot('value')
-    def _on_action_button_value(self, value):
-        if self.is_enabled():
-            self._settings_task.kill()
-            if value:
-                self._settings_task = self._tasks.add(Task.sequence(Task.wait(self.SETTINGS_DELAY), Task.run(self._do_show_settings)))
-                self.trigger_action()
-            elif self._is_showing_settings:
-                self.hide_settings()
-                self._is_showing_settings = False
-            else:
-                self.post_trigger_action()
-            self._update_action_button()
+    @action_button.pressed
+    def action_button(self, button):
+        self._settings_task.kill()
+        self._settings_task = self._tasks.add(Task.sequence(Task.wait(self.SETTINGS_DELAY), Task.run(self._do_show_settings)))
+        self.trigger_action()
 
-    def update(self):
-        self._update_action_button()
-
-    def _update_action_button(self):
-        """ Can be overridden """
-        if self.is_enabled() and self._action_button:
-            self._action_button.set_light(self._action_button.is_pressed())
+    @action_button.released
+    def action_button(self, button):
+        self._settings_task.kill()
+        if self._is_showing_settings:
+            self.hide_settings()
+            self._is_showing_settings = False
+        else:
+            self.post_trigger_action()
 
 
 class OptionsComponent(ControlSurfaceComponent):
@@ -75,13 +62,13 @@ class OptionsComponent(ControlSurfaceComponent):
     unselected_color = 'Option.Unselected'
     selected_color = 'Option.Selected'
     _selected_option = None
+    select_buttons = control_list(ButtonControl, control_count=0)
 
     def __init__(self, num_options = 8, num_labels = 4, num_display_segments = None, *a, **k):
         super(OptionsComponent, self).__init__(*a, **k)
         num_display_segments = num_display_segments or num_options
         self._label_data_sources = [ DisplayDataSource() for _ in xrange(num_labels) ]
         self._data_sources = [ DisplayDataSource() for _ in xrange(num_display_segments) ]
-        self._select_buttons = None
         self._option_names = []
 
     def _get_option_names(self):
@@ -89,11 +76,13 @@ class OptionsComponent(ControlSurfaceComponent):
 
     def _set_option_names(self, value):
         self._option_names = value
+        self.select_buttons.control_count = len(value)
         if self._selected_option:
             currently_selected_option = self.selected_option
             self.selected_option = clamp(self._selected_option, 0, len(self._option_names) - 1)
             if currently_selected_option != self.selected_option:
                 self.notify_selected_option(self.selected_option)
+        self._update_select_buttons()
         self._update_data_sources()
 
     option_names = property(_get_option_names, _set_option_names)
@@ -108,9 +97,6 @@ class OptionsComponent(ControlSurfaceComponent):
         self._update_data_sources()
 
     selected_option = property(_get_selected_option, _set_selected_option)
-
-    def update(self):
-        self._update_select_buttons()
 
     def set_display_line(self, line):
         if line:
@@ -142,34 +128,20 @@ class OptionsComponent(ControlSurfaceComponent):
         if line:
             line.reset()
 
-    def set_select_buttons(self, buttons):
-        buttons = buttons or []
-        self._select_buttons = buttons
-        self._on_select_value.replace_subjects(buttons)
-        self._update_select_buttons()
-
     def set_state_buttons(self, buttons):
         if buttons:
             buttons.reset()
 
-    @subject_slot_group('value')
-    def _on_select_value(self, value, sender):
-        if value:
-            index = list(self._select_buttons).index(sender)
-            if in_range(index, 0, len(self.option_names)):
-                self.selected_option = index
-                self.notify_selected_option(self.selected_option)
+    @select_buttons.pressed
+    def _on_select_value(self, button):
+        index = list(self.select_buttons).index(button)
+        if in_range(index, 0, len(self.option_names)):
+            self.selected_option = index
+            self.notify_selected_option(self.selected_option)
 
     def _update_select_buttons(self):
-        if self.is_enabled() and self._select_buttons:
-            for index, button in enumerate(self._select_buttons):
-                if button:
-                    if index == self._selected_option:
-                        button.set_light(self.selected_color)
-                    elif in_range(index, 0, len(self.option_names)):
-                        button.set_light(self.unselected_color)
-                    else:
-                        button.set_light('DefaultButton.Disabled')
+        for index, button in enumerate(self.select_buttons):
+            button.color = self.selected_color if index == self._selected_option else self.unselected_color
 
     def _update_data_sources(self):
         for index, (source, name) in enumerate(map(None, self._data_sources, self.option_names)):
@@ -209,7 +181,7 @@ class ToggleWithOptionsComponent(ActionWithOptionsComponent):
     def _set_is_active(self, value):
         if value != self._is_active:
             self._is_active = value
-            self._update_action_button()
+            self.action_button.color = 'DefaultButton.On' if value else 'DefaultButton.Off'
 
     is_active = property(_get_is_active, _set_is_active)
 
@@ -217,17 +189,11 @@ class ToggleWithOptionsComponent(ActionWithOptionsComponent):
         if self._is_active:
             self._just_activated = False
         else:
-            self._is_active = True
+            self.is_active = True
             self._just_activated = True
             self.notify_toggle_option(True)
-            self._update_action_button()
 
     def post_trigger_action(self):
         if not self._just_activated:
-            self._is_active = False
+            self.is_active = False
             self.notify_toggle_option(False)
-            self._update_action_button()
-
-    def _update_action_button(self):
-        if self.is_enabled() and self._action_button:
-            self._action_button.set_light(self._is_active)

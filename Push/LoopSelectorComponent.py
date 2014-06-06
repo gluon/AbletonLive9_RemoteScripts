@@ -1,5 +1,9 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/LoopSelectorComponent.py
 from __future__ import with_statement
+from functools import partial
+from _Framework import Task
+from _Framework import Defaults
+from _Framework.Control import ButtonControl
 from _Framework.SubjectSlot import subject_slot, Subject
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Util import contextmanager, clamp
@@ -62,6 +66,8 @@ class LoopSelectorComponent(ControlSurfaceComponent):
     clip. It allows you to select the loop of the clip and a page
     within it of a given Paginator object.
     """
+    next_page_button = ButtonControl()
+    prev_page_button = ButtonControl()
     __subject_events__ = ('is_following',)
 
     def __init__(self, clip_creator = None, measure_length = 4.0, follow_detail_clip = False, paginator = None, *a, **k):
@@ -81,6 +87,8 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         self._page_colors = []
         self._measure_length = measure_length
         self._last_playhead_page = -1
+        self._follow_task = self._tasks.add(Task.sequence(Task.wait(Defaults.MOMENTARY_DELAY), Task.run(partial(self._set_is_following, True))))
+        self._follow_task.kill()
         if follow_detail_clip:
             self._on_detail_clip_changed.subject = self.song().view
         self._on_session_record_changed.subject = self.song()
@@ -111,6 +119,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
     def _on_page_length_changed(self):
         self._update_page_colors()
         self._update_follow_button()
+        self._select_start_page_if_out_of_loop_range()
 
     def set_follow_button(self, button):
         self._follow_button = button
@@ -126,23 +135,27 @@ class LoopSelectorComponent(ControlSurfaceComponent):
 
     def set_detail_clip(self, clip):
         if clip != self._sequencer_clip:
-            if clip != None:
-                self._is_following = self._is_following or clip_is_new_recording(clip)
-                self._on_playing_position_changed.subject = clip
-                self._on_playing_status_changed.subject = clip
-                self._on_loop_start_changed.subject = clip
-                self._on_loop_end_changed.subject = clip
-                self._on_is_recording_changed.subject = clip
-                self._sequencer_clip = clip
-                page_start = self._paginator.page_index * self._paginator.page_length
-                clip and (page_start < clip.loop_start or page_start > clip.loop_end) and self._paginator.select_page_in_point(clip.loop_start)
-            elif not clip:
-                self._paginator.select_page_in_point(0)
+            self._is_following = clip != None and (self._is_following or clip_is_new_recording(clip))
+            self._on_playing_position_changed.subject = clip
+            self._on_playing_status_changed.subject = clip
+            self._on_loop_start_changed.subject = clip
+            self._on_loop_end_changed.subject = clip
+            self._on_is_recording_changed.subject = clip
+            self._sequencer_clip = clip
+            self._select_start_page_if_out_of_loop_range()
             self._on_loop_changed()
 
     def _update_follow_button(self):
         if self.is_enabled() and self._follow_button:
             self._follow_button.set_light(self.is_following)
+
+    def _select_start_page_if_out_of_loop_range(self):
+        if self._sequencer_clip:
+            page_start = self._paginator.page_index * self._paginator.page_length
+            if self._sequencer_clip and (page_start <= self._sequencer_clip.loop_start or page_start >= self._sequencer_clip.loop_end):
+                self._paginator.select_page_in_point(self._sequencer_clip.loop_start)
+        else:
+            self._paginator.select_page_in_point(0)
 
     @subject_slot('loop_start')
     def _on_loop_start_changed(self):
@@ -178,6 +191,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         self._update_page_colors()
 
     def update(self):
+        super(LoopSelectorComponent, self).update()
         self._update_page_and_playhead_leds()
         self._update_follow_button()
 
@@ -303,6 +317,40 @@ class LoopSelectorComponent(ControlSurfaceComponent):
                 if button:
                     button.set_light(color)
 
+    def _jump_to_page(self, next_page):
+        start, length = self._get_loop_in_pages()
+        if next_page >= start + length:
+            next_page = start
+        elif next_page < start:
+            next_page = start + length - 1
+        self._paginator.select_page_in_point(next_page * self._page_length_in_beats)
+
+    @next_page_button.pressed
+    def next_page_button(self, button):
+        if self.is_following:
+            self.is_following = False
+        else:
+            _, end = self._selected_pages_range()
+            self._jump_to_page(end)
+            self._follow_task.restart()
+
+    @next_page_button.released
+    def next_page_button(self, button):
+        self._follow_task.kill()
+
+    @prev_page_button.pressed
+    def prev_page_button(self, button):
+        if self.is_following:
+            self.is_following = False
+        else:
+            begin, end = self._selected_pages_range()
+            self._jump_to_page(begin - (end - begin))
+            self._follow_task.restart()
+
+    @prev_page_button.released
+    def prev_page_button(self, button):
+        self._follow_task.kill()
+
     @subject_slot('value')
     def _on_short_loop_selector_matrix_value(self, value, x, y, is_momentary):
         page = x + y * self._short_loop_selector_matrix.width()
@@ -364,7 +412,7 @@ class LoopSelectorComponent(ControlSurfaceComponent):
         if self._sequencer_clip:
             if not clip_is_new_recording(self._sequencer_clip):
                 lowest_page = min(self._pressed_pages) + self.page_offset
-                if self._try_select_page(lowest_page) == True:
+                if self._try_select_page(lowest_page):
                     self._set_loop_in_live()
                     did_set_loop = True
             if did_set_loop:

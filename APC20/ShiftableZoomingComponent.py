@@ -1,13 +1,12 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC20/ShiftableZoomingComponent.py
-import Live
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ButtonElement import ButtonElement
+from _Framework.SessionZoomingComponent import SessionZoomingComponent
 
 class ShiftableZoomingComponent(SessionZoomingComponent):
     """ Special ZoomingComponent that uses clip stop buttons for stop all when zoomed """
 
-    def __init__(self, session, stop_buttons):
-        SessionZoomingComponent.__init__(self, session)
+    def __init__(self, session, stop_buttons, *a, **k):
+        super(ShiftableZoomingComponent, self).__init__(session, *a, **k)
         self._stop_buttons = stop_buttons
         self._ignore_buttons = False
         for button in self._stop_buttons:
@@ -15,7 +14,7 @@ class ShiftableZoomingComponent(SessionZoomingComponent):
             button.add_value_listener(self._stop_value, identify_sender=True)
 
     def disconnect(self):
-        SessionZoomingComponent.disconnect(self)
+        super(ShiftableZoomingComponent, self).disconnect()
         for button in self._stop_buttons:
             button.remove_value_listener(self._stop_value)
 
@@ -29,7 +28,7 @@ class ShiftableZoomingComponent(SessionZoomingComponent):
 
     def update(self):
         if not self._ignore_buttons:
-            SessionZoomingComponent.update(self)
+            super(ShiftableZoomingComponent, self).update()
         elif self.is_enabled():
             if self._scene_bank_buttons != None:
                 for button in self._scene_bank_buttons:
@@ -61,24 +60,24 @@ class ShiftableZoomingComponent(SessionZoomingComponent):
 
     def _matrix_value(self, value, x, y, is_momentary):
         if not self._ignore_buttons:
-            SessionZoomingComponent._matrix_value(self, value, x, y, is_momentary)
+            super(ShiftableZoomingComponent, self)._matrix_value(value, x, y, is_momentary)
 
     def _nav_up_value(self, value):
         if not self._ignore_buttons:
-            SessionZoomingComponent._nav_up_value(self, value)
+            super(ShiftableZoomingComponent, self)._nav_up_value(value)
 
     def _nav_down_value(self, value):
         if not self._ignore_buttons:
-            SessionZoomingComponent._nav_down_value(self, value)
+            super(ShiftableZoomingComponent, self)._nav_down_value(value)
 
     def _nav_left_value(self, value):
         if not self._ignore_buttons:
-            SessionZoomingComponent._nav_left_value(self, value)
+            super(ShiftableZoomingComponent, self)._nav_left_value(value)
 
     def _nav_right_value(self, value):
         if not self._ignore_buttons:
-            SessionZoomingComponent._nav_right_value(self, value)
+            super(ShiftableZoomingComponent, self)._nav_right_value(value)
 
     def _scene_bank_value(self, value, sender):
         if not self._ignore_buttons:
-            SessionZoomingComponent._scene_bank_value(self, value, sender)
+            super(ShiftableZoomingComponent, self)._scene_bank_value(value, sender)

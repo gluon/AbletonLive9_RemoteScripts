@@ -22,5 +22,6 @@ class TrackFrozenModesComponent(ModesComponent):
         self._update_selected_mode()
 
     def update(self):
+        super(TrackFrozenModesComponent, self).update()
         if self.is_enabled():
             self._update_selected_mode()

@@ -7,12 +7,12 @@ from _Framework.SliderElement import SliderElement
 from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement
 from _Framework.DeviceComponent import DeviceComponent
+from _Framework.SessionComponent import SessionComponent
 from _Framework.TransportComponent import TransportComponent
 from Launchpad.ConfigurableButtonElement import ConfigurableButtonElement
 from SessionNavigationComponent import SessionNavigationComponent
 from TransportViewModeSelector import TransportViewModeSelector
 from SpecialMixerComponent import SpecialMixerComponent
-from SpecialSessionComponent import SpecialSessionComponent
 from consts import *
 IS_MOMENTARY = True
 
@@ -165,7 +165,7 @@ class Launchkey(ControlSurface):
     def _setup_session(self):
         scene_launch_button = self._control_factory.create_scene_launch_button()
         scene_stop_button = self._control_factory.create_scene_stop_button()
-        self._session = SpecialSessionComponent(8, 0)
+        self._session = SessionComponent(8, 0)
         self._session.name = 'Session_Control'
         self._session.selected_scene().name = 'Selected_Scene'
         self._session.selected_scene().set_launch_button(scene_launch_button)
@@ -173,8 +173,8 @@ class Launchkey(ControlSurface):
         self._session.set_stop_all_clips_button(scene_stop_button)
         scene_stop_button.set_on_off_values(AMBER_FULL, LED_OFF)
         self._session.set_mixer(self._mixer)
-        self._session.set_track_banking_increment(8)
-        self._session.set_stop_track_clip_value(GREEN_BLINK)
+        self._session.set_stop_clip_value(AMBER_HALF)
+        self._session.set_stop_clip_triggered_value(GREEN_BLINK)
         clip_launch_buttons = []
         clip_stop_buttons = []
         for index in range(8):

@@ -168,5 +168,6 @@ class DeviceParameterComponent(ControlSurfaceComponent):
         return parameter.value
 
     def update(self):
+        super(DeviceParameterComponent, self).update()
         if self.is_enabled():
             self._update_parameters()

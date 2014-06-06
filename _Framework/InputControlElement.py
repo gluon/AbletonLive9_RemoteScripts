@@ -121,6 +121,10 @@ class InputControlElement(NotifyingControlElement):
 
     class ProxiedInterface(NotifyingControlElement.ProxiedInterface):
         send_value = nop
+        receive_value = nop
+        use_default_message = nop
+        set_channel = nop
+        message_channel = const(None)
 
     __subject_events__ = (SubjectEvent(name='value', signal=InputSignal, override=True),)
     _input_signal_listener_count = 0
@@ -164,8 +168,14 @@ class InputControlElement(NotifyingControlElement):
     def message_channel(self):
         return self._msg_channel
 
+    def original_channel(self):
+        return self._original_channel
+
     def message_identifier(self):
         return self._msg_identifier
+
+    def original_identifier(self):
+        return self._original_identifier
 
     def message_sysex_identifier(self):
         return self._msg_sysex_identifier

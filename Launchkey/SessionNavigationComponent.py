@@ -105,6 +105,3 @@ class SessionNavigationComponent(CompoundComponent):
 
     def set_prev_scene_button(self, button):
         self._scroll_scenes.set_scroll_up_button(button)
-
-    def update(self):
-        pass

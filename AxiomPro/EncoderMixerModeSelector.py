@@ -91,6 +91,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         return 4
 
     def update(self):
+        super(EncoderMixerModeSelector, self).update()
         if not self._modes_buttons != None:
             raise AssertionError
             if self.is_enabled() and self._controls != None:

@@ -9,6 +9,7 @@ from Profile import profile
 from Dependency import inject
 from Util import BooleanContext, first, find_if, const, in_range
 from Debug import debug_print
+from ControlElement import OptimizedOwnershipHandler
 from SubjectSlot import SlotManager
 from DeviceComponent import DeviceComponent
 from PhysicalDisplayElement import PhysicalDisplayElement
@@ -46,15 +47,18 @@ def _scheduled_method(method):
 CS_LIST_KEY = 'control_surfaces'
 
 def publish_control_surface(control_surface):
+    get_control_surfaces().append(control_surface)
+
+
+def get_control_surfaces():
     if isinstance(__builtins__, dict):
         if CS_LIST_KEY not in __builtins__.keys():
             __builtins__[CS_LIST_KEY] = []
-        __builtins__[CS_LIST_KEY].append(control_surface)
+        return __builtins__[CS_LIST_KEY]
     else:
         if not hasattr(__builtins__, CS_LIST_KEY):
             setattr(__builtins__, CS_LIST_KEY, [])
-        cs_list = getattr(__builtins__, CS_LIST_KEY)
-        cs_list.append(control_surface)
+        return getattr(__builtins__, CS_LIST_KEY)
 
 
 class ControlSurface(SlotManager):
@@ -538,6 +542,9 @@ class ControlSurface(SlotManager):
             finally:
                 self._flush_midi_messages()
 
+    def get_control_by_name(self, control_name):
+        return find_if(lambda c: c.name == control_name, self.controls)
+
     def _send_midi(self, midi_event_bytes, optimized = True):
         """
         Script -> Live
@@ -701,3 +708,22 @@ class ControlSurface(SlotManager):
             self._device_component.set_device(self.song().appointed_device)
         else:
             self._device_component.set_device(None)
+
+
+class OptimizedControlSurface(ControlSurface):
+    """
+    Control Surface that makes use of the optimized ownership handler for controls.
+    """
+
+    def __init__(self, *a, **k):
+        super(OptimizedControlSurface, self).__init__(*a, **k)
+        self._optimized_ownership_handler = OptimizedOwnershipHandler()
+        injecting = inject(element_ownership_handler=const(self._optimized_ownership_handler))
+        self._ownership_handler_injector = injecting.everywhere()
+
+    @contextmanager
+    def component_guard(self):
+        with super(OptimizedControlSurface, self).component_guard():
+            with self._ownership_handler_injector:
+                yield
+                self._optimized_ownership_handler.commit_ownership_changes()

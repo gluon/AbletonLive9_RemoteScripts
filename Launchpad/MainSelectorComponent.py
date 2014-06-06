@@ -96,6 +96,7 @@ class MainSelectorComponent(ModeSelectorComponent):
         return new_channel
 
     def update(self):
+        super(MainSelectorComponent, self).update()
         if not self._modes_buttons != None:
             raise AssertionError
             if self.is_enabled():
@@ -216,7 +217,8 @@ class MainSelectorComponent(ModeSelectorComponent):
         self._config_button.send_value(32, force=True)
 
     def _init_session(self):
-        self._session.set_stop_track_clip_value(AMBER_BLINK)
+        self._session.set_stop_clip_value(AMBER_THIRD)
+        self._session.set_stop_clip_triggered_value(AMBER_BLINK)
         for scene_index in range(self._matrix.height()):
             scene = self._session.scene(scene_index)
             scene.set_triggered_value(GREEN_BLINK)

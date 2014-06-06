@@ -79,6 +79,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(MixerOrDeviceModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._device.set_parameter_controls(None)

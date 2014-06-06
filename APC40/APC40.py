@@ -1,222 +1,178 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/APC40.py
-import Live
-from APC import APC
-from _Framework.ControlSurface import ControlSurface
-from _Framework.InputControlElement import *
-from _Framework.SliderElement import SliderElement
-from _Framework.ButtonElement import ButtonElement
-from _Framework.EncoderElement import EncoderElement
+from __future__ import with_statement
+from functools import partial
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.MixerComponent import MixerComponent
-from _Framework.ClipSlotComponent import ClipSlotComponent
-from _Framework.ChannelStripComponent import ChannelStripComponent
-from _Framework.SceneComponent import SceneComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
-from EncModeSelectorComponent import EncModeSelectorComponent
-from RingedEncoderElement import RingedEncoderElement
-from DetailViewCntrlComponent import DetailViewCntrlComponent
-from ShiftableDeviceComponent import ShiftableDeviceComponent
-from ShiftableTransportComponent import ShiftableTransportComponent
-from ShiftTranslatorComponent import ShiftTranslatorComponent
-from PedaledSessionComponent import PedaledSessionComponent
-from SpecialMixerComponent import SpecialMixerComponent
+from _Framework.ControlSurface import OptimizedControlSurface
+from _Framework.Layer import Layer
+from _Framework.ModesComponent import ModesComponent
+from _Framework.Resource import PrioritizedResource
+from _Framework.SessionZoomingComponent import SessionZoomingComponent
+from _Framework.Skin import merge_skins
+from _Framework.Util import nop
+from _APC.APC import APC
+from _APC.ControlElementUtils import make_button, make_pedal_button, make_encoder, make_ring_encoder, make_slider
+from _APC.DeviceBankButtonElement import DeviceBankButtonElement
+from _APC.DeviceComponent import DeviceComponent
+from _APC.MixerComponent import MixerComponent
+from _APC.SkinDefault import make_default_skin, make_biled_skin
+from _APC.DetailViewCntrlComponent import DetailViewCntrlComponent
+from TransportComponent import TransportComponent
+from SessionComponent import SessionComponent
+SESSION_WIDTH = 8
+SESSION_HEIGHT = 5
+MIXER_SIZE = 8
 
-class APC40(APC):
+class APC40(APC, OptimizedControlSurface):
     """ Script for Akai's APC40 Controller """
 
-    def __init__(self, c_instance):
-        APC.__init__(self, c_instance)
+    def __init__(self, *a, **k):
+        super(APC40, self).__init__(*a, **k)
+        self._color_skin = make_biled_skin()
+        self._default_skin = make_default_skin()
+        self._skin = merge_skins(self._color_skin, self._default_skin)
+        with self.component_guard():
+            self._create_controls()
+            self._create_session()
+            self._create_mixer()
+            self._create_device()
+            self._create_detail_view_control()
+            self._create_transport()
+            self._create_global_control()
+            self._session.set_mixer(self._mixer)
+            self.set_highlighting_session_component(self._session)
+            self.set_device_component(self._device)
+            for component in self.components:
+                component.set_enabled(False)
+
         self._device_selection_follows_track_selection = True
 
-    def _setup_session_control(self):
-        is_momentary = True
-        self._shift_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 98)
-        right_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 96)
-        left_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 97)
-        up_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 94)
-        down_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 95)
-        right_button.name = 'Bank_Select_Right_Button'
-        left_button.name = 'Bank_Select_Left_Button'
-        up_button.name = 'Bank_Select_Up_Button'
-        down_button.name = 'Bank_Select_Down_Button'
-        self._session = PedaledSessionComponent(8, 5)
-        self._session.name = 'Session_Control'
-        self._session.set_track_bank_buttons(right_button, left_button)
-        self._session.set_scene_bank_buttons(down_button, up_button)
-        matrix = ButtonMatrixElement()
-        matrix.name = 'Button_Matrix'
-        scene_launch_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, index + 82) for index in range(5) ]
-        track_stop_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, index, 52) for index in range(8) ]
-        for index in range(len(scene_launch_buttons)):
-            scene_launch_buttons[index].name = 'Scene_' + str(index) + '_Launch_Button'
+    def _create_controls(self):
+        make_on_off_button = partial(make_button, skin=self._default_skin)
+        make_color_button = partial(make_button, skin=self._color_skin)
+        self._shift_button = make_button(0, 98, resource_type=PrioritizedResource, name='Shift_Button')
+        self._right_button = make_button(0, 96, name='Bank_Select_Right_Button')
+        self._left_button = make_button(0, 97, name='Bank_Select_Left_Button')
+        self._up_button = make_button(0, 94, name='Bank_Select_Up_Button')
+        self._down_button = make_button(0, 95, name='Bank_Select_Down_Button')
+        self._session_matrix = ButtonMatrixElement(name='Button_Matrix')
+        self._scene_launch_buttons = [ make_color_button(0, index + 82, name='Scene_%d_Launch_Button' % index) for index in xrange(SESSION_HEIGHT) ]
+        self._track_stop_buttons = [ make_color_button(index, 52, name='Track_%d_Stop_Button' % index) for index in xrange(SESSION_WIDTH) ]
+        self._stop_all_button = make_color_button(0, 81, name='Stop_All_Clips_Button')
+        self._matrix_rows_raw = [ [ make_color_button(track_index, scene_index + 53, name='%d_Clip_%d_Button' % (track_index, scene_index)) for track_index in xrange(SESSION_WIDTH) ] for scene_index in xrange(SESSION_HEIGHT) ]
+        for row in self._matrix_rows_raw:
+            self._session_matrix.add_row(row)
 
-        for index in range(len(track_stop_buttons)):
-            track_stop_buttons[index].name = 'Track_' + str(index) + '_Stop_Button'
+        self._selected_slot_launch_button = make_pedal_button(67, name='Selected_Slot_Launch_Button')
+        self._selected_scene_launch_button = make_pedal_button(64, name='Selected_Scene_Launch_Button')
+        self._volume_controls = []
+        self._arm_buttons = []
+        self._solo_buttons = []
+        self._mute_buttons = []
+        self._select_buttons = []
+        for index in xrange(MIXER_SIZE):
+            self._volume_controls.append(make_slider(index, 7, name='%d_Volume_Control' % index))
+            self._arm_buttons.append(make_on_off_button(index, 48, name='%d_Arm_Button' % index))
+            self._solo_buttons.append(make_on_off_button(index, 49, name='%d_Solo_Button' % index))
+            self._mute_buttons.append(make_on_off_button(index, 50, name='%d_Mute_Button' % index))
+            self._select_buttons.append(make_on_off_button(index, 51, name='%d_Select_Button' % index))
 
-        stop_all_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 81)
-        stop_all_button.name = 'Stop_All_Clips_Button'
-        self._session.set_stop_all_clips_button(stop_all_button)
-        self._session.set_stop_track_clip_buttons(tuple(track_stop_buttons))
-        self._session.set_stop_track_clip_value(2)
-        for scene_index in range(5):
-            scene = self._session.scene(scene_index)
-            scene.name = 'Scene_' + str(scene_index)
-            button_row = []
-            scene.set_launch_button(scene_launch_buttons[scene_index])
-            scene.set_triggered_value(2)
-            for track_index in range(8):
-                button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track_index, scene_index + 53)
-                button.name = str(track_index) + '_Clip_' + str(scene_index) + '_Button'
-                button_row.append(button)
-                clip_slot = scene.clip_slot(track_index)
-                clip_slot.name = str(track_index) + '_Clip_Slot_' + str(scene_index)
-                clip_slot.set_triggered_to_play_value(2)
-                clip_slot.set_triggered_to_record_value(4)
-                clip_slot.set_stopped_value(5)
-                clip_slot.set_started_value(1)
-                clip_slot.set_recording_value(3)
-                clip_slot.set_launch_button(button)
-
-            matrix.add_row(tuple(button_row))
-
-        self._session.set_slot_launch_button(ButtonElement(is_momentary, MIDI_CC_TYPE, 0, 67))
-        self._session.selected_scene().name = 'Selected_Scene'
-        self._session.selected_scene().set_launch_button(ButtonElement(is_momentary, MIDI_CC_TYPE, 0, 64))
-        self._session_zoom = SessionZoomingComponent(self._session)
-        self._session_zoom.name = 'Session_Overview'
-        self._session_zoom.set_button_matrix(matrix)
-        self._session_zoom.set_zoom_button(self._shift_button)
-        self._session_zoom.set_nav_buttons(up_button, down_button, left_button, right_button)
-        self._session_zoom.set_scene_bank_buttons(tuple(scene_launch_buttons))
-        self._session_zoom.set_stopped_value(3)
-        self._session_zoom.set_selected_value(5)
-
-    def _setup_mixer_control(self):
-        is_momentary = True
-        self._mixer = SpecialMixerComponent(8)
-        self._mixer.name = 'Mixer'
-        self._mixer.master_strip().name = 'Master_Channel_Strip'
-        self._mixer.selected_strip().name = 'Selected_Channel_Strip'
-        for track in range(8):
-            strip = self._mixer.channel_strip(track)
-            strip.name = 'Channel_Strip_' + str(track)
-            volume_control = SliderElement(MIDI_CC_TYPE, track, 7)
-            arm_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track, 48)
-            solo_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track, 49)
-            mute_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track, 50)
-            select_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track, 51)
-            volume_control.name = str(track) + '_Volume_Control'
-            arm_button.name = str(track) + '_Arm_Button'
-            solo_button.name = str(track) + '_Solo_Button'
-            mute_button.name = str(track) + '_Mute_Button'
-            select_button.name = str(track) + '_Select_Button'
-            strip.set_volume_control(volume_control)
-            strip.set_arm_button(arm_button)
-            strip.set_solo_button(solo_button)
-            strip.set_mute_button(mute_button)
-            strip.set_select_button(select_button)
-            strip.set_shift_button(self._shift_button)
-            strip.set_invert_mute_feedback(True)
-
-        crossfader = SliderElement(MIDI_CC_TYPE, 0, 15)
-        master_volume_control = SliderElement(MIDI_CC_TYPE, 0, 14)
-        master_select_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 80)
-        prehear_control = EncoderElement(MIDI_CC_TYPE, 0, 47, Live.MidiMap.MapMode.relative_two_compliment)
-        crossfader.name = 'Crossfader'
-        master_volume_control.name = 'Master_Volume_Control'
-        master_select_button.name = 'Master_Select_Button'
-        prehear_control.name = 'Prehear_Volume_Control'
-        self._mixer.set_crossfader_control(crossfader)
-        self._mixer.set_prehear_volume_control(prehear_control)
-        self._mixer.master_strip().set_volume_control(master_volume_control)
-        self._mixer.master_strip().set_select_button(master_select_button)
-
-    def _setup_custom_components(self):
-        self._setup_device_and_transport_control()
-        self._setup_global_control()
-
-    def _setup_device_and_transport_control(self):
-        is_momentary = True
-        device_bank_buttons = []
-        device_param_controls = []
+        self._crossfader_control = make_slider(0, 15, name='Crossfader')
+        self._master_volume_control = make_slider(0, 14, name='Master_Volume_Control')
+        self._master_select_button = make_on_off_button(0, 80, name='Master_Select_Button')
+        self._prehear_control = make_encoder(0, 47, name='Prehear_Volume_Control')
+        self._device_bank_buttons = []
+        self._device_param_controls_raw = []
         bank_button_labels = ('Clip_Track_Button', 'Device_On_Off_Button', 'Previous_Device_Button', 'Next_Device_Button', 'Detail_View_Button', 'Rec_Quantization_Button', 'Midi_Overdub_Button', 'Metronome_Button')
         for index in range(8):
-            device_bank_buttons.append(ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 58 + index))
-            device_bank_buttons[-1].name = bank_button_labels[index]
-            ring_mode_button = ButtonElement(not is_momentary, MIDI_CC_TYPE, 0, 24 + index)
-            ringed_encoder = RingedEncoderElement(MIDI_CC_TYPE, 0, 16 + index, Live.MidiMap.MapMode.absolute)
-            ringed_encoder.set_ring_mode_button(ring_mode_button)
-            ringed_encoder.name = 'Device_Control_' + str(index)
-            ring_mode_button.name = ringed_encoder.name + '_Ring_Mode_Button'
-            device_param_controls.append(ringed_encoder)
+            self._device_bank_buttons.append(make_on_off_button(0, 58 + index, name=bank_button_labels[index]))
+            encoder_name = 'Device_Control_%d' % index
+            ringed_encoder = make_ring_encoder(16 + index, 24 + index, name=encoder_name)
+            self._device_param_controls_raw.append(ringed_encoder)
 
-        device = ShiftableDeviceComponent()
-        device.name = 'Device_Component'
-        device.set_bank_buttons(tuple(device_bank_buttons))
-        device.set_shift_button(self._shift_button)
-        device.set_parameter_controls(tuple(device_param_controls))
-        device.set_on_off_button(device_bank_buttons[1])
-        self.set_device_component(device)
-        detail_view_toggler = DetailViewCntrlComponent()
-        detail_view_toggler.name = 'Detail_View_Control'
-        detail_view_toggler.set_shift_button(self._shift_button)
-        detail_view_toggler.set_device_clip_toggle_button(device_bank_buttons[0])
-        detail_view_toggler.set_detail_toggle_button(device_bank_buttons[4])
-        detail_view_toggler.set_device_nav_buttons(device_bank_buttons[2], device_bank_buttons[3])
-        transport = ShiftableTransportComponent()
-        transport.name = 'Transport'
-        play_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 91)
-        stop_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 92)
-        record_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 93)
-        nudge_up_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 100)
-        nudge_down_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 101)
-        tap_tempo_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 99)
-        play_button.name = 'Play_Button'
-        stop_button.name = 'Stop_Button'
-        record_button.name = 'Record_Button'
-        nudge_up_button.name = 'Nudge_Up_Button'
-        nudge_down_button.name = 'Nudge_Down_Button'
-        tap_tempo_button.name = 'Tap_Tempo_Button'
-        transport.set_shift_button(self._shift_button)
-        transport.set_play_button(play_button)
-        transport.set_stop_button(stop_button)
-        transport.set_record_button(record_button)
-        transport.set_nudge_buttons(nudge_up_button, nudge_down_button)
-        transport.set_tap_tempo_button(tap_tempo_button)
-        transport.set_quant_toggle_button(device_bank_buttons[5])
-        transport.set_overdub_button(device_bank_buttons[6])
-        transport.set_metronome_button(device_bank_buttons[7])
-        bank_button_translator = ShiftTranslatorComponent()
-        bank_button_translator.set_controls_to_translate(tuple(device_bank_buttons))
-        bank_button_translator.set_shift_button(self._shift_button)
-
-    def _setup_global_control(self):
-        is_momentary = True
-        global_bank_buttons = []
-        global_param_controls = []
+        self._play_button = make_button(0, 91, name='Play_Button')
+        self._stop_button = make_button(0, 92, name='Stop_Button')
+        self._record_button = make_button(0, 93, name='Record_Button')
+        self._nudge_up_button = make_button(0, 100, name='Nudge_Up_Button')
+        self._nudge_down_button = make_button(0, 101, name='Nudge_Down_Button')
+        self._tap_tempo_button = make_button(0, 99, name='Tap_Tempo_Button')
+        self._global_bank_buttons = []
+        self._global_param_controls = []
         for index in range(8):
-            ring_button = ButtonElement(not is_momentary, MIDI_CC_TYPE, 0, 56 + index)
-            ringed_encoder = RingedEncoderElement(MIDI_CC_TYPE, 0, 48 + index, Live.MidiMap.MapMode.absolute)
-            ringed_encoder.name = 'Track_Control_' + str(index)
-            ring_button.name = ringed_encoder.name + '_Ring_Mode_Button'
-            ringed_encoder.set_ring_mode_button(ring_button)
-            global_param_controls.append(ringed_encoder)
+            encoder_name = 'Track_Control_%d' % index
+            ringed_encoder = make_ring_encoder(48 + index, 56 + index, name=encoder_name)
+            self._global_param_controls.append(ringed_encoder)
 
-        global_bank_buttons = []
-        global_bank_labels = ('Pan_Button', 'Send_A_Button', 'Send_B_Button', 'Send_C_Button')
-        for index in range(4):
-            global_bank_buttons.append(ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 87 + index))
-            global_bank_buttons[-1].name = global_bank_labels[index]
+        self._global_bank_buttons = [ make_on_off_button(0, 87 + index, name=name) for index, name in enumerate(('Pan_Button', 'Send_A_Button', 'Send_B_Button', 'Send_C_Button')) ]
+        self._device_clip_toggle_button = self._device_bank_buttons[0]
+        self._device_on_off_button = self._device_bank_buttons[1]
+        self._detail_left_button = self._device_bank_buttons[2]
+        self._detail_right_button = self._device_bank_buttons[3]
+        self._detail_toggle_button = self._device_bank_buttons[4]
+        self._rec_quantization_button = self._device_bank_buttons[5]
+        self._overdub_button = self._device_bank_buttons[6]
+        self._metronome_button = self._device_bank_buttons[7]
 
-        encoder_modes = EncModeSelectorComponent(self._mixer)
-        encoder_modes.name = 'Track_Control_Modes'
-        encoder_modes.set_modes_buttons(global_bank_buttons)
-        encoder_modes.set_controls(tuple(global_param_controls))
-        global_translation_selector = ChannelTranslationSelector()
-        global_translation_selector.name = 'Global_Translations'
-        global_translation_selector.set_controls_to_translate(tuple(global_param_controls))
-        global_translation_selector.set_mode_buttons(tuple(global_bank_buttons))
+        def wrap_matrix(control_list, wrapper = nop):
+            return ButtonMatrixElement(rows=[map(wrapper, control_list)])
+
+        self._scene_launch_buttons = wrap_matrix(self._scene_launch_buttons)
+        self._track_stop_buttons = wrap_matrix(self._track_stop_buttons)
+        self._volume_controls = wrap_matrix(self._volume_controls)
+        self._arm_buttons = wrap_matrix(self._arm_buttons)
+        self._solo_buttons = wrap_matrix(self._solo_buttons)
+        self._mute_buttons = wrap_matrix(self._mute_buttons)
+        self._select_buttons = wrap_matrix(self._select_buttons)
+        self._device_param_controls = wrap_matrix(self._device_param_controls_raw)
+        self._device_bank_buttons = wrap_matrix(self._device_bank_buttons, partial(DeviceBankButtonElement, modifiers=[self._shift_button]))
+
+    def _create_session(self):
+        self._session = SessionComponent(SESSION_WIDTH, SESSION_HEIGHT, auto_name=True, enable_skinning=True, is_enabled=False, layer=Layer(track_bank_left_button=self._left_button, track_bank_right_button=self._right_button, scene_bank_up_button=self._up_button, scene_bank_down_button=self._down_button, stop_all_clips_button=self._stop_all_button, stop_track_clip_buttons=self._track_stop_buttons, scene_launch_buttons=self._scene_launch_buttons, clip_launch_buttons=self._session_matrix, slot_launch_button=self._selected_slot_launch_button, selected_scene_launch_button=self._selected_scene_launch_button))
+        self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._session_matrix, zoom_button=self._shift_button, nav_up_button=self._up_button, nav_down_button=self._down_button, nav_left_button=self._left_button, nav_right_button=self._right_button, scene_bank_buttons=self._scene_launch_buttons))
+
+    def _create_mixer(self):
+        self._mixer = MixerComponent(MIXER_SIZE, auto_name=True, is_enabled=False, invert_mute_feedback=True, layer=Layer(volume_controls=self._volume_controls, arm_buttons=self._arm_buttons, solo_buttons=self._solo_buttons, mute_buttons=self._mute_buttons, track_select_buttons=self._select_buttons, shift_button=self._shift_button, crossfader_control=self._crossfader_control, prehear_volume_control=self._prehear_control))
+        self._mixer.master_strip().layer = Layer(volume_control=self._master_volume_control, select_button=self._master_select_button)
+
+    def _create_device(self):
+        self._device = DeviceComponent(name='Device_Component', is_enabled=False, layer=Layer(bank_buttons=self._device_bank_buttons, on_off_button=self._device_on_off_button), use_fake_banks=True)
+        ChannelTranslationSelector(8, name='Control_Translations')
+        self._device.set_parameter_controls(tuple(self._device_param_controls_raw))
+
+    def _create_detail_view_control(self):
+        self._detail_view_toggler = DetailViewCntrlComponent(name='Detail_View_Control', is_enabled=False, layer=Layer(device_clip_toggle_button=self._device_clip_toggle_button, detail_toggle_button=self._detail_toggle_button, device_nav_left_button=self._detail_left_button, device_nav_right_button=self._detail_right_button))
+
+    def _create_transport(self):
+        self._transport = TransportComponent(name='Transport', is_enabled=False, layer=Layer(play_button=self._play_button, stop_button=self._stop_button, record_button=self._record_button, nudge_up_button=self._nudge_up_button, nudge_down_button=self._nudge_down_button, tap_tempo_button=self._tap_tempo_button, quant_toggle_button=self._rec_quantization_button, overdub_button=self._overdub_button, metronome_button=self._metronome_button))
+        self._bank_button_translator = ChannelTranslationSelector(name='Bank_Button_Translations', is_enabled=False)
+
+    def _create_global_control(self):
+
+        def set_pan_controls():
+            for index, control in enumerate(self._global_param_controls):
+                self._mixer.channel_strip(index).set_pan_control(control)
+                self._mixer.channel_strip(index).set_send_controls((None, None, None))
+                control.set_channel(0)
+
+        def set_send_controls(send_index):
+            for index, control in enumerate(self._global_param_controls):
+                self._mixer.channel_strip(index).set_pan_control(None)
+                send_controls = [None] * 3
+                send_controls[send_index] = control
+                self._mixer.channel_strip(index).set_send_controls(send_controls)
+                control.set_channel(send_index + 1)
+
+        encoder_modes = ModesComponent(name='Track_Control_Modes', is_enabled=False)
+        encoder_modes.add_mode('pan', [set_pan_controls])
+        encoder_modes.add_mode('send_a', [partial(set_send_controls, 0)])
+        encoder_modes.add_mode('send_b', [partial(set_send_controls, 1)])
+        encoder_modes.add_mode('send_c', [partial(set_send_controls, 2)])
+        encoder_modes.selected_mode = 'pan'
+        encoder_modes.layer = Layer(pan_button=self._global_bank_buttons[0], send_a_button=self._global_bank_buttons[1], send_b_button=self._global_bank_buttons[2], send_c_button=self._global_bank_buttons[3])
+        self._translation_selector = ChannelTranslationSelector(name='Global_Translations')
+
+    def get_matrix_button(self, column, row):
+        return self._matrix_rows_raw[row][column]
 
     def _product_model_id_byte(self):
         return 115

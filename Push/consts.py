@@ -7,7 +7,8 @@ SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.Off',
  True: 'DefaultButton.On',
  False: 'DefaultButton.Disabled'}
-MUSICAL_MODES = ['Major Ionian',
+SIDE_BUTTON_COLORS = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
+MUSICAL_MODES = ['Major',
  [0,
   2,
   4,

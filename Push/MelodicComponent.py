@@ -60,6 +60,9 @@ class MelodicComponent(ModesComponent, Messenger):
     def set_short_loop_selector_matrix(self, matrix):
         pass
 
+    next_loop_page_button = forward_property('_loop_selector')('next_page_button')
+    prev_loop_page_button = forward_property('_loop_selector')('prev_page_button')
+
     def set_note_editor_matrices(self, matrices):
         raise not matrices or len(matrices) <= NUM_NOTE_EDITORS or AssertionError
         self._matrices = matrices
@@ -150,6 +153,7 @@ class MelodicComponent(ModesComponent, Messenger):
             self._playhead.velocity = int(self._skin[self._playhead_color])
 
     def update(self):
+        super(MelodicComponent, self).update()
         self._on_detail_clip_changed()
         self._update_playhead_color()
 

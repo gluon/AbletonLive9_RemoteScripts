@@ -39,6 +39,7 @@ class DetailViewCntrlComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(DetailViewCntrlComponent, self).update()
         if self.is_enabled():
             if self._left_button != None:
                 self._left_button.turn_off()

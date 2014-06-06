@@ -35,10 +35,6 @@ class DeviceNavComponent(ControlSurfaceComponent):
     def on_enabled_changed(self):
         self.update()
 
-    def update(self):
-        if self.is_enabled():
-            pass
-
     def _nav_value(self, value, sender):
         if self.is_enabled():
             if not sender.is_momentary() or value != 0:

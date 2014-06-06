@@ -33,7 +33,7 @@ class NotifyingMixerComponent(MixerComponent):
             self.set_track_offset(new_offset)
 
     def update(self):
-        MixerComponent.update(self)
+        super(NotifyingMixerComponent, self).update()
         if self._update_callback != None:
             self._update_callback()
 

@@ -12,9 +12,6 @@ class CuePointControlComponent(ControlSurfaceComponent):
         self._on_can_jump_to_prev_cue_changed.subject = self.song()
         self._on_can_jump_to_next_cue_changed.subject = self.song()
 
-    def update(self):
-        pass
-
     def set_toggle_cue_button(self, button):
         self._toggle_cue_button = button
         self._on_toggle_cue.subject = button

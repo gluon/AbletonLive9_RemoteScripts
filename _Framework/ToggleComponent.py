@@ -57,6 +57,7 @@ class ToggleComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(ToggleComponent, self).update()
         self._update_button()
 
     def _update_button(self):

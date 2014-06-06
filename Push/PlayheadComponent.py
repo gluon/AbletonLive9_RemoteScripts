@@ -52,6 +52,7 @@ class PlayheadComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(PlayheadComponent, self).update()
         if self._playhead:
             if self.is_enabled() and self.song().is_playing and self._clip and self._clip.is_playing:
                 clip_slot = self._clip.canonical_parent

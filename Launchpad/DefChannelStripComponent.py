@@ -105,7 +105,7 @@ class DefChannelStripComponent(ChannelStripComponent):
             self.update()
 
     def update(self):
-        ChannelStripComponent.update(self)
+        super(DefChannelStripComponent, self).update()
         if self._allow_updates:
             if self.is_enabled():
                 if self._track != None:

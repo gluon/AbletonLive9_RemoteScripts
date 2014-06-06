@@ -222,7 +222,7 @@ def instance_decorator(decorator):
     as second argument. The decorator method will be called lazily the
     first time the method is accessed.
     
-    For an example see @signal_slot in SubjectSlot module.
+    For an example see @subject_slot in SubjectSlot module.
     """
 
     class Decorator(object):

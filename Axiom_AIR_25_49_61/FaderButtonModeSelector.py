@@ -36,6 +36,7 @@ class FaderButtonModeSelector(ModeSelectorComponent):
         self.update()
 
     def update(self):
+        super(FaderButtonModeSelector, self).update()
         if self.is_enabled():
             for index in range(len(self._fader_buttons)):
                 strip = self._mixer.channel_strip(index)

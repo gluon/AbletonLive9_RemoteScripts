@@ -1,4 +1,5 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SkinDefault.py
+from _Framework.Skin import Skin
 from Colors import Basic, Rgb, Pulse, Blink, BiLed
 
 class Colors:
@@ -47,9 +48,9 @@ class Colors:
         Transition = Basic.FULL_BLINK_FAST
 
     class Session:
-        SceneSelected = BiLed.GREEN
-        SceneUnselected = BiLed.OFF
+        Scene = BiLed.GREEN
         SceneTriggered = BiLed.GREEN_BLINK_FAST
+        NoScene = BiLed.OFF
         ClipStopped = Rgb.AMBER
         ClipStarted = Pulse(Rgb.GREEN.shade(1), Rgb.GREEN, 48)
         ClipRecording = Pulse(Rgb.BLACK, Rgb.RED, 48)
@@ -57,6 +58,9 @@ class Colors:
         ClipTriggeredRecord = Blink(Rgb.RED, Rgb.BLACK, 24)
         ClipEmpty = Rgb.BLACK
         RecordButton = Rgb.RED.shade(2)
+        StopClip = Rgb.RED
+        StopClipTriggered = Blink(Rgb.RED, Rgb.BLACK, 24)
+        StoppedClip = Rgb.DARK_GREY
 
     class Zooming:
         Selected = Rgb.AMBER
@@ -130,8 +134,6 @@ class Colors:
         SoloOff = Rgb.DARK_GREY
         MuteOn = Rgb.DARK_GREY
         MuteOff = BiLed.YELLOW
-        StopTrack = Rgb.RED
-        StoppingTrack = Blink(Rgb.RED, Rgb.BLACK, 24)
         ArmSelected = BiLed.RED
         ArmUnselected = BiLed.RED_HALF
 
@@ -143,3 +145,7 @@ class Colors:
 
     class MessageBox:
         Cancel = BiLed.GREEN
+
+
+def make_default_skin():
+    return Skin(Colors)

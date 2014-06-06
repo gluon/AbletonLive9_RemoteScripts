@@ -1,6 +1,6 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ConfigurableButtonElement.py
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
-from Skin import Skin, SkinColorMissingError
+from _Framework.Skin import Skin, SkinColorMissingError
 from Colors import Basic
 from MatrixMaps import NON_FEEDBACK_CHANNEL
 
@@ -29,12 +29,11 @@ class ConfigurableButtonElement(ButtonElement):
     send_depends_on_forwarding = False
 
     def __init__(self, is_momentary, msg_type, channel, identifier, skin = None, is_rgb = False, default_states = None, *a, **k):
-        super(ConfigurableButtonElement, self).__init__(is_momentary, msg_type, channel, identifier, *a, **k)
+        super(ConfigurableButtonElement, self).__init__(is_momentary, msg_type, channel, identifier, skin=(skin or self.default_skin), *a, **k)
         if default_states is not None:
             self.default_states = default_states
         self.states = dict(self.default_states)
         self.is_rgb = is_rgb
-        self._skin = skin or self.default_skin
         self._is_enabled = True
         self._force_next_value = False
         self.set_channel(NON_FEEDBACK_CHANNEL)
@@ -84,14 +83,7 @@ class ConfigurableButtonElement(ButtonElement):
         return self._is_enabled
 
     def set_light(self, value):
-        self._set_skin_light(self.states.get(value, value))
-
-    def _set_skin_light(self, value):
-        try:
-            color = self._skin[value]
-            color.draw(self)
-        except SkinColorMissingError:
-            super(ConfigurableButtonElement, self).set_light(value)
+        super(ConfigurableButtonElement, self).set_light(self.states.get(value, value))
 
     def send_value(self, value, **k):
         if value is ON_VALUE:

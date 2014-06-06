@@ -57,11 +57,6 @@ class SpecialSceneComponent(SceneComponent):
     def _create_clip_slot(self):
         return SpecialClipSlotComponent()
 
-    def _on_is_triggered_changed(self):
-        raise self._scene != None or AssertionError
-        if self._scene.is_triggered:
-            pass
-
     def _on_name_changed(self):
         if self._serato_interface != None and self._index > -1:
             name = ''

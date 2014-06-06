@@ -28,7 +28,7 @@ class Setting(Subject):
             raise AssertionError
             self._preferences[self.name] = self._preferences[self.name] != value and value
             self.on_value_changed(value)
-            self.notify_value(self)
+            self.notify_value(self.value)
 
     def _get_value(self):
         return self._preferences[self.name]

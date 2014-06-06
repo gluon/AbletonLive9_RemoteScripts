@@ -15,9 +15,6 @@ class TouchStripControllerComponent(ControlSurfaceComponent):
         self._parameter = parameter
         self._update_strip_state()
 
-    def update(self):
-        pass
-
     def set_touch_strip(self, touch_strip):
         self._touch_strip = touch_strip
         self._update_strip_state()
@@ -55,9 +52,6 @@ class TouchStripEncoderConnection(ControlSurfaceComponent, TouchEncoderObserver)
 
     def on_encoder_parameter(self, encoder):
         self._on_encoder_change(encoder)
-
-    def update(self):
-        pass
 
     def _on_encoder_change(self, encoder):
         if consts.PROTO_TOUCH_ENCODER_TO_STRIP and self._encoder in (encoder, None):

@@ -124,6 +124,7 @@ class ScrollableListComponent(ControlSurfaceComponent):
             return ''
 
     def update(self):
+        super(ScrollableListComponent, self).update()
         if not self.is_enabled():
             return
         first_segment, max_segment = 0, self.num_segments

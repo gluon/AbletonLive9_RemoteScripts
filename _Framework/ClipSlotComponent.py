@@ -101,6 +101,7 @@ class ClipSlotComponent(ControlSurfaceComponent):
         return self._clip_slot.has_clip
 
     def update(self):
+        super(ClipSlotComponent, self).update()
         self._has_fired_slot = False
         button = self._launch_button_value.subject
         if self._allow_updates:

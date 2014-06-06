@@ -1,5 +1,5 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionZoomingComponent.py
-from SubjectSlot import subject_slot
+from SubjectSlot import subject_slot, subject_slot_group
 from CompoundComponent import CompoundComponent
 from ScrollComponent import ScrollComponent
 from Util import in_range
@@ -10,29 +10,37 @@ class SessionZoomingComponent(CompoundComponent):
     session, as if you had zoomed out from session.
     """
 
-    def __init__(self, session = None, *a, **k):
+    def __init__(self, session = None, enable_skinning = False, *a, **k):
         super(SessionZoomingComponent, self).__init__(*a, **k)
-        raise session or AssertionError
-        self._buttons = None
-        self._zoom_button = None
-        self._scene_bank_buttons = None
-        self._scene_bank_button_slots = self.register_slot_manager()
-        self._scene_bank_index = 0
-        self._is_zoomed_out = False
-        self._empty_value = 0
-        self._stopped_value = 100
-        self._playing_value = 127
-        self._selected_value = 64
-        self._session, self._vertical_scroll, self._horizontal_scroll = self.register_components(session, ScrollComponent(), ScrollComponent())
-        self._vertical_scroll.can_scroll_up = self._can_scroll_up
-        self._vertical_scroll.can_scroll_down = self._can_scroll_down
-        self._vertical_scroll.scroll_up = self._scroll_up
-        self._vertical_scroll.scroll_down = self._scroll_down
-        self._horizontal_scroll.can_scroll_up = self._can_scroll_left
-        self._horizontal_scroll.can_scroll_down = self._can_scroll_right
-        self._horizontal_scroll.scroll_up = self._scroll_left
-        self._horizontal_scroll.scroll_down = self._scroll_right
-        self.register_slot(self._session, self._on_session_offset_changes, 'offset')
+        if not session:
+            raise AssertionError
+            self._buttons = None
+            self._zoom_button = None
+            self._scene_bank_buttons = None
+            self._scene_bank_button_slots = self.register_slot_manager()
+            self._scene_bank_index = 0
+            self._is_zoomed_out = False
+            self._empty_value = 0
+            self._stopped_value = 100
+            self._playing_value = 127
+            self._selected_value = 64
+            self._session, self._vertical_scroll, self._horizontal_scroll = self.register_components(session, ScrollComponent(), ScrollComponent())
+            self._vertical_scroll.can_scroll_up = self._can_scroll_up
+            self._vertical_scroll.can_scroll_down = self._can_scroll_down
+            self._vertical_scroll.scroll_up = self._scroll_up
+            self._vertical_scroll.scroll_down = self._scroll_down
+            self._horizontal_scroll.can_scroll_up = self._can_scroll_left
+            self._horizontal_scroll.can_scroll_down = self._can_scroll_right
+            self._horizontal_scroll.scroll_up = self._scroll_left
+            self._horizontal_scroll.scroll_down = self._scroll_right
+            self.register_slot(self._session, self._on_session_offset_changes, 'offset')
+            enable_skinning and self._enable_skinning()
+
+    def _enable_skinning(self):
+        self.set_stopped_value('Zooming.Stopped')
+        self.set_selected_value('Zooming.Selected')
+        self.set_playing_value('Zooming.Playing')
+        self.set_empty_value('Zooming.Empty')
 
     def on_scene_list_changed(self):
         self.update()
@@ -42,10 +50,10 @@ class SessionZoomingComponent(CompoundComponent):
         self._session.set_show_highlight(self.is_enabled())
 
     def set_button_matrix(self, buttons):
-        if buttons != self._buttons:
-            self._buttons = buttons
-            self._on_matrix_value.subject = self._buttons
+        self._buttons = buttons
+        self._on_matrix_value.subject = self._buttons
         self.update()
+        self._on_session_offset_changes()
 
     def set_zoom_button(self, button):
         if button != self._zoom_button:
@@ -74,33 +82,20 @@ class SessionZoomingComponent(CompoundComponent):
         self._horizontal_scroll.set_scroll_down_button(button)
 
     def set_scene_bank_buttons(self, buttons):
-        if self._scene_bank_buttons != buttons:
-            self._scene_bank_button_slots.disconnect()
-            self._scene_bank_buttons = buttons
-            if self._scene_bank_buttons != None:
-                for button in self._scene_bank_buttons:
-                    self._scene_bank_button_slots.register_slot(button, self._on_scene_bank_value, 'value', extra_kws=dict(identify_sender=True))
-
-            self.update()
+        self._scene_bank_buttons = buttons
+        self._on_scene_bank_value.replace_subjects(buttons or [])
+        self.update()
 
     def set_empty_value(self, value):
-        value = int(value)
-        raise in_range(value, 0, 128) or AssertionError
         self._empty_value = value
 
     def set_playing_value(self, value):
-        value = int(value)
-        raise in_range(value, 0, 128) or AssertionError
         self._playing_value = value
 
     def set_stopped_value(self, value):
-        value = int(value)
-        raise in_range(value, 0, 128) or AssertionError
         self._stopped_value = value
 
     def set_selected_value(self, value):
-        value = int(value)
-        raise in_range(value, 0, 128) or AssertionError
         self._selected_value = value
 
     def _session_set_enabled(self, is_enabled):
@@ -110,6 +105,7 @@ class SessionZoomingComponent(CompoundComponent):
         self._session.set_enabled(is_enabled)
 
     def update(self):
+        super(SessionZoomingComponent, self).update()
         if self._allow_updates:
             self._session_set_enabled(not self._is_zoomed_out)
             if self.is_enabled():
@@ -145,20 +141,21 @@ class SessionZoomingComponent(CompoundComponent):
                                         if playing:
                                             break
 
-                            self._buttons.send_value(x, y, value_to_send)
+                            if in_range(value_to_send, 0, 128):
+                                self._buttons.send_value(x, y, value_to_send)
+                            else:
+                                self._buttons.set_light(x, y, value_to_send)
 
                 if self._scene_bank_buttons != None:
-                    for index in range(len(self._scene_bank_buttons)):
-                        if self._is_zoomed_out and index == self._scene_bank_index:
-                            self._scene_bank_buttons[index].turn_on()
-                        else:
-                            self._scene_bank_buttons[index].turn_off()
+                    for index, button in enumerate(self._scene_bank_buttons):
+                        if button:
+                            button.set_light(self._is_zoomed_out and index == self._scene_bank_index)
 
         else:
             self._update_requests += 1
 
     def _on_session_offset_changes(self):
-        if self._is_zoomed_out:
+        if self._is_zoomed_out and self._buttons:
             self._scene_bank_index = int(self._session.scene_offset() / self._session.height() / self._buttons.height())
         self.update()
 
@@ -185,6 +182,7 @@ class SessionZoomingComponent(CompoundComponent):
                 if track_offset in range(len(self._session.tracks_to_use())) and scene_offset in range(len(self.song().scenes)):
                     self._session.set_offsets(track_offset, scene_offset)
 
+    @subject_slot_group('value')
     def _on_scene_bank_value(self, value, sender):
         if self.is_enabled() and self._is_zoomed_out:
             if value != 0 or not sender.is_momentary():

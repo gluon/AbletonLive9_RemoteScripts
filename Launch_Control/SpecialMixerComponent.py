@@ -85,6 +85,3 @@ class SpecialMixerComponent(MixerComponent):
     @subject_slot('selected_mode')
     def _on_selected_mixer_mode(self, mode):
         self.notify_selected_mixer_mode(mode)
-
-    def update(self):
-        pass

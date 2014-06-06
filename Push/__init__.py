@@ -18,5 +18,5 @@ def get_capabilities():
 
 
 def create_instance(c_instance):
-    """ Creates and returns the L9C script """
+    """ Creates and returns the Push script """
     return Push(c_instance)

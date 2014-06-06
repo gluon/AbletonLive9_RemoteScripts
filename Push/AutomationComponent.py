@@ -1,15 +1,15 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/AutomationComponent.py
-from itertools import count
 import Live
 AutomationState = Live.DeviceParameter.AutomationState
 from _Framework import Task
+from _Framework.Control import EncoderControl, control_list
 from _Framework.Util import clamp
-from _Framework.SubjectSlot import subject_slot_group
 from DeviceParameterComponent import DeviceParameterComponent
 from Setting import EnumerableSetting
 
 class AutomationComponent(DeviceParameterComponent):
     _clip = None
+    encoders = control_list(EncoderControl)
 
     def __init__(self, *a, **k):
         super(AutomationComponent, self).__init__(*a, **k)
@@ -42,8 +42,7 @@ class AutomationComponent(DeviceParameterComponent):
         return self.parameter_provider.parameters and self._clip and not self._clip.is_arrangement_clip
 
     def set_parameter_controls(self, encoders):
-        self._on_encoder_value.replace_subjects(encoders or [], count())
-        self._on_encoder_touch.replace_subjects(encoders or [], count())
+        self.encoders.set_control_element(encoders)
 
     def _update_parameters(self):
         super(AutomationComponent, self)._update_parameters()
@@ -69,29 +68,28 @@ class AutomationComponent(DeviceParameterComponent):
     def _value_at_time(self, envelope, time_range):
         return envelope.value_at_time((time_range[0] + time_range[1]) / 2)
 
-    @subject_slot_group('normalized_value')
-    def _on_encoder_value(self, value, index):
-        if self.is_enabled():
-            parameters = self.parameters
-            if 0 <= index < len(parameters) and self._clip and parameters[index]:
-                param = parameters[index]
-                envelope = self._clip.automation_envelope(param)
-                if envelope != None:
-                    if param.automation_state == AutomationState.overridden:
-                        param.re_enable_automation()
-                    self._clip.view.select_envelope_parameter(param)
-                    for time_index, time_range in enumerate(self.selected_time):
-                        self._insert_step(time_range, time_index, index, envelope, value)
+    @encoders.value
+    def encoders(self, value, encoder):
+        index = encoder.index
+        parameters = self.parameters
+        if 0 <= index < len(parameters) and self._clip and parameters[index]:
+            param = parameters[index]
+            envelope = self._clip.automation_envelope(param)
+            if envelope != None:
+                if param.automation_state == AutomationState.overridden:
+                    param.re_enable_automation()
+                for time_index, time_range in enumerate(self.selected_time):
+                    self._insert_step(time_range, time_index, index, envelope, value)
 
-                self._update_parameter_values()
+            self._update_parameter_values()
 
-    @subject_slot_group('touch_value')
-    def _on_encoder_touch(self, value, index):
-        if self.is_enabled() and value:
-            parameters = self.parameters
-            if 0 <= index < len(parameters) and parameters[index] and self._clip:
-                self._clip.view.select_envelope_parameter(parameters[index])
-                self._update_parameter_floats()
+    @encoders.touched
+    def encoders(self, encoder):
+        index = encoder.index
+        parameters = self.parameters
+        if 0 <= index < len(parameters) and parameters[index] and self._clip:
+            self._clip.view.select_envelope_parameter(parameters[index])
+            self._update_parameter_floats()
 
     def _update_parameter_floats(self):
         if self._clip and self.is_enabled():

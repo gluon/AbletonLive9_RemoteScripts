@@ -30,6 +30,7 @@ class EncoderModeSelector(ModeSelectorComponent):
         return self._number_of_modes
 
     def update(self):
+        super(EncoderModeSelector, self).update()
         if self.is_enabled():
             self._device.set_allow_update(False)
             self._mixer.set_allow_update(False)

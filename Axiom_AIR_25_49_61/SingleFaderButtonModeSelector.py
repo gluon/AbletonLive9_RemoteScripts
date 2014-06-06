@@ -27,6 +27,7 @@ class SingleFaderButtonModeSelector(ModeSelectorComponent):
         return self._number_of_modes
 
     def update(self):
+        super(SingleFaderButtonModeSelector, self).update()
         if self.is_enabled():
             strip = self._mixer.selected_strip()
             fader_button = self._fader_button

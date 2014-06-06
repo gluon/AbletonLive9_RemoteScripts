@@ -2,6 +2,7 @@
 import Live
 from SubjectSlot import SubjectEvent
 from InputControlElement import InputControlElement, MIDI_CC_TYPE, InputSignal
+from Util import nop
 
 def _not_implemented(value):
     raise NotImplementedError
@@ -18,6 +19,10 @@ class EncoderElement(InputControlElement):
     The normalized value notifies a delta in the range:
         (-encoder_sensitivity, +encoder_sensitvity)
     """
+
+    class ProxiedInterface(InputControlElement.ProxiedInterface):
+        normalize_value = nop
+
     __subject_events__ = (SubjectEvent(name='normalized_value', signal=InputSignal),)
     encoder_sensitivity = 1.0
 
@@ -36,8 +41,10 @@ class EncoderElement(InputControlElement):
         raise value >= 0 and value < 128 or AssertionError
         return self.__value_normalizer(value)
 
+    def normalize_value(self, value):
+        return self.relative_value_to_delta(value) / 64.0 * self.encoder_sensitivity
+
     def notify_value(self, value):
         super(EncoderElement, self).notify_value(value)
         if self.normalized_value_listener_count():
-            normalized = self.relative_value_to_delta(value) / 64.0 * self.encoder_sensitivity
-            self.notify_normalized_value(normalized)
+            self.notify_normalized_value(self.normalize_value(value))

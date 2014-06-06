@@ -79,9 +79,6 @@ class HandshakeComponent(ControlSurfaceComponent):
         if self._handshake_succeeded == None:
             self._do_fail()
 
-    def update(self):
-        pass
-
     def _start_handshake(self):
         self._handshake_succeeded = None
         self._identification_timeout_task.restart()

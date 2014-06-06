@@ -31,6 +31,7 @@ class SelectButtonModeSelector(ModeSelectorComponent):
         return 4
 
     def update(self):
+        super(SelectButtonModeSelector, self).update()
         if self.is_enabled():
             for index in range(len(self._buttons)):
                 if self._mode_index == 0:

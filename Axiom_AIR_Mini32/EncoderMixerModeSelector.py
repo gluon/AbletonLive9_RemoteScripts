@@ -26,6 +26,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(EncoderMixerModeSelector, self).update()
         if self.is_enabled() and self._controls != None:
             mode = self._mode_index
             for index in range(len(self._controls)):

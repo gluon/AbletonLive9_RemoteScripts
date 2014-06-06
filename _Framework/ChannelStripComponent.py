@@ -333,6 +333,7 @@ class ChannelStripComponent(ControlSurfaceComponent):
                     self._empty_control_slots.register_slot(send_control, nop, 'value')
 
     def update(self):
+        super(ChannelStripComponent, self).update()
         if self._allow_updates:
             if self.is_enabled():
                 self._empty_control_slots.disconnect()

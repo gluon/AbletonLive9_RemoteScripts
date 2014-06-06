@@ -128,6 +128,7 @@ class DeviceNavigationComponent(CompoundComponent):
             self._message_box.set_enabled(False)
 
     def update(self):
+        super(DeviceNavigationComponent, self).update()
         if self.is_enabled():
             self._update_enter_button()
             self._update_exit_button()

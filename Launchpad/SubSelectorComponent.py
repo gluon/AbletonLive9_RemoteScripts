@@ -125,6 +125,7 @@ class SubSelectorComponent(ModeSelectorComponent):
         self._session.set_stop_all_clips_button(None)
 
     def update(self):
+        super(SubSelectorComponent, self).update()
         if not self._modes_buttons != None:
             raise AssertionError
             if self.is_enabled():

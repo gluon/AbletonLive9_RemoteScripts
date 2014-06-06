@@ -108,6 +108,7 @@ class AutoArmComponent(CompoundComponent):
             self._notification.hide_notification()
 
     def update(self):
+        super(AutoArmComponent, self).update()
         song = self.song()
         if self.is_enabled():
             enabled = not self.needs_restore_auto_arm

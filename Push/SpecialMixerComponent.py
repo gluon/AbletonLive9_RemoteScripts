@@ -12,7 +12,7 @@ class SpecialMixerComponent(MixerComponent):
     """
     Special mixer class that uses return tracks alongside midi and
     audio tracks.  This provides also a more convenient interface to
-    set controls for the different modes of the L9C.
+    set controls for the different modes of Push.
     """
     num_label_segments = 4
 

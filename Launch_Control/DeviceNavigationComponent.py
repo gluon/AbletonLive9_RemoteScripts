@@ -39,5 +39,6 @@ class DeviceNavigationComponent(ControlSurfaceComponent):
             self._previous_button.turn_on()
 
     def update(self):
+        super(DeviceNavigationComponent, self).update()
         if self.is_enabled():
             self._update_button_states()

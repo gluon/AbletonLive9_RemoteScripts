@@ -312,12 +312,11 @@ class Axiom_AIR_25_49_61(ControlSurface):
         self._mixer_for_faders.name = 'Mixer_for_faders'
 
     def _setup_session(self):
-        self._session = SpecialSessionComponent(0, 0)
+        self._session = SpecialSessionComponent(8, 0)
         self._session.name = 'Session_Control'
         self._session.selected_scene().name = 'Selected_Scene'
         self._session.set_mixer(self._mixer_for_encoders)
         self._session.set_alt_mixer(self._mixer_for_faders)
-        self._session.set_track_banking_increment(8)
         self._session.add_offset_listener(self._update_bank_value)
 
     def _setup_transport(self):
@@ -560,7 +559,7 @@ class Axiom_AIR_25_49_61(ControlSurface):
             self._bank_display.reset()
 
     def _update_bank_value(self):
-        bank = (self._session.track_offset() + 1) / self._session.track_banking_increment() + 1
+        bank = (self._session.track_offset() + 1) / self._session.width() + 1
         self._set_bank_string(str(bank))
 
     def _install_mapping(self, midi_map_handle, control, parameter, feedback_delay, feedback_map):

@@ -86,6 +86,7 @@ class TrackEQComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(TrackEQComponent, self).update()
         if self.is_enabled() and self._device != None:
             device_dict = EQ_DEVICES[self._device.class_name]
             if self._gain_controls != None:

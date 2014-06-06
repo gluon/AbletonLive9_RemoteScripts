@@ -1,12 +1,11 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ValueComponent.py
-from functools import partial
+from _Framework.Control import EncoderControl, ButtonControl
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
 from _Framework.InputControlElement import ParameterSlot
-from _Framework import Task
 from DeviceParameterComponent import convert_parameter_value_to_graphic
 import consts
 NUM_SEGMENTS = 4
@@ -68,6 +67,7 @@ class ValueDisplayComponentBase(ControlSurfaceComponent):
             display.reset()
 
     def update(self):
+        super(ValueDisplayComponentBase, self).update()
         if self.is_enabled():
             self._value_data_source.set_display_string(self.get_value_string())
             self._graphic_data_source.set_display_string(self.get_graphic_string())
@@ -79,64 +79,36 @@ class ValueComponentBase(CompoundComponent):
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.
     """
-    TOUCH_BASED = 0
-    TIMER_BASED = 1
-    AUTO_HIDE_IN_SEC = 0.5
 
     def create_display_component(self, *a, **k):
         raise NotImplementedError
 
-    def __init__(self, display_label = ' ', display_seg_start = 0, encoder = None, *a, **k):
+    encoder = EncoderControl()
+
+    def __init__(self, display_label = ' ', display_seg_start = 0, *a, **k):
         super(ValueComponentBase, self).__init__(*a, **k)
-        self._display_mode = self.TOUCH_BASED
-        self._button = None
-        self._on_encoder_changed.subject = encoder
         self._display = self.register_component(self.create_display_component(display_label=display_label, display_seg_start=display_seg_start))
         self._display.set_enabled(False)
-        self._hide_display_task = self._tasks.add(Task.sequence(Task.wait(self.AUTO_HIDE_IN_SEC), Task.run(partial(self._display.set_enabled, False))))
-        self._hide_display_task.kill()
 
     display_layer = forward_property('_display')('layer')
 
-    def _get_display_mode(self):
-        return self._display_mode
-
-    def _set_display_mode(self, mode):
-        if self._display_mode != mode:
-            self._display_mode = mode
-            self._update_display_state()
-
-    display_mode = property(_get_display_mode, _set_display_mode)
-
-    def set_encoder(self, encoder):
-        raise NotImplementedError
-
-    def set_button(self, button):
-        self._button = button
-        self._on_button_value.subject = button
+    @encoder.touched
+    def encoder(self, encoder):
         self._update_display_state()
 
-    @subject_slot('value')
-    def _on_button_value(self, value):
+    @encoder.released
+    def encoder(self, encoder):
         self._update_display_state()
 
-    @subject_slot('value')
-    def _on_encoder_changed(self, value):
-        if self.display_mode == self.TIMER_BASED:
-            self._display.set_enabled(True)
-            self._hide_display_task.restart()
+    @encoder.value
+    def encoder(self, value, encoder):
+        self._on_value(value)
+
+    def _on_value(self, value):
+        pass
 
     def _update_display_state(self):
-        if self.display_mode == self.TOUCH_BASED:
-            self._display.set_enabled(self._button and self._button.is_pressed())
-            if self._button:
-                self._hide_display_task.kill()
-        elif self.display_mode == self.TIMER_BASED:
-            self._display.set_enabled(False)
-
-    def update(self):
-        button = self._on_button_value.subject
-        self._display.set_enabled(button and button.is_pressed())
+        self._display.set_enabled(self.encoder.is_touched)
 
 
 class ValueDisplayComponent(ValueDisplayComponentBase):
@@ -181,12 +153,13 @@ class ValueComponent(ValueComponentBase):
     touch-sensitive encoder. You can optionally give it a display and
     a button such that the value will be displayed while its pressed.
     """
+    shift_button = ButtonControl()
     encoder_factor = 1.0
 
     def create_display_component(self, *a, **k):
         return ValueDisplayComponent(property_name=self._property_name, subject=self._subject, display_format=self._display_format, view_transform=(lambda x: self.view_transform(x)), graphic_transform=(lambda x: self.graphic_transform(x)), *a, **k)
 
-    def __init__(self, property_name = None, subject = None, display_format = '%f', model_transform = None, view_transform = None, graphic_transform = None, encoder_factor = 1.0, *a, **k):
+    def __init__(self, property_name = None, subject = None, display_format = '%f', model_transform = None, view_transform = None, graphic_transform = None, encoder_factor = None, *a, **k):
         self._property_name = property_name
         self._subject = subject
         self._display_format = display_format
@@ -199,6 +172,7 @@ class ValueComponent(ValueComponentBase):
             self.graphic_transform = graphic_transform
         if encoder_factor is not None:
             self.encoder_factor = encoder_factor
+        self._original_encoder_factor = self.encoder_factor
 
     def model_transform(self, x):
         """
@@ -221,11 +195,16 @@ class ValueComponent(ValueComponentBase):
         """
         return self.view_transform(x) / self.encoder_factor
 
-    def set_encoder(self, encoder):
-        self._on_encoder_value.subject = encoder
+    @shift_button.pressed
+    def shift_button(self, button):
+        self.encoder_factor = self._original_encoder_factor / 10.0
 
-    @subject_slot('normalized_value')
-    def _on_encoder_value(self, value):
+    @shift_button.released
+    def shift_button(self, button):
+        self.encoder_factor = self._original_encoder_factor
+
+    def _on_value(self, value):
+        super(ValueComponent, self)._on_value(value)
         value = self.view_transform(getattr(self._subject, self._property_name)) + value * self.encoder_factor
         setattr(self._subject, self._property_name, self.model_transform(value))
 
@@ -267,4 +246,5 @@ class ParameterValueComponent(ValueComponentBase):
         self.register_disconnectable(self._parameter_slot)
 
     def set_encoder(self, encoder):
+        self.encoder.set_control_element(encoder)
         self._parameter_slot.control = encoder

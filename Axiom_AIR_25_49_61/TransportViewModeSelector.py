@@ -24,6 +24,7 @@ class TransportViewModeSelector(ModeSelectorComponent):
         self.application().view.remove_is_view_visible_listener('Session', self._on_view_changed)
 
     def update(self):
+        super(TransportViewModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._transport.set_seek_buttons(self._ffwd_button, self._rwd_button)

@@ -228,6 +228,7 @@ class NoteEditorComponent(CompoundComponent, Subject):
             self._update_editor_matrix()
 
     def update(self):
+        super(NoteEditorComponent, self).update()
         self._update_editor_matrix_leds()
         self._grid_resolution.update()
 

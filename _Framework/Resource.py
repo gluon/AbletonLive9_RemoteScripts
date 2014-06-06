@@ -119,7 +119,7 @@ class SharedResource(Resource):
         return True
 
     def release(self, client):
-        if not client:
+        if not client is not None:
             raise AssertionError
             client in self._clients and self.on_release(client)
             self._clients.remove(client)

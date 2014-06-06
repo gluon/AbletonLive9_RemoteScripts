@@ -2,15 +2,16 @@
 """
 Component that automatically selects the playing clip in the selected track.
 """
+from _Framework.Control import ButtonControl
 from _Framework.ModesComponent import ModesComponent, AddLayerMode
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property, index_if, partial
 from _Framework import Task
 from MessageBoxComponent import NotificationComponent
-from consts import NOTIFICATION_PRIORITY, MessageBoxText
-from itertools import imap
+from consts import MessageBoxText
 
 class SelectPlayingClipComponent(ModesComponent):
+    action_button = ButtonControl(color='DefaultButton.Alert')
 
     def __init__(self, playing_clip_above_layer = None, playing_clip_below_layer = None, *a, **k):
         super(SelectPlayingClipComponent, self).__init__(*a, **k)
@@ -26,12 +27,8 @@ class SelectPlayingClipComponent(ModesComponent):
 
     notification_layer = forward_property('_notification')('message_box_layer')
 
-    def set_action_button(self, button):
-        self._on_action_button_value.subject = button
-        self._update_action_button()
-
-    @subject_slot('value')
-    def _on_action_button_value(self, value):
+    @action_button.pressed
+    def action_button(self, button):
         self._go_to_playing_clip()
 
     @subject_slot('detail_clip')
@@ -80,13 +77,3 @@ class SelectPlayingClipComponent(ModesComponent):
                 self.selected_mode = 'below'
         else:
             self.selected_mode = 'default'
-
-    def _update_action_button(self):
-        action_button = self._on_action_button_value.subject
-        if action_button:
-            action_button.set_light('DefaultButton.Alert')
-
-    def update(self):
-        if self.is_enabled():
-            self._update_action_button()
-            self._update_mode()

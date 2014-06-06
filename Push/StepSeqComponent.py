@@ -48,6 +48,7 @@ class DrumGroupFinderComponent(ControlSurfaceComponent, Subject):
         self.update()
 
     def update(self):
+        super(DrumGroupFinderComponent, self).update()
         if self.is_enabled():
             self._update_listeners()
             self._update_drum_group()
@@ -185,6 +186,12 @@ class StepSeqComponent(CompoundComponent):
         self._delete_button = button
         self._drum_group.set_delete_button(button)
 
+    def set_next_loop_page_button(self, button):
+        self._loop_selector.next_page_button.set_control_element(button)
+
+    def set_prev_loop_page_button(self, button):
+        self._loop_selector.prev_page_button.set_control_element(button)
+
     def set_loop_selector_matrix(self, matrix):
         self._loop_selector.set_loop_selector_matrix(matrix)
 
@@ -231,6 +238,7 @@ class StepSeqComponent(CompoundComponent):
         pass
 
     def update(self):
+        super(StepSeqComponent, self).update()
         self._on_detail_clip_changed()
         self._update_playhead_color()
 

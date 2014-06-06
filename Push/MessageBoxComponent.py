@@ -8,10 +8,9 @@ from _Framework.Util import forward_property, const, nop, maybe
 from _Framework import Task
 from _Framework.ControlElement import ControlElement
 from _Framework.Layer import Layer
-from BackgroundComponent import BackgroundComponent
-from consts import MessageBoxText, DISPLAY_LENGTH, DISPLAY_BLOCK_LENGTH
-import consts
+from _Framework.BackgroundComponent import BackgroundComponent
 from _Framework.CompoundElement import CompoundElement
+from consts import MessageBoxText, DISPLAY_LENGTH, DISPLAY_BLOCK_LENGTH, MESSAGE_BOX_PRIORITY
 
 class Messenger(object):
     """
@@ -107,6 +106,7 @@ class MessageBoxComponent(BackgroundComponent):
     can_cancel = property(_get_can_cancel, _set_can_cancel)
 
     def update(self):
+        super(MessageBoxComponent, self).update()
         self._update_cancel_button()
         self._update_display()
 
@@ -213,7 +213,7 @@ class NotificationComponent(CompoundComponent):
             raise AssertionError
             display = self._display_lines[line_index]
             display = line_slice is not None and display.subdisplay[line_slice]
-        layer = Layer(priority=consts.MESSAGE_BOX_PRIORITY, display_line1=display)
+        layer = Layer(priority=MESSAGE_BOX_PRIORITY, display_line1=display)
         return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer, maybe(partial(align, display.width))))
 
     def use_full_display(self, message_line_index = 2):
@@ -221,15 +221,12 @@ class NotificationComponent(CompoundComponent):
         Returns a control, that will change the notification to use the whole display,
         if it is grabbed.
         """
-        layer = Layer(priority=consts.MESSAGE_BOX_PRIORITY, **dict([ ('display_line1' if i == message_line_index else 'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
+        layer = Layer(priority=MESSAGE_BOX_PRIORITY, **dict([ ('display_line1' if i == message_line_index else 'bg%d' % i, line) for i, line in enumerate(self._display_lines) ]))
         return _CallbackControl(self._token_control, partial(self._set_message_box_layout, layer))
 
     def _set_message_box_layout(self, layer, align_text_fn = None):
         self._message_box.layer = layer
         self._align_text_fn = partial(align_text_fn or self._default_align_text_fn)
-
-    def update(self):
-        pass
 
 
 class DialogComponent(CompoundComponent):
@@ -280,9 +277,6 @@ class DialogComponent(CompoundComponent):
         self._message_box.can_cancel = can_cancel
         self._message_box.set_enabled(self.application().open_dialog_count > 0 or not open_dialog_changed and self._next_message)
 
-    def update(self):
-        pass
-
 
 class InfoComponent(BackgroundComponent):
     """
@@ -297,6 +291,3 @@ class InfoComponent(BackgroundComponent):
     def set_display(self, display):
         if display:
             display.set_data_sources([self._data_source])
-
-    def update(self):
-        pass

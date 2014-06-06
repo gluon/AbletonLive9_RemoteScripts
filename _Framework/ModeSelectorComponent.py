@@ -101,9 +101,6 @@ class ModeSelectorComponent(ControlSurfaceComponent):
         raise listener in self._mode_listeners or AssertionError
         self._mode_listeners.remove(listener)
 
-    def update(self):
-        raise NotImplementedError
-
     def _mode_value(self, value, sender):
         raise len(self._modes_buttons) > 0 or AssertionError
         raise isinstance(value, int) or AssertionError

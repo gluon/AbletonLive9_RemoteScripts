@@ -1,16 +1,14 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC20/ShiftableSelectorComponent.py
-import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
-from _Framework.ButtonElement import ButtonElement
-from consts import *
+from consts import NOTE_MODE, ABLETON_MODE
 
 class ShiftableSelectorComponent(ModeSelectorComponent):
     """ SelectorComponent that assigns buttons to functions based on the shift button """
 
-    def __init__(self, select_buttons, master_button, arm_buttons, matrix, session, zooming, mixer, transport, slider_modes, mode_callback):
+    def __init__(self, select_buttons, master_button, arm_buttons, matrix, session, zooming, mixer, transport, slider_modes, mode_callback, *a, **k):
         raise len(select_buttons) == 8 or AssertionError
         raise len(arm_buttons) == 8 or AssertionError
-        ModeSelectorComponent.__init__(self)
+        super(ShiftableSelectorComponent, self).__init__(*a, **k)
         self._toggle_pressed = False
         self._note_mode_active = False
         self._invert_assignment = False
@@ -27,7 +25,7 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
         self._master_button.add_value_listener(self._master_value)
 
     def disconnect(self):
-        ModeSelectorComponent.disconnect(self)
+        super(ShiftableSelectorComponent, self).disconnect()
         self._master_button.remove_value_listener(self._master_value)
         self._select_buttons = None
         self._master_button = None
@@ -41,7 +39,7 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
         self._mode_callback = None
 
     def set_mode_toggle(self, button):
-        ModeSelectorComponent.set_mode_toggle(self, button)
+        super(ShiftableSelectorComponent, self).set_mode_toggle(button)
         self.set_mode(0)
 
     def invert_assignment(self):
@@ -52,6 +50,7 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(ShiftableSelectorComponent, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 for index in range(len(self._select_buttons)):

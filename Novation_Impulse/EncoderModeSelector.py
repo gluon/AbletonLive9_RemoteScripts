@@ -51,6 +51,7 @@ class EncoderModeSelector(ModeSelectorComponent):
         return self._number_of_modes
 
     def update(self):
+        super(EncoderModeSelector, self).update()
         if not self._mode_index in range(self.number_of_modes()):
             raise AssertionError
             if self.is_enabled():

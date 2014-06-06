@@ -61,6 +61,7 @@ class UserSettingsComponent(ControlSurfaceComponent):
             self._value_sources[index].set_display_string(str(setting))
 
     def update(self):
+        super(UserSettingsComponent, self).update()
         if self.is_enabled():
             self._update_display()
 

@@ -1,6 +1,7 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonElement.py
 import Live
 from InputControlElement import InputControlElement, MIDI_CC_TYPE
+from Skin import Skin, SkinColorMissingError
 from Util import nop
 
 class ButtonValue(object):
@@ -27,9 +28,25 @@ class ButtonValue(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __nonzero__(self):
+        return self != OFF_VALUE
+
 
 ON_VALUE = ButtonValue(127)
 OFF_VALUE = ButtonValue(0)
+
+class Color(ButtonValue):
+    """
+    Basic interface for showing a color.
+    """
+
+    def draw(self, interface):
+        """
+        Draws the color into the interface.  Depending on the color
+        type, interface might be required special capabilities.
+        """
+        interface.send_value(self.midi_value)
+
 
 class DummyUndoStepHandler(object):
 
@@ -67,11 +84,12 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
         is_momentary = nop
         is_pressed = nop
 
-    def __init__(self, is_momentary, msg_type, channel, identifier, undo_step_handler = DummyUndoStepHandler(), *a, **k):
+    def __init__(self, is_momentary, msg_type, channel, identifier, skin = Skin(), undo_step_handler = DummyUndoStepHandler(), *a, **k):
         super(ButtonElement, self).__init__(msg_type, channel, identifier, *a, **k)
         self.__is_momentary = bool(is_momentary)
         self._last_received_value = -1
         self._undo_step_handler = undo_step_handler
+        self._skin = skin
 
     def is_momentary(self):
         """ returns true if the buttons sends a message on being released """
@@ -83,6 +101,16 @@ class ButtonElement(InputControlElement, ButtonElementMixin):
 
     def is_pressed(self):
         return self.__is_momentary and int(self._last_received_value) > 0
+
+    def set_light(self, value):
+        self._set_skin_light(value)
+
+    def _set_skin_light(self, value):
+        try:
+            color = self._skin[value]
+            color.draw(self)
+        except SkinColorMissingError:
+            super(ButtonElement, self).set_light(value)
 
     def receive_value(self, value):
         pressed_before = self.is_pressed()

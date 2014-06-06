@@ -93,6 +93,7 @@ class PadUpdateComponent(ControlSurfaceComponent):
             self._profile_count[new_profile] += 1
 
     def update(self):
+        super(PadUpdateComponent, self).update()
         self._add_modified_pads(self._all_pads)
         self._update_modified()
 

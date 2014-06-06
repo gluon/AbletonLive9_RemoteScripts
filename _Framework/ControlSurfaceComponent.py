@@ -1,11 +1,12 @@
 #Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurfaceComponent.py
 import Live
+from Control import ControlManager
 from Dependency import dependency, depends
-from SubjectSlot import SlotManager, Subject
+from SubjectSlot import Subject
 from Util import lazy_attribute
 import Task
 
-class ControlSurfaceComponent(SlotManager, Subject):
+class ControlSurfaceComponent(ControlManager, Subject):
     """
     Base class for all classes encapsulating functions in Live
     """
@@ -54,9 +55,6 @@ class ControlSurfaceComponent(SlotManager, Subject):
     def on_enabled_changed(self):
         self.update()
 
-    def update(self):
-        raise NotImplementedError, self.__class__
-
     def update_all(self):
         self.update()
 
@@ -82,6 +80,9 @@ class ControlSurfaceComponent(SlotManager, Subject):
             if self._allow_updates and self._update_requests > 0:
                 self._update_requests = 0
                 self.update()
+
+    def control_notifications_enabled(self):
+        return self.is_enabled()
 
     def application(self):
         return Live.Application.get_application()

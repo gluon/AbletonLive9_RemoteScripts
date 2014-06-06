@@ -205,6 +205,7 @@ class NoteSettingsComponent(ControlSurfaceComponent):
             map(lambda setting: setting.set_encoder(None), self._settings)
 
     def update(self):
+        super(NoteSettingsComponent, self).update()
         self._update_encoders()
 
 
@@ -436,5 +437,6 @@ class NoteEditorSettingsComponent(ModesComponent):
             self.selected_mode = 'disabled'
 
     def update(self):
+        super(NoteEditorSettingsComponent, self).update()
         if self.is_enabled():
             self._on_detail_clip_changed()
