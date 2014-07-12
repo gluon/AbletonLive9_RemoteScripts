@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/PySCAClipControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Serato/PySCAClipControl.py
 import libInterprocessCommsAPIPython
 
 class PySCAClipControl:

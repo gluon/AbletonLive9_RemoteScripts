@@ -1,10 +1,16 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ControlElement.py
 import traceback
 from Resource import StackingResource
 from Util import lazy_attribute, nop, const, second, print_message
 from Disconnectable import Disconnectable
 from Dependency import depends
 import Task
+
+class ControlElementClient(object):
+
+    def set_control_element(self, control_element, grabbed):
+        pass
+
 
 class ElementOwnershipHandler(object):
     """
@@ -116,7 +122,7 @@ class ControlElement(Disconnectable):
     @lazy_attribute
     def _resource(self):
         self._has_resource = True
-        return self._resource_type(self._on_grab_resource, self._on_release_resource)
+        return self._resource_type(self._on_resource_received, self._on_resource_lost)
 
     @lazy_attribute
     @depends(parent_task_group=Task.TaskGroup)
@@ -125,10 +131,10 @@ class ControlElement(Disconnectable):
         self._has_task_group = True
         return tasks
 
-    def _on_grab_resource(self, client, *a, **k):
+    def _on_resource_received(self, client, *a, **k):
         self.notify_ownership_change(client, True)
 
-    def _on_release_resource(self, client):
+    def _on_resource_lost(self, client):
         self.notify_ownership_change(client, False)
 
     @depends(element_ownership_handler=const(ElementOwnershipHandler()))

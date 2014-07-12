@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ControlSurface.py
 from __future__ import with_statement
 from functools import partial, wraps
-from itertools import chain
+from itertools import chain, imap
 from contextlib import contextmanager
 import traceback
 import Live
@@ -11,7 +11,6 @@ from Util import BooleanContext, first, find_if, const, in_range
 from Debug import debug_print
 from ControlElement import OptimizedOwnershipHandler
 from SubjectSlot import SlotManager
-from DeviceComponent import DeviceComponent
 from PhysicalDisplayElement import PhysicalDisplayElement
 from InputControlElement import InputControlElement, MIDI_CC_TYPE, MIDI_PB_TYPE, MIDI_NOTE_TYPE, MIDI_SYSEX_TYPE, MIDI_PB_STATUS
 import Task
@@ -99,12 +98,12 @@ class ControlSurface(SlotManager):
         self._midi_message_dict = {}
         self._midi_message_list = []
         self._midi_message_count = 0
-        self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), send_midi=const(self._send_midi), song=self.song).everywhere()
+        self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=self.song).everywhere()
         with self.setting_listener_caller():
-            self.song().add_visible_tracks_listener(self._on_track_list_changed)
-            self.song().add_scenes_listener(self._on_scene_list_changed)
-            self.song().view.add_selected_track_listener(self._on_selected_track_changed)
-            self.song().view.add_selected_scene_listener(self._on_selected_scene_changed)
+            self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
+            self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
+            self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
+            self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
 
     @property
     def components(self):
@@ -127,27 +126,18 @@ class ControlSurface(SlotManager):
         """
         Live -> Script: Called right before we get disconnected from Live
         """
+        self._disconnect_and_unregister_all_components()
         with self.component_guard():
-            for component in self._components:
-                component.disconnect()
-
             for control in self.controls:
                 control.disconnect()
+                control.canonical_parent = None
 
         self._forwarding_registry = None
         self.controls = None
-        self._components = None
         self._displays = None
         self._device_component = None
         self._pad_translations = None
-        self.song().remove_visible_tracks_listener(self._on_track_list_changed)
-        self.song().remove_scenes_listener(self._on_scene_list_changed)
-        self.song().view.remove_selected_track_listener(self._on_selected_track_changed)
-        self.song().view.remove_selected_scene_listener(self._on_selected_scene_changed)
-        if isinstance(__builtins__, dict):
-            cs_list = __builtins__.get(CS_LIST_KEY, [])
-        else:
-            cs_list = getattr(__builtins__, CS_LIST_KEY, [])
+        cs_list = self._control_surfaces()
         if self in cs_list:
             cs_list.remove(self)
         self._task_group.clear()
@@ -155,13 +145,7 @@ class ControlSurface(SlotManager):
 
     def _control_surfaces(self):
         """ Returns list of registered control surfaces """
-        control_surfaces = []
-        if isinstance(__builtins__, dict):
-            if CS_LIST_KEY in __builtins__.keys():
-                control_surfaces = __builtins__[CS_LIST_KEY]
-        elif hasattr(__builtins__, CS_LIST_KEY):
-            control_surfaces = getattr(__builtins__, CS_LIST_KEY)
-        return control_surfaces
+        return get_control_surfaces()
 
     def can_lock_to_devices(self):
         """
@@ -247,9 +231,12 @@ class ControlSurface(SlotManager):
         return self._pad_translations != None
 
     def set_highlighting_session_component(self, session_component):
-        raise self._highlighting_session_component is None or AssertionError, 'There must be one session component only'
+        if self._highlighting_session_component is not None:
+            self._set_session_highlight(-1, -1, -1, -1, False)
+            self._highlighting_session_component.set_highlighting_callback(None)
+        if session_component is not None:
+            session_component.set_highlighting_callback(self._set_session_highlight)
         self._highlighting_session_component = session_component
-        self._highlighting_session_component.set_highlighting_callback(self._set_session_highlight)
 
     def highlighting_session_component(self):
         """ Return the session component showing the ring in Live session """
@@ -318,11 +305,19 @@ class ControlSurface(SlotManager):
         """
         self._c_instance.toggle_lock()
 
+    def port_settings_changed(self):
+        """ Live -> Script
+            Is called when either the user changes the MIDI ports that are assigned
+            to the script, or the ports state changes due to unplugging/replugging the
+            device.
+            Will always be called initially when setting up the script.
+        """
+        self.refresh_state()
+
     def refresh_state(self):
         """ Live -> Script
             Send out MIDI to completely update the attached MIDI controller.
-            Will be called when requested by the user, after for example having reconnected
-            the MIDI cables...
+            Will be called when exiting MIDI map mode
         """
         self.update()
 
@@ -386,11 +381,14 @@ class ControlSurface(SlotManager):
             self.log_message('Got unknown sysex message: ', midi_bytes)
 
     def set_device_component(self, device_component):
-        raise self._device_component == None or AssertionError
-        raise device_component != None or AssertionError
-        raise isinstance(device_component, DeviceComponent) or AssertionError
+        if self._device_component is not None:
+            self._device_component.set_lock_callback(None)
         self._device_component = device_component
-        self._device_component.set_lock_callback(self._toggle_lock)
+        self._c_instance.update_locks()
+        if device_component is not None:
+            device_component.set_lock_callback(self._toggle_lock)
+            if self._device_selection_follows_track_selection:
+                self.schedule_message(1, self._update_device_selection)
 
     @contextmanager
     def suppressing_rebuild_requests(self):
@@ -415,18 +413,16 @@ class ControlSurface(SlotManager):
             self._rebuild_requests_during_suppression = 0
 
     def set_pad_translations(self, pad_translations):
-        raise self._pad_translations == None or AssertionError
-        raise len(pad_translations) <= 16 or AssertionError
 
         def check_translation(translation):
             raise len(translation) == 4 or AssertionError
             raise in_range(translation[0], 0, 4) or AssertionError
             raise in_range(translation[1], 0, 4) or AssertionError
-            raise in_range(translation[2], 0, 128) or AssertionError
-            raise in_range(translation[3], 0, 16) or AssertionError
+            raise in_range(translation[2], -1, 128) or AssertionError
+            raise in_range(translation[3], -1, 16) or AssertionError
             return True
 
-        raise all(map(check_translation, pad_translations)) or AssertionError
+        raise pad_translations is None or all(imap(check_translation, pad_translations)) and len(pad_translations) <= 16 or AssertionError
         self._pad_translations = pad_translations
 
     def set_enabled(self, enable):
@@ -491,6 +487,16 @@ class ControlSurface(SlotManager):
         raise component not in self._components or AssertionError, 'Component registered twice'
         self._components.append(component)
         component.canonical_parent = self
+
+    def _disconnect_and_unregister_all_components(self):
+        with self.component_guard():
+            for component in self._components:
+                component.canonical_parent = None
+                component.disconnect()
+
+        self._components = []
+        self.set_highlighting_session_component(None)
+        self.set_device_component(None)
 
     @contextmanager
     def component_guard(self):
@@ -678,7 +684,7 @@ class ControlSurface(SlotManager):
         for component in self._components:
             component.on_selected_track_changed()
 
-        if self._device_selection_follows_track_selection:
+        if self._device_component is not None and self._device_selection_follows_track_selection:
             self._update_device_selection()
 
     def _on_selected_scene_changed(self):

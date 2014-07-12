@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteRepeatComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/NoteRepeatComponent.py
 from _Framework.ModesComponent import ModesComponent
 from _Framework import Task
 from _Framework.CompoundComponent import CompoundComponent
@@ -67,7 +67,7 @@ class NoteRepeatComponent(CompoundComponent):
         self._update_note_repeat(enabled=self.is_enabled())
 
     def _enable_note_repeat(self):
-        self._last_record_quantization = self._song.midi_recording_quantization
+        self._last_record_quantization = self.song().midi_recording_quantization
         self._set_recording_quantization(False)
         self._update_note_repeat(enabled=True)
 

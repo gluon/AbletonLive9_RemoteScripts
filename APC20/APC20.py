@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC20/APC20.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC20/APC20.py
 from __future__ import with_statement
 from functools import partial
 from itertools import izip
@@ -53,7 +53,7 @@ class APC20(APC):
             self._matrix.add_row(row)
 
         self._selected_scene_launch_button = make_pedal_button(64, name='Selected_Scene_Launch_Button')
-        self._scene_launch_buttons = ButtonMatrixElement(rows=[self._scene_launch_buttons])
+        self._scene_launch_buttons = ButtonMatrixElement(name='Scene_Launch_Buttons', rows=[self._scene_launch_buttons])
         self._solo_buttons = [ make_button(track_index, 49, name='%d_Solo_Button' % track_index) for track_index in xrange(MIXER_SIZE) ]
         self._mute_buttons = [ make_button(track_index, 50, name='%d_Mute_Button' % track_index) for track_index in xrange(MIXER_SIZE) ]
         self._master_volume_control = make_slider(0, 14, name='Master_Volume_Control')
@@ -64,18 +64,16 @@ class APC20(APC):
         self._sliders = [ make_slider(track_index, 7, name='%d_Volume_Control' % track_index) for track_index in xrange(8) ]
 
     def _create_session(self):
-        self._session = SessionComponent(SESSION_WIDTH, SESSION_HEIGHT, name='Session_Control', enable_skinning=True)
+        self._session = SessionComponent(SESSION_WIDTH, SESSION_HEIGHT, name='Session_Control', auto_name=True, enable_skinning=True)
         self._session.set_clip_launch_buttons(self._matrix)
         self._session.set_stop_track_clip_buttons(tuple(self._track_stop_buttons))
         self._session.set_scene_launch_buttons(self._scene_launch_buttons)
         for scene_index in xrange(SESSION_HEIGHT):
             scene = self._session.scene(scene_index)
-            scene.name = 'Scene_%d' % scene_index
             for track_index in xrange(SESSION_WIDTH):
                 clip_slot = scene.clip_slot(track_index)
                 clip_slot.name = '%d_Clip_Slot_%d' % (track_index, scene_index)
 
-        self._session.selected_scene().name = 'Selected_Scene'
         self._session.selected_scene().set_launch_button(self._selected_scene_launch_button)
         self._session_zoom = ShiftableZoomingComponent(self._session, tuple(self._track_stop_buttons), name='Session_Overview', enable_skinning=True)
         self._session_zoom.set_button_matrix(self._matrix)

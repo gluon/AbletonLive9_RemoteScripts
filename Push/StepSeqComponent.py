@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/StepSeqComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/StepSeqComponent.py
 from __future__ import with_statement
 import Live
 from itertools import imap, chain, starmap
@@ -8,7 +8,6 @@ from _Framework.SubjectSlot import subject_slot, Subject, subject_slot_group
 from _Framework.Util import forward_property, find_if
 from DrumGroupComponent import DrumGroupComponent
 from NoteEditorComponent import NoteEditorComponent
-from GridResolution import GridResolution
 from LoopSelectorComponent import LoopSelectorComponent
 from PlayheadComponent import PlayheadComponent
 from NoteEditorPaginator import NoteEditorPaginator

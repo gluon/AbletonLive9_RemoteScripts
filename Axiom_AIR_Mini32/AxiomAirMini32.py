@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/AxiomAirMini32.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_AIR_Mini32/AxiomAirMini32.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

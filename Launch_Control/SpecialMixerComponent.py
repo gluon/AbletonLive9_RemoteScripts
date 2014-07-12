@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launch_Control/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launch_Control/SpecialMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ModesComponent import ModesComponent, LayerMode, LatchingBehaviour
 from _Framework.SubjectSlot import subject_slot

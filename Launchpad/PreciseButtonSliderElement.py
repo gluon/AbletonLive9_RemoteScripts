@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/PreciseButtonSliderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launchpad/PreciseButtonSliderElement.py
 from _Framework.ButtonSliderElement import ButtonSliderElement
 from _Framework.InputControlElement import *
 SLIDER_MODE_SINGLE = 0

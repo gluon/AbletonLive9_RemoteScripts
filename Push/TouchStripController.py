@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchStripController.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/TouchStripController.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from TouchStripElement import TouchStripModes, SimpleBehaviour
 from TouchEncoderElement import TouchEncoderObserver

@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Layer.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Layer.py
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
+from ControlElement import ControlElementClient
 from Util import nop
 from itertools import repeat, izip
 from Resource import ExclusiveResource, CompoundResource
@@ -15,21 +16,18 @@ class UnhandledControlError(LayerError):
     pass
 
 
-class ControlClient(object):
+class LayerClient(ControlElementClient):
     """
     Client of the indivial controls that delivers the controls to the
     layer owner.
     """
 
     def __init__(self, layer = None, layer_client = None, *a, **k):
-        super(ControlClient, self).__init__(*a, **k)
+        super(LayerClient, self).__init__(*a, **k)
         raise layer_client or AssertionError
         raise layer or AssertionError
         self.layer_client = layer_client
         self.layer = layer
-
-    def __eq__(self, other):
-        return self.layer == getattr(other, 'layer', None) and self.layer_client == getattr(other, 'layer_client', None)
 
     def set_control_element(self, control_element, grabbed):
         layer = self.layer
@@ -98,7 +96,7 @@ class Layer(ExclusiveResource):
     for them.
     
     Note that [control-name] can not be any of the following reserved
-    names: priority, grab, release, on_grab, on_release, owner,
+    names: priority, grab, release, on_received, on_lost, owner,
     get_owner
     
     If [control-name] starts with an underscore (_) it is considered
@@ -110,6 +108,7 @@ class Layer(ExclusiveResource):
         self._priority = priority
         self._name_to_controls = dict(izip(controls.iterkeys(), repeat(None)))
         self._control_to_names = dict()
+        self._control_clients = dict()
         for name, control in controls.iteritems():
             self._control_to_names.setdefault(control, []).append(name)
 
@@ -121,9 +120,9 @@ class Layer(ExclusiveResource):
 
     def _set_priority(self, priority):
         if priority != self._priority:
-            self._priority = priority
             if self.owner:
-                self.grab(self.owner)
+                raise RuntimeError("Cannot change priority of a layer while it's owned")
+            self._priority = priority
 
     priority = property(_get_priority, _set_priority)
 
@@ -136,17 +135,25 @@ class Layer(ExclusiveResource):
 
     def grab(self, client, *a, **k):
         if client == self.owner:
-            self.on_grab(client, *a, **k)
+            self.on_received(client, *a, **k)
             return True
         return super(Layer, self).grab(client, *a, **k)
 
-    def on_grab(self, client, *a, **k):
+    def on_received(self, client, *a, **k):
         """ Override from ExclusiveResource """
         for control in self._control_to_names.iterkeys():
             k.setdefault('priority', self._priority)
-            control.resource.grab(ControlClient(layer_client=client, layer=self), *a, **k)
+            control.resource.grab(self._get_control_client(client), *a, **k)
 
-    def on_release(self, client):
+    def on_lost(self, client):
         """ Override from ExclusiveResource """
         for control in self._control_to_names.iterkeys():
-            control.resource.release(ControlClient(layer_client=client, layer=self))
+            control.resource.release(self._get_control_client(client))
+
+    def _get_control_client(self, client):
+        try:
+            control_client = self._control_clients[client]
+        except KeyError:
+            control_client = self._control_clients[client] = LayerClient(layer_client=client, layer=self)
+
+        return control_client

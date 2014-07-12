@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl/MackieControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/MackieControl/MackieControl.py
 from consts import *
 from MainDisplay import MainDisplay
 from MainDisplayController import MainDisplayController
@@ -44,6 +44,9 @@ class MackieControl:
         self.__option_is_pressed = False
         self.__ctrl_is_pressed = False
         self.__alt_is_pressed = False
+        self.is_pro_version = False
+        self._received_firmware_version = False
+        self._refresh_state_next_time = 0
 
     def disconnect(self):
         for c in self.__components:
@@ -76,6 +79,17 @@ class MackieControl:
         self.__main_display_controller.set_controller_extensions(left_extensions, right_extensions)
         self.__channel_strip_controller.set_controller_extensions(left_extensions, right_extensions)
 
+    def request_firmware_version(self):
+        if not self._received_firmware_version:
+            self.send_midi((240,
+             0,
+             0,
+             102,
+             SYSEX_DEVICE_TYPE,
+             19,
+             0,
+             247))
+
     def application(self):
         """returns a reference to the application that we are running in"""
         return Live.Application.get_application()
@@ -93,6 +107,9 @@ class MackieControl:
     def refresh_state(self):
         for c in self.__components:
             c.refresh_state()
+
+        self.request_firmware_version()
+        self._refresh_state_next_time = 30
 
     def is_extension(self):
         return False
@@ -122,6 +139,13 @@ class MackieControl:
         Live.MidiMap.forward_midi_cc(self.handle(), midi_map_handle, 0, JOG_WHEEL_CC_NO)
 
     def update_display(self):
+        if self._refresh_state_next_time > 0:
+            self._refresh_state_next_time -= 1
+            if self._refresh_state_next_time == 0:
+                for c in self.__components:
+                    c.refresh_state()
+
+                self.request_firmware_version()
         for c in self.__components:
             c.on_update_display_timer()
 
@@ -161,6 +185,12 @@ class MackieControl:
             elif cc_no in range(FID_PANNING_BASE, FID_PANNING_BASE + NUM_CHANNEL_STRIPS):
                 for s in self.__channel_strips:
                     s.handle_vpot_rotation(cc_no - FID_PANNING_BASE, cc_value)
+
+        elif midi_bytes[0] == 240 and len(midi_bytes) == 12 and midi_bytes[5] == 20:
+            version_bytes = midi_bytes[6:-2]
+            major_version = version_bytes[1]
+            self.is_pro_version = major_version > 50
+            self._received_firmware_version = True
 
     def can_lock_to_devices(self):
         return False

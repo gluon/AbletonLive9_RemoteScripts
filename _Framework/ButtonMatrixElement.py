@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonMatrixElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ButtonMatrixElement.py
 from CompoundElement import CompoundElement
 from Util import in_range, product, const, slicer, to_slice
 
@@ -105,10 +105,10 @@ class ButtonMatrixElement(CompoundElement):
         is_momentary = getattr(sender, 'is_momentary', const(None))()
         self.notify_value(value, x, y, is_momentary)
 
-    def on_nested_control_element_grabbed(self, control):
+    def on_nested_control_element_received(self, control):
         x, y = self._button_coordinates[control]
         self._buttons[y][x] = control
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_lost(self, control):
         x, y = self._button_coordinates[control]
         self._buttons[y][x] = None

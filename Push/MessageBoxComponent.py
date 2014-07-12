@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/MessageBoxComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/MessageBoxComponent.py
 from functools import partial
 from _Framework.Dependency import dependency
 from _Framework.CompoundComponent import CompoundComponent
@@ -119,10 +119,10 @@ class _CallbackControl(CompoundElement):
         self._callback = callback
         self.register_control_element(token)
 
-    def on_nested_control_element_grabbed(self, control):
+    def on_nested_control_element_received(self, control):
         self._callback()
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_lost(self, control):
         pass
 
 

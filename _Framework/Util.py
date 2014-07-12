@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Util.py
 """
 Various utilities.
 """
@@ -93,7 +93,7 @@ def memoize(function):
 
 
 @memoize
-def mixin(one, *args):
+def mixin(*args):
     """
     Dynamically creates a class that inherits from all the classes
     passed as parameters. Example::
@@ -109,18 +109,10 @@ def mixin(one, *args):
     
         assert mixin(A, B) == mixin(A, B)
     """
-    if not args:
-        return one
-    two, rest = args[0], args[1:]
-
-    class Mixin(one, two):
-
-        def __init__(self, *args, **kws):
-            super(Mixin, self).__init__(*args, **kws)
-
-    if rest:
-        return mixin(Mixin, *rest)
-    return Mixin
+    if len(args) == 1:
+        return args[0]
+    name = 'Mixin_%s' % '_'.join((cls.__name__ for cls in args))
+    return type(name, args, {})
 
 
 def monkeypatch(target, name = None, override = False, doc = None):
@@ -525,9 +517,6 @@ class BooleanContext(object):
     def __nonzero__(self):
         return bool(self._current_value)
 
-    def __bool__(self):
-        return bool(self._current_value)
-
     def __call__(self, update_value = None):
         """
         Makes a context manager for the boolean context
@@ -690,10 +679,6 @@ def trace_value(value, msg = 'Value: '):
     return value
 
 
-def count_calls(fn = nop):
-    return wraps(fn)(CallCounter(fn))
-
-
 class Bindable(object):
     """
     Utility base class for general bindable function objects.
@@ -716,28 +701,3 @@ class Bindable(object):
 
     def bind(self, bind_to_object):
         raise NotImplementedError
-
-
-class CallCounter(Bindable):
-    """
-    Function object that counts the number of times it is called.
-    """
-
-    def __init__(self, fn = nop, current_self = None, *a, **k):
-        super(CallCounter, self).__init__(*a, **k)
-        wraps(fn)(self)
-        self.fn = fn
-        self.count = 0
-        self.last_args = None
-        self.current_self = current_self
-
-    def bind(self, obj):
-        return CallCounter(fn=self.fn, current_self=obj)
-
-    def __call__(self, *a, **k):
-        self.count += 1
-        self.last_args = a
-        if self.current_self is not None:
-            return self.fn(self.current_self, *a, **k)
-        else:
-            return self.fn(*a, **k)

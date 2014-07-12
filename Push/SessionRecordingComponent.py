@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SessionRecordingComponent.py
 from functools import partial
 from _Framework.SessionRecordingComponent import SessionRecordingComponent
 from _Framework.Util import forward_property
@@ -33,6 +33,10 @@ def song_selected_slot(song):
     return slot
 
 
+def track_can_overdub(track):
+    return not track.has_audio_input
+
+
 class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger):
 
     def __init__(self, *a, **k):
@@ -63,6 +67,37 @@ class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger)
         self._fixed_length.action_button.set_control_element(button)
         self._on_length_value.subject = button
         self._length_press_state = None
+
+    def _start_recording(self):
+        song = self.song()
+        song.overdub = True
+        selected_scene = song.view.selected_scene
+        scene_index = list(song.scenes).index(selected_scene)
+        track = self.song().view.selected_track
+        if track.can_be_armed and (track.arm or track.implicit_arm):
+            self._record_in_slot(track, track.clip_slots[scene_index])
+            self._ensure_slot_is_visible(track, scene_index)
+        if not song.is_playing:
+            song.is_playing = True
+
+    def _record_in_slot(self, track, clip_slot):
+        if self._length_should_be_fixed() and not clip_slot.has_clip:
+            length, quant = self._get_selected_length()
+            if track_can_overdub(track):
+                self._clip_creator.create(clip_slot, length)
+            else:
+                clip_slot.fire(record_length=length, launch_quantization=quant)
+        elif not clip_slot.is_playing:
+            if clip_slot.has_clip:
+                clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
+            else:
+                clip_slot.fire()
+
+    def _ensure_slot_is_visible(self, track, scene_index):
+        song = self.song()
+        if song.view.selected_track == track:
+            song.view.selected_scene = song.scenes[scene_index]
+        self._view_selected_clip_detail()
 
     @subject_slot('selected_option')
     def _on_selected_fixed_length_option_changed(self, _):

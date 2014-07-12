@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ComboElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ComboElement.py
 from __future__ import with_statement
 from itertools import imap
 from contextlib import contextmanager
@@ -11,6 +11,7 @@ from _Framework.ButtonElement import ButtonElementMixin
 from _Framework.NotifyingControlElement import NotifyingControlElement
 from _Framework.InputControlElement import ParameterSlot
 from _Framework.Proxy import ProxyBase
+from _Framework.Resource import DEFAULT_PRIORITY
 
 class WrapperElement(CompoundElement, ProxyBase):
     """
@@ -53,11 +54,11 @@ class WrapperElement(CompoundElement, ProxyBase):
     def __nonzero__(self):
         return self.owns_control_element(self._wrapped_control)
 
-    def on_nested_control_element_grabbed(self, control):
+    def on_nested_control_element_received(self, control):
         if control == self._wrapped_control:
             self._parameter_slot.control = control
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_lost(self, control):
         if control == self._wrapped_control:
             self._parameter_slot.control = None
 
@@ -94,6 +95,7 @@ class ComboElement(WrapperElement):
     example see how the SessionRecording takes the automation_button
     in a combo and raw.
     """
+    priority_increment = 0.5
 
     def __init__(self, control = None, modifiers = [], negative_modifiers = [], *a, **k):
         super(ComboElement, self).__init__(wrapped_control=control, *a, **k)
@@ -106,17 +108,24 @@ class ComboElement(WrapperElement):
         if self.owns_control_element(self._wrapped_control):
             self._wrapped_control.reset()
 
-    def on_nested_control_element_grabbed(self, control):
-        if control != self._wrapped_control:
-            self._enforce_control_invariant()
-        else:
-            super(ComboElement, self).on_nested_control_element_grabbed(control)
+    def get_control_element_priority(self, element, priority):
+        if not (element == self._wrapped_control and (priority is None or 1 - priority + int(priority) > self.priority_increment)):
+            raise AssertionError, 'Attempting to increase the priority over a whole unit. ' + 'Make sure the combo element is not inside another combo element'
+            priority = DEFAULT_PRIORITY if priority is None else priority
+            return priority + self.priority_increment
+        return priority
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_received(self, control):
         if control != self._wrapped_control:
             self._enforce_control_invariant()
         else:
-            super(ComboElement, self).on_nested_control_element_released(control)
+            super(ComboElement, self).on_nested_control_element_received(control)
+
+    def on_nested_control_element_lost(self, control):
+        if control != self._wrapped_control:
+            self._enforce_control_invariant()
+        else:
+            super(ComboElement, self).on_nested_control_element_lost(control)
 
     def on_nested_control_element_value(self, value, control):
         if control != self._wrapped_control:
@@ -302,10 +311,10 @@ class MultiElement(CompoundElement, ButtonElementMixin):
     def is_momentary(self):
         return find_if(lambda c: getattr(c, 'is_momentary', const(False))(), self.nested_control_elements()) != None
 
-    def on_nested_control_element_grabbed(self, control):
+    def on_nested_control_element_received(self, control):
         pass
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_lost(self, control):
         pass
 
 

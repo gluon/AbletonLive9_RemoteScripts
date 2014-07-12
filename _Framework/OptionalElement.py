@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/OptionalElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/OptionalElement.py
 from _Framework.ComboElement import ToggleElement
 from _Framework.SubjectSlot import SlotManager, subject_slot, Subject, SubjectEvent
 

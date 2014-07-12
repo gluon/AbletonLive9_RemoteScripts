@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_APC/APC.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_APC/APC.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -156,7 +156,7 @@ class APC(ControlSurface):
 
     def _do_combine(self):
         if self._should_combine() and self not in APC._active_instances:
-            APC._active_instances.append(self)
+            APC._active_instances = sorted(APC._active_instances + [self], key=lambda x: x.instance_identifier())
             APC._combine_active_instances()
 
     def _do_uncombine(self):

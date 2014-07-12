@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TrackFrozenMode.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/TrackFrozenMode.py
 from _Framework.ModesComponent import ModesComponent
 from _Framework.SubjectSlot import subject_slot
 
@@ -11,11 +11,11 @@ class TrackFrozenModesComponent(ModesComponent):
             raise AssertionError
             self.add_mode('default', default_mode)
             self.add_mode('frozen', frozen_mode)
-            self._on_selected_track_is_frozen_changed.subject = self._song.view
+            self._on_selected_track_is_frozen_changed.subject = self.song().view
             self.is_enabled() and self._update_selected_mode()
 
     def _update_selected_mode(self):
-        self.selected_mode = 'frozen' if self._song.view.selected_track.is_frozen else 'default'
+        self.selected_mode = 'frozen' if self.song().view.selected_track.is_frozen else 'default'
 
     @subject_slot('selected_track.is_frozen')
     def _on_selected_track_is_frozen_changed(self):

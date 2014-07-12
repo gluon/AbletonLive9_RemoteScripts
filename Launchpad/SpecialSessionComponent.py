@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launchpad/SpecialSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 
 class SpecialSessionComponent(SessionComponent):

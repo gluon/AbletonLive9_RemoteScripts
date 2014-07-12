@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Resource.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Resource.py
 from functools import partial
 from _Framework.Proxy import Proxy
 from _Framework.Util import index_if, nop, first, NamedTuple
+DEFAULT_PRIORITY = 0
 
 class Resource(object):
 
@@ -66,18 +67,18 @@ class ExclusiveResource(Resource):
     someone else already.
     """
 
-    def __init__(self, on_grab_callback = None, on_release_callback = None, *a, **k):
+    def __init__(self, on_received_callback = None, on_lost_callback = None, *a, **k):
         super(ExclusiveResource, self).__init__(*a, **k)
         self._owner = None
-        if on_grab_callback:
-            self.on_grab = on_grab_callback
-        if on_release_callback:
-            self.on_release = on_release_callback
+        if on_received_callback:
+            self.on_received = on_received_callback
+        if on_lost_callback:
+            self.on_lost = on_lost_callback
 
     def grab(self, client, *a, **k):
         if not client is not None:
             raise AssertionError, 'Someone has to adquire resource'
-            self._owner == None and self.on_grab(client, *a, **k)
+            self._owner == None and self.on_received(client, *a, **k)
             self._owner = client
         return self._owner == client
 
@@ -85,17 +86,17 @@ class ExclusiveResource(Resource):
         if not client:
             raise AssertionError
             self._owner = client == self._owner and None
-            self.on_release(client)
+            self.on_lost(client)
             return True
         return False
 
     def get_owner(self):
         return self._owner
 
-    def on_grab(self, client, *a, **k):
+    def on_received(self, client, *a, **k):
         raise NotImplemented, 'Override or pass callback'
 
-    def on_release(self, client):
+    def on_lost(self, client):
         raise NotImplemented, 'Override or pass callback'
 
 
@@ -104,27 +105,27 @@ class SharedResource(Resource):
     A resource that has no owner and will always be grabbed.
     """
 
-    def __init__(self, on_grab_callback = None, on_release_callback = None, *a, **k):
+    def __init__(self, on_received_callback = None, on_lost_callback = None, *a, **k):
         super(SharedResource, self).__init__(*a, **k)
-        if on_grab_callback:
-            self.on_grab = on_grab_callback
-        if on_release_callback:
-            self.on_release = on_release_callback
+        if on_received_callback:
+            self.on_received = on_received_callback
+        if on_lost_callback:
+            self.on_lost = on_lost_callback
         self._clients = set()
 
     def grab(self, client, *a, **k):
         raise client is not None or AssertionError, 'Someone has to adquire resource'
-        self.on_grab(client, *a, **k)
+        self.on_received(client, *a, **k)
         self._clients.add(client)
         return True
 
     def release(self, client):
         if not client is not None:
             raise AssertionError
-            client in self._clients and self.on_release(client)
+            client in self._clients and self.on_lost(client)
             self._clients.remove(client)
             for client in self._clients:
-                self.on_grab(client)
+                self.on_received(client)
 
             return True
         return False
@@ -132,10 +133,10 @@ class SharedResource(Resource):
     def get_owner(self):
         raise False or AssertionError, 'Shared resource has no owner'
 
-    def on_grab(self, client, *a, **k):
+    def on_received(self, client, *a, **k):
         raise NotImplemented, 'Override or pass callback'
 
-    def on_release(self, client):
+    def on_lost(self, client):
         raise NotImplemented, 'Override or pass callback'
 
 
@@ -159,38 +160,37 @@ class StackingResource(Resource):
     dialog should not loose focus because of a normal window
     appearing.)
     """
-    default_priority = 0
 
-    def __init__(self, on_grab_callback = None, on_release_callback = None, *a, **k):
+    def __init__(self, on_received_callback = None, on_lost_callback = None, *a, **k):
         super(StackingResource, self).__init__(*a, **k)
         self._clients = []
         self._owners = set()
-        if on_grab_callback:
-            self.on_grab = on_grab_callback
-        if on_release_callback:
-            self.on_release = on_release_callback
+        if on_received_callback:
+            self.on_received = on_received_callback
+        if on_lost_callback:
+            self.on_lost = on_lost_callback
 
     def grab(self, client, priority = None):
         if not client is not None:
             raise AssertionError
             if priority is None:
-                priority = self.default_priority
+                priority = DEFAULT_PRIORITY
             old_owners = self._owners
             self._remove_client(client)
             self._add_client(client, priority)
             new_owners = self._actual_owners()
-            new_owners != old_owners and self._on_release_set(set(old_owners) - set(new_owners))
-            self._on_grab_set(new_owners)
+            new_owners != old_owners and self._on_lost_set(set(old_owners) - set(new_owners))
+            self._on_received_set(new_owners)
             self._owners = new_owners
         return True
 
-    def _on_release_set(self, clients):
+    def _on_lost_set(self, clients):
         for client in clients:
-            self.on_release(client)
+            self.on_lost(client)
 
-    def _on_grab_set(self, clients):
+    def _on_received_set(self, clients):
         for client in clients:
-            self.on_grab(client)
+            self.on_received(client)
 
     def release(self, client):
         if not client is not None:
@@ -199,8 +199,8 @@ class StackingResource(Resource):
             result = self._remove_client(client)
             new_owners = self._actual_owners()
             self._owners = new_owners != old_owners and new_owners
-            self._on_release_set(set(old_owners) - set(new_owners))
-            self._on_grab_set(new_owners)
+            self._on_lost_set(set(old_owners) - set(new_owners))
+            self._on_received_set(new_owners)
         return result
 
     def release_all(self):
@@ -225,7 +225,7 @@ class StackingResource(Resource):
 
     @property
     def max_priority(self):
-        return self._clients[-1][1] if self._clients else self.default_priority
+        return self._clients[-1][1] if self._clients else DEFAULT_PRIORITY
 
     @property
     def stack_size(self):
@@ -244,10 +244,10 @@ class StackingResource(Resource):
     def owners(self):
         return self._owners
 
-    def on_grab(self, client):
+    def on_received(self, client):
         raise NotImplemented, 'Override or pass callback'
 
-    def on_release(self, client):
+    def on_lost(self, client):
         raise NotImplemented, 'Override or pass callback'
 
     def release_stacked(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_49_61_Classic/Axiom.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_49_61_Classic/Axiom.py
 from _Axiom.consts import *
 from _Axiom.Transport import Transport
 from _Axiom.Pads import Pads

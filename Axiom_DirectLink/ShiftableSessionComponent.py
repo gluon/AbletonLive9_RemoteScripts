@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_DirectLink/ShiftableSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_DirectLink/ShiftableSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ButtonElement import ButtonElement
 

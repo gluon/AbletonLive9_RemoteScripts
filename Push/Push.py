@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Push.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/Push.py
 from __future__ import with_statement
 import Live
 from contextlib import contextmanager
@@ -10,7 +10,7 @@ from _Framework.ButtonElement import ButtonElement
 from _Framework.ControlSurface import OptimizedControlSurface
 from _Framework.InputControlElement import MIDI_CC_TYPE, MIDI_NOTE_TYPE
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ModesComponent import AddLayerMode, MultiEntryMode, ModesComponent, SetAttributeMode, CancellableBehaviour, AlternativeBehaviour, ReenterBehaviour, DynamicBehaviourMixin, ExcludingBehaviourMixin, EnablingModesComponent, LazyComponentMode
+from _Framework.ModesComponent import AddLayerMode, MultiEntryMode, ModesComponent, CancellableBehaviour, AlternativeBehaviour, ReenterBehaviour, DynamicBehaviourMixin, ExcludingBehaviourMixin, EnablingModesComponent, LazyComponentMode
 from _Framework.SysexValueControl import SysexValueControl
 from _Framework.Layer import Layer
 from _Framework.Resource import PrioritizedResource
@@ -23,10 +23,12 @@ from _Framework.ClipCreator import ClipCreator
 from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from _Framework.OptionalElement import OptionalElement, ChoosingElement
 from _Framework.TransportComponent import TransportComponent
+from _Framework.SessionZoomingComponent import SessionZoomingComponent
+from _Framework import Task
 from HandshakeComponent import HandshakeComponent, make_dongle_message
 from ValueComponent import ValueComponent, ParameterValueComponent
 from ConfigurableButtonElement import PadButtonElement
-from SpecialSessionComponent import SpecialSessionComponent, SpecialSessionZoomingComponent
+from SpecialSessionComponent import SpecialSessionComponent
 from SpecialMixerComponent import SpecialMixerComponent
 from SpecialPhysicalDisplay import SpecialPhysicalDisplay
 from MelodicComponent import MelodicComponent
@@ -161,10 +163,10 @@ class Push(OptimizedControlSurface):
         if self._auto_arm.needs_restore_auto_arm:
             self._auto_arm.restore_auto_arm()
 
-    def refresh_state(self):
-        super(Push, self).refresh_state()
-        if self._user.mode == Sysex.LIVE_MODE:
-            self.schedule_message(5, self._start_handshake)
+    def port_settings_changed(self):
+        self._user.mode = Sysex.LIVE_MODE
+        self._user.update()
+        self._start_handshake_task.restart()
 
     def _pre_serialize(self):
         """
@@ -203,8 +205,11 @@ class Push(OptimizedControlSurface):
         self._handshake = HandshakeComponent(identity_control=identity_control, dongle_control=dongle_control, presentation_control=presentation_control, dongle=dongle)
         self._on_handshake_success.subject = self._handshake
         self._on_handshake_failure.subject = self._handshake
+        self._start_handshake_task = self._tasks.add(Task.sequence(Task.wait(consts.HANDSHAKE_TIMEOUT), Task.run(self._start_handshake)))
+        self._start_handshake_task.kill()
 
     def _start_handshake(self):
+        self._start_handshake_task.kill()
         self._playhead_element.proxied_object = self._c_instance.playhead
         self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
         self._accent_component.set_full_velocity(self._c_instance.full_velocity)
@@ -342,6 +347,7 @@ class Push(OptimizedControlSurface):
          False: 'DefaultMatrix.Off'}) for column in xrange(8) ] for row in xrange(8) ]
         double_press_rows = recursive_map(DoublePressElement, self._matrix_rows_raw)
         self._matrix = ButtonMatrixElement(name='Button_Matrix', rows=self._matrix_rows_raw)
+        self._shifted_matrix = ButtonMatrixElement(name='Shifted_Button_Matrix', rows=recursive_map(self._with_shift, self._matrix_rows_raw))
         self._double_press_matrix = ButtonMatrixElement(name='Double_Press_Matrix', rows=double_press_rows)
         self._single_press_event_matrix = ButtonMatrixElement(name='Single_Press_Event_Matrix', rows=recursive_map(lambda x: x.single_press, double_press_rows))
         self._double_press_event_matrix = ButtonMatrixElement(name='Double_Press_Event_Matrix', rows=recursive_map(lambda x: x.double_press, double_press_rows))
@@ -380,8 +386,7 @@ class Push(OptimizedControlSurface):
 
     def _init_background(self):
         self._background = BackgroundComponent()
-        self._background.layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, scales_button=self._scale_presets_button, octave_up=self._octave_up_button, octave_down=self._octave_down_button, side_buttons=self._side_buttons, repeat_button=self._repeat_button, accent_button=self._accent_button, double_button=self._double_button, in_button=self._in_button, out_button=self._out_button, param_controls=self._global_param_controls, param_touch=self._global_param_touch_buttons, tempo_control_tap=self._tempo_control_tap, master_control_tap=self._master_volume_control_tap, touch_strip=self._touch_strip_control, touch_strip_tap=self._touch_strip_tap, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button, aftertouch=self._aftertouch_control, _notification=self._notification.use_single_line(2))
-        self._background.layer.priority = consts.BACKGROUND_PRIORITY
+        self._background.layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, scales_button=self._scale_presets_button, octave_up=self._octave_up_button, octave_down=self._octave_down_button, side_buttons=self._side_buttons, repeat_button=self._repeat_button, accent_button=self._accent_button, double_button=self._double_button, in_button=self._in_button, out_button=self._out_button, param_controls=self._global_param_controls, param_touch=self._global_param_touch_buttons, tempo_control_tap=self._tempo_control_tap, master_control_tap=self._master_volume_control_tap, touch_strip=self._touch_strip_control, touch_strip_tap=self._touch_strip_tap, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button, aftertouch=self._aftertouch_control, _notification=self._notification.use_single_line(2), priority=consts.BACKGROUND_PRIORITY)
         self._matrix_background = BackgroundComponent()
         self._matrix_background.set_enabled(False)
         self._matrix_background.layer = Layer(matrix=self._matrix)
@@ -482,7 +487,7 @@ class Push(OptimizedControlSurface):
         return session
 
     def _create_zooming(self):
-        return SpecialSessionZoomingComponent(self._session_mode.component, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._matrix, zoom_button=self._shift_button, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button))
+        return SessionZoomingComponent(session=self._session_mode.component, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._shifted_matrix, nav_up_button=self._with_shift(self._nav_up_button), nav_down_button=self._with_shift(self._nav_down_button), nav_left_button=self._with_shift(self._nav_left_button), nav_right_button=self._with_shift(self._nav_right_button)))
 
     def _init_session(self):
         self._c_instance.set_session_highlight(0, 0, 8, 8, True)
@@ -594,14 +599,14 @@ class Push(OptimizedControlSurface):
         return ClipControlComponent(loop_layer=Layer(encoders=self._global_param_controls.submatrix[:4, :], shift_button=self._shift_button, name_display=self._display_line1.subdisplay[:36], value_display=self._display_line2.subdisplay[:36]), audio_layer=Layer(encoders=self._global_param_controls.submatrix[4:, :], shift_button=self._shift_button, name_display=self._display_line1.subdisplay[36:], value_display=self._display_line2.subdisplay[36:]), clip_name_layer=Layer(display=self._display_line3), name='Clip_Control', is_enabled=False)
 
     def _create_browser(self):
-        browser = BrowserComponent(name='Browser', is_enabled=False, layer=Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, enter_button=self._in_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, shift_button=WithPriority(consts.SHARED_PRIORITY, self._shift_button), _notification=self._notification.use_full_display(2), priority=consts.BROWSER_PRIORITY))
+        browser = BrowserComponent(name='Browser', is_enabled=False, layer=Layer(encoder_controls=self._global_param_controls, display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, enter_button=self._in_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, shift_button=WithPriority(consts.SHARED_PRIORITY, self._shift_button), _notification=self._notification.use_full_display(2)))
         return browser
 
     def _create_create_device_right(self):
-        return CreateDeviceComponent(name='Create_Device_Right', browser_component=self._browser_mode.component, browser_mode=self._browser_dialog_mode, browser_hotswap_mode=self._browser_hotswap_mode, insert_left=False, is_enabled=False)
+        return CreateDeviceComponent(name='Create_Device_Right', browser_component=self._browser_mode.component, browser_mode=self._browser_mode, browser_hotswap_mode=self._browser_hotswap_mode, insert_left=False, is_enabled=False)
 
     def _create_create_device_left(self):
-        return CreateDeviceComponent(name='Create_Device_Right', browser_component=self._browser_mode.component, browser_mode=self._browser_dialog_mode, browser_hotswap_mode=self._browser_hotswap_mode, insert_left=True, is_enabled=False)
+        return CreateDeviceComponent(name='Create_Device_Right', browser_component=self._browser_mode.component, browser_mode=self._browser_mode, browser_hotswap_mode=self._browser_hotswap_mode, insert_left=True, is_enabled=False)
 
     def _create_create_default_track(self):
         create_default_track = CreateDefaultTrackComponent(name='Create_Default_Track', is_enabled=False)
@@ -609,7 +614,7 @@ class Push(OptimizedControlSurface):
         return create_default_track
 
     def _create_create_instrument_track(self):
-        return CreateInstrumentTrackComponent(name='Create_Instrument_Track', browser_component=self._browser_mode.component, browser_mode=self._browser_dialog_mode, browser_hotswap_mode=self._browser_hotswap_mode, is_enabled=False)
+        return CreateInstrumentTrackComponent(name='Create_Instrument_Track', browser_component=self._browser_mode.component, browser_mode=self._browser_mode, browser_hotswap_mode=self._browser_hotswap_mode, is_enabled=False)
 
     def _browser_back_to_top(self):
         self._browser_mode.component.back_to_top()
@@ -624,13 +629,16 @@ class Push(OptimizedControlSurface):
             def __init__(self, create_browser = nop, *a, **k):
                 super(BrowserMode, self).__init__(LazyComponentMode(create_browser), *a, **k)
 
+            def enter_mode(browser_mode_self):
+                super(BrowserMode, browser_mode_self).enter_mode()
+                self._instrument.scales_menu.selected_mode = 'disabled'
+
             @property
             def component(self):
                 return self._mode.component
 
         self._browser_mode = BrowserMode(self._create_browser)
         self._browser_hotswap_mode = MultiEntryMode(BrowserHotswapMode(application=self.application()))
-        self._browser_dialog_mode = MultiEntryMode([SetAttributeMode(lambda : self._browser_mode.component.layer, 'priority', consts.MODAL_DIALOG_PRIORITY), self._browser_mode])
         self._on_browse_mode_changed.subject = self.application().view
 
     @subject_slot('browse_mode')
@@ -828,7 +836,10 @@ class Push(OptimizedControlSurface):
     @subject_slot('mode')
     def _on_hardware_mode_changed(self, mode):
         if mode == Sysex.LIVE_MODE:
-            self.update()
+            if self._start_handshake_task.is_running:
+                self._start_handshake()
+            elif self._handshake.handshake_succeeded:
+                self.update()
         elif mode == Sysex.USER_MODE:
             self._suppress_sysex = True
         self._update_auto_arm()

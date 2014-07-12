@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceParameterComponent.py
-from itertools import chain, repeat
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/DeviceParameterComponent.py
+from itertools import chain, repeat, ifilter
 import Live
 AutomationState = Live.DeviceParameter.AutomationState
 from _Framework.Util import first, second
@@ -108,7 +108,7 @@ class DeviceParameterComponent(ControlSurfaceComponent):
             source.set_display_string('')
 
     def _release_parameters(self):
-        for encoder in self._parameter_controls or []:
+        for encoder in ifilter(None, self._parameter_controls or []):
             encoder.release_parameter()
 
     def _connect_parameters(self):

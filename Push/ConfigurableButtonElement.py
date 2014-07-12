@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ConfigurableButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/ConfigurableButtonElement.py
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 from _Framework.Skin import Skin, SkinColorMissingError
 from Colors import Basic
@@ -34,7 +34,6 @@ class ConfigurableButtonElement(ButtonElement):
             self.default_states = default_states
         self.states = dict(self.default_states)
         self.is_rgb = is_rgb
-        self._is_enabled = True
         self._force_next_value = False
         self.set_channel(NON_FEEDBACK_CHANNEL)
 
@@ -75,12 +74,10 @@ class ConfigurableButtonElement(ButtonElement):
         self._force_next_value = True
 
     def set_enabled(self, enabled):
-        if self._is_enabled != enabled:
-            self._is_enabled = enabled
-            self._request_rebuild()
+        self.suppress_script_forwarding = not enabled
 
     def is_enabled(self):
-        return self._is_enabled
+        return not self.suppress_script_forwarding
 
     def set_light(self, value):
         super(ConfigurableButtonElement, self).set_light(self.states.get(value, value))
@@ -100,7 +97,7 @@ class ConfigurableButtonElement(ButtonElement):
         self._skin[self._off_value].draw(self)
 
     def script_wants_forwarding(self):
-        return self._is_enabled
+        return not self.suppress_script_forwarding
 
 
 class PadButtonElement(ConfigurableButtonElement):

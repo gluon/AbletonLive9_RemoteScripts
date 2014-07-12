@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/FaderModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_AIR_25_49_61/FaderModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from consts import *
 

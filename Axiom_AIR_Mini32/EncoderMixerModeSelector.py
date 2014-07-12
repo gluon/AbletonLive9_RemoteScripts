@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/EncoderMixerModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_AIR_Mini32/EncoderMixerModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class EncoderMixerModeSelector(ModeSelectorComponent):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/LV2_LX2_LC2_LD2/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/LV2_LX2_LC2_LD2/consts.py
 TRACK_CHANNEL_SETUP1 = 9
 AUX_CHANNEL_SETUP1 = 10
 CHANNEL_SETUP1 = 11

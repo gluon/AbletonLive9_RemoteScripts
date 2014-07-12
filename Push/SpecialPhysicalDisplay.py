@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialPhysicalDisplay.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SpecialPhysicalDisplay.py
 from _Framework.Util import group, flatten
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 from consts import DISPLAY_BLOCK_LENGTH

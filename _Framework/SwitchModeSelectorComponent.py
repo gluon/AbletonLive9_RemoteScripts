@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SwitchModeSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/SwitchModeSelectorComponent.py
 from ModeSelectorComponent import ModeSelectorComponent
 from ControlSurfaceComponent import ControlSurfaceComponent
 from ButtonElement import ButtonElement
@@ -34,13 +34,14 @@ class SwitchModeSelectorComponent(ModeSelectorComponent):
         return len(self._components_per_mode)
 
     def update(self):
-        if not (len(self._modes_buttons) == 0 or len(self._modes_buttons) == len(self._components_per_mode)):
+        super(SwitchModeSelectorComponent, self).update()
+        raise len(self._modes_buttons) == 0 or len(self._modes_buttons) == len(self._components_per_mode) or AssertionError
+        if not len(self._components_per_mode) > self._mode_index:
             raise AssertionError
-            if not len(self._components_per_mode) > self._mode_index:
-                raise AssertionError
-                index = 0
-                active_components = None
-                active_components = self.is_enabled() and self._components_per_mode[self._mode_index]
+            index = 0
+            active_components = None
+            if self.is_enabled():
+                active_components = self._components_per_mode[self._mode_index]
             for index in range(len(self._components_per_mode)):
                 if self._components_per_mode[index] != active_components:
                     if len(self._modes_buttons) == len(self._components_per_mode):

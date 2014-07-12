@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/InputControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/InputControlElement.py
 from __future__ import with_statement
 import contextlib
 from Dependency import depends
@@ -154,6 +154,7 @@ class InputControlElement(NotifyingControlElement):
         self._force_next_send = False
         self._mapping_feedback_delay = 0
         self._mapping_sensitivity = 1.0
+        self._suppress_script_forwarding = False
         self._send_delayed_messages_task = self._tasks.add(Task.run(self._send_delayed_messages))
         self._send_delayed_messages_task.kill()
         self._parameter_to_map_to = None
@@ -190,6 +191,16 @@ class InputControlElement(NotifyingControlElement):
         self._mapping_sensitivity = sensitivity
 
     mapping_sensitivity = property(_get_mapping_sensitivity, _set_mapping_sensitivity)
+
+    def _get_suppress_script_forwarding(self):
+        return self._suppress_script_forwarding
+
+    def _set_suppress_script_forwarding(self, value):
+        if self._suppress_script_forwarding != value:
+            self._suppress_script_forwarding = value
+            self._request_rebuild()
+
+    suppress_script_forwarding = property(_get_suppress_script_forwarding, _set_suppress_script_forwarding)
 
     def force_next_send(self):
         """
@@ -264,7 +275,7 @@ class InputControlElement(NotifyingControlElement):
         Subclasses that overload this should _request_rebuild()
         whenever the property changes.
         """
-        return self._input_signal_listener_count > 0 or self._report_input
+        return not self._suppress_script_forwarding and self._input_signal_listener_count > 0 or self._report_input
 
     def begin_gesture(self):
         """
@@ -367,6 +378,7 @@ class InputControlElement(NotifyingControlElement):
     def reset(self):
         """ Send 0 to reset motorized faders and turn off LEDs """
         self.send_value(0)
+        self.suppress_script_forwarding = False
 
     def receive_value(self, value):
         value = getattr(value, 'midi_value', value)

@@ -1,8 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC20/ShiftableZoomingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC20/ShiftableZoomingComponent.py
 from _Framework.ButtonElement import ButtonElement
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
+from _Framework.SessionZoomingComponent import DeprecatedSessionZoomingComponent
 
-class ShiftableZoomingComponent(SessionZoomingComponent):
+class ShiftableZoomingComponent(DeprecatedSessionZoomingComponent):
     """ Special ZoomingComponent that uses clip stop buttons for stop all when zoomed """
 
     def __init__(self, session, stop_buttons, *a, **k):

@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/M4LInterfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/M4LInterfaceComponent.py
 from __future__ import with_statement
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
+from ControlElement import ControlElementClient
+from ControlSurfaceComponent import ControlSurfaceComponent
 
-class M4LInterfaceComponent(ControlSurfaceComponent):
+class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
     """
     Simplified API for interaction from M4L as a high priority layer
     superposed on top of any functionality.

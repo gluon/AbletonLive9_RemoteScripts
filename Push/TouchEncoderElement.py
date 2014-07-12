@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/TouchEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.SubjectSlot import subject_slot, SlotManager
 from _Framework.Util import nop, const
@@ -82,3 +82,7 @@ class TouchEncoderElement(EncoderElement, SlotManager):
             self._trigger_undo_step = False
             self._undo_step_open = True
         super(TouchEncoderElement, self).receive_value(value)
+
+    def disconnect(self):
+        super(TouchEncoderElement, self).disconnect()
+        self._undo_step_handler = None

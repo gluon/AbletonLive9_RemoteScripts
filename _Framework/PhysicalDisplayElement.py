@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/PhysicalDisplayElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/PhysicalDisplayElement.py
 from itertools import ifilter, izip, starmap, chain, imap
 from functools import partial
 from Resource import StackingResource, ProxyResource, ClientWrapper
@@ -7,6 +7,7 @@ from ControlElement import ControlElement
 from LogicalDisplaySegment import LogicalDisplaySegment
 from DisplayDataSource import adjust_string
 from Util import in_range, slicer, to_slice, slice_size, const, second, maybe, lazy_attribute, first, nop, group
+from NotifyingControlElement import NotifyingControlElement
 import Task
 
 class _DisplayCentralResource(StackingResource):
@@ -128,7 +129,7 @@ class DisplayElement(ControlElement):
         pass
 
 
-class PhysicalDisplayElement(DisplayElement, CompoundElement):
+class PhysicalDisplayElement(DisplayElement, NotifyingControlElement):
     """
     A physical character based display control element.
     """
@@ -224,7 +225,7 @@ class PhysicalDisplayElement(DisplayElement, CompoundElement):
      '+': 43}
 
     def __init__(self, *a, **k):
-        self._central_resource = _DisplayCentralResource(root_display=self, on_grab_callback=self._on_central_resource_grab, on_release_callback=self._on_central_resource_release)
+        self._central_resource = _DisplayCentralResource(root_display=self, on_received_callback=self._on_central_resource_received, on_lost_callback=self._on_central_resource_lost)
         super(PhysicalDisplayElement, self).__init__(resource_type=self.nested_display_resource_factory(self), *a, **k)
         self._translation_table = self._ascii_translations
         self._message_header = None
@@ -240,11 +241,11 @@ class PhysicalDisplayElement(DisplayElement, CompoundElement):
         wrapper = ClientWrapper(wrap=lambda c: (display, c), unwrap=partial(maybe(second)))
         return const(ProxyResource(proxied_resource=self._central_resource, client_wrapper=wrapper))
 
-    def _on_central_resource_grab(self, (display, client)):
+    def _on_central_resource_received(self, (display, client)):
         client.set_control_element(display, True)
         self.update()
 
-    def _on_central_resource_release(self, (display, client)):
+    def _on_central_resource_lost(self, (display, client)):
         client.set_control_element(display, False)
         self.update()
 

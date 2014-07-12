@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/SessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC40/SessionComponent.py
 from _Framework.Control import ButtonControl
 from _APC.SessionComponent import SessionComponent as SessionComponentBase
 

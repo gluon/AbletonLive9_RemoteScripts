@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/FirmwareHandling.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/FirmwareHandling.py
 from __future__ import with_statement
 from os import path
 VERSION_PREFIX = '10F4000041444139204E69636F6C6C73'

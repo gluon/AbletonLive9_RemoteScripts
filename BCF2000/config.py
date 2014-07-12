@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/BCF2000/config.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/BCF2000/config.py
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
  'PLAY': GENERIC_PLAY,

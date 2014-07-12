@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SpecialMixerComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.MixerComponent import MixerComponent
 from _Framework.DisplayDataSource import DisplayDataSource

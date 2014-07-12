@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Control.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Control.py
 from __future__ import with_statement
 from functools import partial
+from Defaults import MOMENTARY_DELAY
 from SubjectSlot import SlotManager
 from Util import clamp, lazy_attribute, mixin, nop
 import Task
@@ -104,21 +105,32 @@ class Control(object):
             raise RuntimeError('Cannot fetch state during construction of controls.')
         return manager._control_states[self]
 
+    def _clear_state(self, manager):
+        if self in manager._control_states:
+            del manager._control_states[self]
+
 
 class ButtonControl(Control):
+    DELAY_TIME = MOMENTARY_DELAY
     pressed = control_event('pressed')
     released = control_event('released')
+    pressed_delayed = control_event('pressed_delayed')
+    released_delayed = control_event('released_delayed')
+    released_immediately = control_event('released_immediately')
 
     class State(Control.State):
 
-        def __init__(self, control = None, manager = None, color = None, pressed_color = None, disabled_color = None, *a, **k):
+        def __init__(self, control = None, manager = None, color = None, pressed_color = None, disabled_color = None, enabled = True, *a, **k):
             raise control is not None or AssertionError
             raise manager is not None or AssertionError
+            super(ButtonControl.State, self).__init__(control, manager, *a, **k)
             self._pressed_listener = control._event_listeners.get('pressed', None)
             self._released_listener = control._event_listeners.get('released', None)
-            super(ButtonControl.State, self).__init__(control, manager, *a, **k)
+            self._pressed_delayed_listener = control._event_listeners.get('pressed_delayed', None)
+            self._released_delayed_listener = control._event_listeners.get('released_delayed', None)
+            self._released_immediately_listener = control._event_listeners.get('released_immediately', None)
             self._is_pressed = False
-            self._enabled = True
+            self._enabled = enabled
             self._color = color if color is not None else 'DefaultButton.On'
             self._disabled_color = disabled_color if disabled_color is not None else 'DefaultButton.Disabled'
             self._pressed_color = pressed_color
@@ -203,14 +215,35 @@ class ButtonControl(Control):
         def _press_button(self):
             is_pressed = self._is_pressed
             self._is_pressed = True
-            if self._notifications_enabled() and self._pressed_listener and not is_pressed:
-                self._pressed_listener(self._manager, self)
+            if self._notifications_enabled() and not is_pressed:
+                if self._pressed_listener is not None:
+                    self._pressed_listener(self._manager, self)
+                if self._has_delayed_event():
+                    self._delay_task.restart()
 
         def _release_button(self):
             is_pressed = self._is_pressed
             self._is_pressed = False
-            if self._notifications_enabled() and self._released_listener and is_pressed:
-                self._released_listener(self._manager, self)
+            if self._notifications_enabled() and is_pressed:
+                if self._released_listener is not None:
+                    self._released_listener(self._manager, self)
+                if self._has_delayed_event():
+                    if self._delay_task.is_running:
+                        self._released_immediately_listener(self._manager, self)
+                        self._delay_task.kill()
+                    else:
+                        self._released_delayed_listener(self._manager, self)
+
+        @lazy_attribute
+        def _delay_task(self):
+            return self._manager._tasks.add(Task.sequence(Task.wait(ButtonControl.DELAY_TIME), Task.run(self._on_pressed_delayed)))
+
+        def _has_delayed_event(self):
+            return self._pressed_delayed_listener is not None or self._released_delayed_listener is not None or self._released_immediately_listener is not None
+
+        def _on_pressed_delayed(self):
+            if self._notifications_enabled() and self._is_pressed:
+                self._pressed_delayed_listener(self._manager, self)
 
         def update(self):
             self._send_current_color()
@@ -471,6 +504,7 @@ class ControlList(Control):
         def _disconnect_controls(self):
             for control in self._controls:
                 control._get_state(self._manager).disconnect()
+                control._clear_state(self._manager)
 
         def _make_control(self, index):
             control = self._control_type(*self._extra_args, **self._extra_kws)

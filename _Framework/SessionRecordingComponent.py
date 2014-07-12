@@ -1,10 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/SessionRecordingComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.CompoundComponent import CompoundComponent
-from _Framework.Util import find_if, index_if
+from _Framework.Util import find_if
 from _Framework.ToggleComponent import ToggleComponent
 import Live
-_Q = Live.Song.Quantization
 
 def track_fired_slot(track):
     index = track.fired_slot_index
@@ -26,10 +25,6 @@ def track_is_recording(track):
 def track_will_record(track):
     fired_slot = track_fired_slot(track)
     return fired_slot and fired_slot.will_record_on_start
-
-
-def track_can_overdub(track):
-    return not track.has_audio_input
 
 
 class SessionRecordingComponent(CompoundComponent):
@@ -231,9 +226,6 @@ class SessionRecordingComponent(CompoundComponent):
     def _has_clip(self, scene_or_track):
         return find_if(lambda x: x.clip != None, scene_or_track.clip_slots) != None
 
-    def _length_should_be_fixed(self):
-        return False
-
     def _create_silent_scene(self, scene_index):
         song = self.song()
         song.stop_all_clips(False)
@@ -259,19 +251,7 @@ class SessionRecordingComponent(CompoundComponent):
 
     def _start_recording(self):
         song = self.song()
-        song.overdub = True
-        selected_scene = song.view.selected_scene
-        scene_index = list(song.scenes).index(selected_scene)
-        track = song.view.selected_track
-        if track.can_be_armed and (track.arm or track.implicit_arm):
-            self._record_in_slot(track, scene_index)
-        if not song.is_playing:
-            song.is_playing = True
-
-    def _find_last_clip(self):
-        """ Finds the last clip of the session and returns the scene index """
-        scenes = self.song().scenes
-        return len(scenes) - index_if(self._has_clip, reversed(scenes)) - 1
+        song.session_record = True
 
     def _next_empty_slot(self, track, scene_index):
         """ Finds an empty slot in the track after the given position,
@@ -285,28 +265,6 @@ class SessionRecordingComponent(CompoundComponent):
                 song.create_scene(scene_count)
 
         return scene_index
-
-    def _record_in_slot(self, track, scene_index):
-        song = self.song()
-        clip_slot = track.clip_slots[scene_index]
-        if self._length_should_be_fixed() and not clip_slot.has_clip:
-            length, quant = self._get_selected_length()
-            if track_can_overdub(track):
-                self._clip_creator.create(clip_slot, length)
-            else:
-                clip_slot.fire(record_length=length, launch_quantization=quant)
-        elif not clip_slot.is_playing:
-            if clip_slot.has_clip:
-                clip_slot.fire(force_legato=True, launch_quantization=_Q.q_no_q)
-            else:
-                clip_slot.fire()
-        if song.view.selected_track == track:
-            song.view.selected_scene = song.scenes[scene_index]
-        self._view_selected_clip_detail()
-
-    def _get_selected_length(self):
-        length = 8.0 * self.song().signature_numerator / self.song().signature_denominator
-        return (length, _Q.q_2_bars)
 
     def _view_selected_clip_detail(self):
         view = self.song().view

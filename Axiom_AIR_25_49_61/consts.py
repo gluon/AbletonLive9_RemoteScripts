@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_AIR_25_49_61/consts.py
 SYSEX_START = (240, 0, 1, 5, 32, 127)
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 AXIOM_AIR_RESPONSE = (240, 126, 127, 6, 2, 0, 1, 5, 99, 14)

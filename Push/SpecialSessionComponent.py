@@ -1,33 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SpecialSessionComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
 from _Framework.ModesComponent import EnablingModesComponent
 from MessageBoxComponent import Messenger
-import consts
 from consts import MessageBoxText
 import Live
-
-class SpecialSessionZoomingComponent(SessionZoomingComponent):
-    """
-    Zooming component that does not disable session, instead it sends
-    it to the back by changing its priority.
-    """
-
-    def set_button_matrix(self, buttons):
-        if buttons:
-            buttons.reset()
-        super(SpecialSessionZoomingComponent, self).set_button_matrix(buttons)
-
-    def _session_set_enabled(self, is_enabled):
-        layer = self._session.layer
-        if layer:
-            layer.priority = None if is_enabled else consts.HIDDEN_SESSION_PRIORITY
-
 
 class DuplicateSceneComponent(ControlSurfaceComponent, Messenger):
 

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NoteEditorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/NoteEditorComponent.py
 from __future__ import with_statement
 from functools import partial
 from itertools import chain, imap, ifilter
@@ -9,7 +9,7 @@ from _Framework import Task, Defaults
 from LoopSelectorComponent import create_clip_in_selected_slot
 from MatrixMaps import PAD_FEEDBACK_CHANNEL
 DEFAULT_VELOCITY = 100
-BEAT_TIME_EPSILON = 1.0000000000000006e-05
+BEAT_TIME_EPSILON = 1e-05
 
 def color_for_note(note):
     velocity = note[3]

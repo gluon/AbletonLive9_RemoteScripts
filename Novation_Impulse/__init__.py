@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Novation_Impulse/__init__.py
 from Novation_Impulse import Novation_Impulse
 
 def create_instance(c_instance):

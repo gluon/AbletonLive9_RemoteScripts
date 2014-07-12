@@ -1,15 +1,16 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Projects/AppLive/Resources/MIDI Remote Scripts/APC40/APC40.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC40/APC40.py
 from __future__ import with_statement
 from functools import partial
+from _Framework.BackgroundComponent import BackgroundComponent
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
+from _Framework.ComboElement import ComboElement
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
 from _Framework.ControlSurface import OptimizedControlSurface
 from _Framework.Layer import Layer
 from _Framework.ModesComponent import ModesComponent
 from _Framework.Resource import PrioritizedResource
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
-from _Framework.Skin import merge_skins
-from _Framework.Util import nop
+from _Framework.Util import nop, recursive_map
 from _APC.APC import APC
 from _APC.ControlElementUtils import make_button, make_pedal_button, make_encoder, make_ring_encoder, make_slider
 from _APC.DeviceBankButtonElement import DeviceBankButtonElement
@@ -22,6 +23,7 @@ from SessionComponent import SessionComponent
 SESSION_WIDTH = 8
 SESSION_HEIGHT = 5
 MIXER_SIZE = 8
+BACKGROUND_PRIORITY = -1
 
 class APC40(APC, OptimizedControlSurface):
     """ Script for Akai's APC40 Controller """
@@ -30,7 +32,6 @@ class APC40(APC, OptimizedControlSurface):
         super(APC40, self).__init__(*a, **k)
         self._color_skin = make_biled_skin()
         self._default_skin = make_default_skin()
-        self._skin = merge_skins(self._color_skin, self._default_skin)
         with self.component_guard():
             self._create_controls()
             self._create_session()
@@ -39,6 +40,7 @@ class APC40(APC, OptimizedControlSurface):
             self._create_detail_view_control()
             self._create_transport()
             self._create_global_control()
+            self._create_background()
             self._session.set_mixer(self._mixer)
             self.set_highlighting_session_component(self._session)
             self.set_device_component(self._device)
@@ -46,6 +48,9 @@ class APC40(APC, OptimizedControlSurface):
                 component.set_enabled(False)
 
         self._device_selection_follows_track_selection = True
+
+    def _with_shift(self, button):
+        return ComboElement(button, modifiers=[self._shift_button])
 
     def _create_controls(self):
         make_on_off_button = partial(make_button, skin=self._default_skin)
@@ -56,7 +61,7 @@ class APC40(APC, OptimizedControlSurface):
         self._up_button = make_button(0, 94, name='Bank_Select_Up_Button')
         self._down_button = make_button(0, 95, name='Bank_Select_Down_Button')
         self._session_matrix = ButtonMatrixElement(name='Button_Matrix')
-        self._scene_launch_buttons = [ make_color_button(0, index + 82, name='Scene_%d_Launch_Button' % index) for index in xrange(SESSION_HEIGHT) ]
+        self._scene_launch_buttons_raw = [ make_color_button(0, index + 82, name='Scene_%d_Launch_Button' % index) for index in xrange(SESSION_HEIGHT) ]
         self._track_stop_buttons = [ make_color_button(index, 52, name='Track_%d_Stop_Button' % index) for index in xrange(SESSION_WIDTH) ]
         self._stop_all_button = make_color_button(0, 81, name='Stop_All_Clips_Button')
         self._matrix_rows_raw = [ [ make_color_button(track_index, scene_index + 53, name='%d_Clip_%d_Button' % (track_index, scene_index)) for track_index in xrange(SESSION_WIDTH) ] for scene_index in xrange(SESSION_HEIGHT) ]
@@ -116,7 +121,7 @@ class APC40(APC, OptimizedControlSurface):
         def wrap_matrix(control_list, wrapper = nop):
             return ButtonMatrixElement(rows=[map(wrapper, control_list)])
 
-        self._scene_launch_buttons = wrap_matrix(self._scene_launch_buttons)
+        self._scene_launch_buttons = wrap_matrix(self._scene_launch_buttons_raw)
         self._track_stop_buttons = wrap_matrix(self._track_stop_buttons)
         self._volume_controls = wrap_matrix(self._volume_controls)
         self._arm_buttons = wrap_matrix(self._arm_buttons)
@@ -125,10 +130,12 @@ class APC40(APC, OptimizedControlSurface):
         self._select_buttons = wrap_matrix(self._select_buttons)
         self._device_param_controls = wrap_matrix(self._device_param_controls_raw)
         self._device_bank_buttons = wrap_matrix(self._device_bank_buttons, partial(DeviceBankButtonElement, modifiers=[self._shift_button]))
+        self._shifted_matrix = ButtonMatrixElement(rows=recursive_map(self._with_shift, self._matrix_rows_raw))
+        self._shifted_scene_buttons = ButtonMatrixElement(rows=[[ self._with_shift(button) for button in self._scene_launch_buttons_raw ]])
 
     def _create_session(self):
         self._session = SessionComponent(SESSION_WIDTH, SESSION_HEIGHT, auto_name=True, enable_skinning=True, is_enabled=False, layer=Layer(track_bank_left_button=self._left_button, track_bank_right_button=self._right_button, scene_bank_up_button=self._up_button, scene_bank_down_button=self._down_button, stop_all_clips_button=self._stop_all_button, stop_track_clip_buttons=self._track_stop_buttons, scene_launch_buttons=self._scene_launch_buttons, clip_launch_buttons=self._session_matrix, slot_launch_button=self._selected_slot_launch_button, selected_scene_launch_button=self._selected_scene_launch_button))
-        self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._session_matrix, zoom_button=self._shift_button, nav_up_button=self._up_button, nav_down_button=self._down_button, nav_left_button=self._left_button, nav_right_button=self._right_button, scene_bank_buttons=self._scene_launch_buttons))
+        self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._shifted_matrix, nav_up_button=self._with_shift(self._up_button), nav_down_button=self._with_shift(self._down_button), nav_left_button=self._with_shift(self._left_button), nav_right_button=self._with_shift(self._right_button), scene_bank_buttons=self._shifted_scene_buttons))
 
     def _create_mixer(self):
         self._mixer = MixerComponent(MIXER_SIZE, auto_name=True, is_enabled=False, invert_mute_feedback=True, layer=Layer(volume_controls=self._volume_controls, arm_buttons=self._arm_buttons, solo_buttons=self._solo_buttons, mute_buttons=self._mute_buttons, track_select_buttons=self._select_buttons, shift_button=self._shift_button, crossfader_control=self._crossfader_control, prehear_volume_control=self._prehear_control))
@@ -170,6 +177,9 @@ class APC40(APC, OptimizedControlSurface):
         encoder_modes.selected_mode = 'pan'
         encoder_modes.layer = Layer(pan_button=self._global_bank_buttons[0], send_a_button=self._global_bank_buttons[1], send_b_button=self._global_bank_buttons[2], send_c_button=self._global_bank_buttons[3])
         self._translation_selector = ChannelTranslationSelector(name='Global_Translations')
+
+    def _create_background(self):
+        self._background = BackgroundComponent(name='Background', is_enabled=False, layer=Layer(matrix=self._session_matrix, priority=BACKGROUND_PRIORITY))
 
     def get_matrix_button(self, column, row):
         return self._matrix_rows_raw[row][column]
