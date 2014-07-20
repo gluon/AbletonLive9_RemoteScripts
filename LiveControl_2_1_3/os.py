@@ -1,3 +1,4 @@
+#Embedded file name: /Applications/Ableton Live 9 Suite.app/Contents/App-Resources/MIDI Remote Scripts/LiveControl_2_1_3/os.py
 r"""OS routines for Mac, NT, or Posix depending on what system we're on.
 
 This exports:
@@ -20,23 +21,28 @@ only use functions that are defined by all platforms (e.g., unlink
 and opendir), and leave all pathname manipulation to os.path
 (e.g., split and join).
 """
-
-#'
-
 import sys
-
 _names = sys.builtin_module_names
-
-# Note:  more names are added to __all__ later.
-__all__ = ["altsep", "curdir", "pardir", "sep", "pathsep", "linesep",
-           "defpath", "name", "path", "devnull",
-           "SEEK_SET", "SEEK_CUR", "SEEK_END"]
+__all__ = ['altsep',
+ 'curdir',
+ 'pardir',
+ 'sep',
+ 'pathsep',
+ 'linesep',
+ 'defpath',
+ 'name',
+ 'path',
+ 'devnull',
+ 'SEEK_SET',
+ 'SEEK_CUR',
+ 'SEEK_END']
 
 def _get_exports_list(module):
     try:
         return list(module.__all__)
     except AttributeError:
-        return [n for n in dir(module) if n[0] != '_']
+        return [ n for n in dir(module) if n[0] != '_' ]
+
 
 if 'posix' in _names:
     name = 'posix'
@@ -46,12 +52,11 @@ if 'posix' in _names:
         from posix import _exit
     except ImportError:
         pass
-    import posixpath as path
 
+    import posixpath as path
     import posix
     __all__.extend(_get_exports_list(posix))
     del posix
-
 elif 'nt' in _names:
     name = 'nt'
     linesep = '\r\n'
@@ -60,12 +65,11 @@ elif 'nt' in _names:
         from nt import _exit
     except ImportError:
         pass
-    import ntpath as path
 
+    import ntpath as path
     import nt
     __all__.extend(_get_exports_list(nt))
     del nt
-
 elif 'os2' in _names:
     name = 'os2'
     linesep = '\r\n'
@@ -74,16 +78,15 @@ elif 'os2' in _names:
         from os2 import _exit
     except ImportError:
         pass
+
     if sys.version.find('EMX GCC') == -1:
         import ntpath as path
     else:
         import os2emxpath as path
         from _emx_link import link
-
     import os2
     __all__.extend(_get_exports_list(os2))
     del os2
-
 elif 'mac' in _names:
     name = 'mac'
     linesep = '\r'
@@ -92,12 +95,11 @@ elif 'mac' in _names:
         from mac import _exit
     except ImportError:
         pass
-    import macpath as path
 
+    import macpath as path
     import mac
     __all__.extend(_get_exports_list(mac))
     del mac
-
 elif 'ce' in _names:
     name = 'ce'
     linesep = '\r\n'
@@ -106,13 +108,11 @@ elif 'ce' in _names:
         from ce import _exit
     except ImportError:
         pass
-    # We can use the standard Windows path.
-    import ntpath as path
 
+    import ntpath as path
     import ce
     __all__.extend(_get_exports_list(ce))
     del ce
-
 elif 'riscos' in _names:
     name = 'riscos'
     linesep = '\n'
@@ -121,47 +121,34 @@ elif 'riscos' in _names:
         from riscos import _exit
     except ImportError:
         pass
-    import riscospath as path
 
+    import riscospath as path
     import riscos
     __all__.extend(_get_exports_list(riscos))
     del riscos
-
 else:
     raise ImportError, 'no os specific module found'
-
-if sys.platform == "win32":
+if sys.platform == 'win32':
     import ntpath
     sys.modules['os.path'] = ntpath
-    from ntpath import (curdir, pardir, sep, pathsep, defpath, extsep, altsep,
-        devnull)
+    from ntpath import curdir, pardir, sep, pathsep, defpath, extsep, altsep, devnull
 else:
     import posixpath
     sys.modules['os.path'] = posixpath
-    from posixpath import (curdir, pardir, sep, pathsep, defpath, extsep, altsep,
-        devnull)
-        
+    from posixpath import curdir, pardir, sep, pathsep, defpath, extsep, altsep, devnull
 del _names
-
-# Python uses fixed values for the SEEK_ constants; they are mapped
-# to native constants if necessary in posixmodule.c
 SEEK_SET = 0
 SEEK_CUR = 1
 SEEK_END = 2
 
-#'
-
-# Super directory utilities.
-# (Inspired by Eric Raymond; the doc strings are mostly his)
-
-def makedirs(name, mode=0777):
+def makedirs(name, mode = 511):
     """makedirs(path [, mode=0777])
-
+    
     Super-mkdir; create a leaf directory and all intermediate ones.
     Works like mkdir, except that any intermediate path segment (not
     just the rightmost) will be created if it does not exist.  This is
     recursive.
-
+    
     """
     from errno import EEXIST
     head, tail = path.split(name)
@@ -170,24 +157,25 @@ def makedirs(name, mode=0777):
     if head and tail and not path.exists(head):
         try:
             makedirs(head, mode)
-        except OSError, e:
-            # be happy if someone already created the path
+        except OSError as e:
             if e.errno != EEXIST:
-                raise
-        if tail == curdir:           # xxx/newdir/. exists if xxx/newdir exists
+                raise 
+
+        if tail == curdir:
             return
     mkdir(name, mode)
 
+
 def removedirs(name):
     """removedirs(path)
-
+    
     Super-rmdir; remove a leaf directory and all empty intermediate
     ones.  Works like rmdir except that, if the leaf directory is
     successfully removed, directories corresponding to rightmost path
     segments will be pruned away until either the whole path is
     consumed or an error occurs.  Errors during this latter phase are
     ignored -- they generally mean that a directory was not empty.
-
+    
     """
     rmdir(name)
     head, tail = path.split(name)
@@ -198,22 +186,24 @@ def removedirs(name):
             rmdir(head)
         except error:
             break
+
         head, tail = path.split(head)
+
 
 def renames(old, new):
     """renames(old, new)
-
+    
     Super-rename; create directories as necessary and delete any left
     empty.  Works like rename, except creation of any intermediate
     directories needed to make the new pathname good is attempted
     first.  After the rename, directories corresponding to rightmost
     path segments of the old name will be pruned way until either the
     whole path is consumed or a nonempty directory is found.
-
+    
     Note: this function can fail with the new directory structure made
     if you lack permissions needed to unlink the leaf directory or
     file.
-
+    
     """
     head, tail = path.split(new)
     if head and tail and not path.exists(head):
@@ -226,29 +216,30 @@ def renames(old, new):
         except error:
             pass
 
-__all__.extend(["makedirs", "removedirs", "renames"])
 
-def walk(top, topdown=True, onerror=None):
+__all__.extend(['makedirs', 'removedirs', 'renames'])
+
+def walk(top, topdown = True, onerror = None):
     """Directory tree generator.
-
+    
     For each directory in the directory tree rooted at top (including top
     itself, but excluding '.' and '..'), yields a 3-tuple
-
+    
         dirpath, dirnames, filenames
-
+    
     dirpath is a string, the path to the directory.  dirnames is a list of
     the names of the subdirectories in dirpath (excluding '.' and '..').
     filenames is a list of the names of the non-directory files in dirpath.
     Note that the names in the lists are just names, with no path components.
     To get a full path (which begins with top) to a file or directory in
     dirpath, do os.path.join(dirpath, name).
-
+    
     If optional arg 'topdown' is true or not specified, the triple for a
     directory is generated before the triples for any of its subdirectories
     (directories are generated top down).  If topdown is false, the triple
     for a directory is generated after the triples for all of its
     subdirectories (directories are generated bottom up).
-
+    
     When topdown is true, the caller can modify the dirnames list in-place
     (e.g., via del or slice assignment), and walk will only recurse into the
     subdirectories whose names remain in dirnames; this can be used to prune
@@ -256,21 +247,21 @@ def walk(top, topdown=True, onerror=None):
     dirnames when topdown is false is ineffective, since the directories in
     dirnames have already been generated by the time dirnames itself is
     generated.
-
+    
     By default errors from the os.listdir() call are ignored.  If
     optional arg 'onerror' is specified, it should be a function; it
     will be called with one argument, an os.error instance.  It can
     report the error to continue with the walk, or raise the exception
     to abort the walk.  Note that the filename is available as the
     filename attribute of the exception object.
-
+    
     Caution:  if you pass a relative pathname for top, don't change the
     current working directory between resumptions of walk.  walk never
     changes the current directory, and assumes that the client doesn't
     either.
-
+    
     Example:
-
+    
     from os.path import join, getsize
     for root, dirs, files in walk('python/Lib/email'):
         print root, "consumes",
@@ -279,19 +270,10 @@ def walk(top, topdown=True, onerror=None):
         if 'CVS' in dirs:
             dirs.remove('CVS')  # don't visit CVS directories
     """
-
     from os.path import join, isdir, islink
-
-    # We may not have read permission for top, in which case we can't
-    # get a list of the files the directory contains.  os.path.walk
-    # always suppressed the exception then, rather than blow up for a
-    # minor reason when (say) a thousand readable directories are still
-    # left to visit.  That logic is copied here.
     try:
-        # Note that listdir and error are globals in this module due
-        # to earlier import-*.
         names = listdir(top)
-    except error, err:
+    except error as err:
         if onerror is not None:
             onerror(err)
         return
@@ -304,18 +286,18 @@ def walk(top, topdown=True, onerror=None):
             nondirs.append(name)
 
     if topdown:
-        yield top, dirs, nondirs
+        yield (top, dirs, nondirs)
     for name in dirs:
         path = join(top, name)
         if not islink(path):
             for x in walk(path, topdown, onerror):
                 yield x
+
     if not topdown:
-        yield top, dirs, nondirs
+        yield (top, dirs, nondirs)
 
-__all__.append("walk")
 
-# Make sure os.environ exists, at least
+__all__.append('walk')
 try:
     environ
 except NameError:
@@ -323,57 +305,67 @@ except NameError:
 
 def execl(file, *args):
     """execl(file, *args)
-
+    
     Execute the executable file with argument list args, replacing the
     current process. """
     execv(file, args)
 
+
 def execle(file, *args):
     """execle(file, *args, env)
-
+    
     Execute the executable file with argument list args and
     environment env, replacing the current process. """
     env = args[-1]
     execve(file, args[:-1], env)
 
+
 def execlp(file, *args):
     """execlp(file, *args)
-
+    
     Execute the executable file (which is searched for along $PATH)
     with argument list args, replacing the current process. """
     execvp(file, args)
 
+
 def execlpe(file, *args):
     """execlpe(file, *args, env)
-
+    
     Execute the executable file (which is searched for along $PATH)
     with argument list args and environment env, replacing the current
     process. """
     env = args[-1]
     execvpe(file, args[:-1], env)
 
+
 def execvp(file, args):
     """execp(file, args)
-
+    
     Execute the executable file (which is searched for along $PATH)
     with argument list args, replacing the current process.
     args may be a list or tuple of strings. """
     _execvpe(file, args)
 
+
 def execvpe(file, args, env):
     """execvpe(file, args, env)
-
+    
     Execute the executable file (which is searched for along $PATH)
     with argument list args and environment env , replacing the
     current process.
     args may be a list or tuple of strings. """
     _execvpe(file, args, env)
 
-__all__.extend(["execl","execle","execlp","execlpe","execvp","execvpe"])
 
-def _execvpe(file, args, env=None):
+__all__.extend(['execl',
+ 'execle',
+ 'execlp',
+ 'execlpe',
+ 'execvp',
+ 'execvpe'])
+
+def _execvpe(file, args, env = None):
     from errno import ENOENT, ENOTDIR
-
     if env is not None:
         func = execve
         argrest = (args, env)
@@ -381,7 +373,6 @@ def _execvpe(file, args, env=None):
         func = execv
         argrest = (args,)
         env = environ
-
     head, tail = path.split(file)
     if head:
         func(file, *argrest)
@@ -397,126 +388,139 @@ def _execvpe(file, args, env=None):
         fullname = path.join(dir, file)
         try:
             func(fullname, *argrest)
-        except error, e:
+        except error as e:
             tb = sys.exc_info()[2]
-            if (e.errno != ENOENT and e.errno != ENOTDIR
-                and saved_exc is None):
+            if e.errno != ENOENT and e.errno != ENOTDIR and saved_exc is None:
                 saved_exc = e
                 saved_tb = tb
+
     if saved_exc:
         raise error, saved_exc, saved_tb
     raise error, e, tb
 
-# Change environ to automatically call putenv() if it exists
+
 try:
-    # This will fail if there's no putenv
     putenv
 except NameError:
     pass
 else:
     import UserDict
-
-    # Fake unsetenv() for Windows
-    # not sure about os2 here but
-    # I'm guessing they are the same.
-
     if name in ('os2', 'nt'):
-        def unsetenv(key):
-            putenv(key, "")
 
-    if name == "riscos":
-        # On RISC OS, all env access goes through getenv and putenv
+        def unsetenv(key):
+            putenv(key, '')
+
+
+    if name == 'riscos':
         from riscosenviron import _Environ
-    elif name in ('os2', 'nt'):  # Where Env Var Names Must Be UPPERCASE
-        # But we store them as upper case
+    elif name in ('os2', 'nt'):
+
         class _Environ(UserDict.IterableUserDict):
+
             def __init__(self, environ):
                 UserDict.UserDict.__init__(self)
                 data = self.data
                 for k, v in environ.items():
                     data[k.upper()] = v
+
             def __setitem__(self, key, item):
                 putenv(key, item)
                 self.data[key.upper()] = item
+
             def __getitem__(self, key):
                 return self.data[key.upper()]
+
             try:
                 unsetenv
             except NameError:
+
                 def __delitem__(self, key):
                     del self.data[key.upper()]
+
             else:
+
                 def __delitem__(self, key):
                     unsetenv(key)
                     del self.data[key.upper()]
+
             def has_key(self, key):
                 return key.upper() in self.data
+
             def __contains__(self, key):
                 return key.upper() in self.data
-            def get(self, key, failobj=None):
+
+            def get(self, key, failobj = None):
                 return self.data.get(key.upper(), failobj)
-            def update(self, dict=None, **kwargs):
+
+            def update(self, dict = None, **kwargs):
                 if dict:
                     try:
                         keys = dict.keys()
                     except AttributeError:
-                        # List of (key, value)
                         for k, v in dict:
                             self[k] = v
+
                     else:
-                        # got keys
-                        # cannot use items(), since mappings
-                        # may not have them.
                         for k in keys:
                             self[k] = dict[k]
+
                 if kwargs:
                     self.update(kwargs)
+
             def copy(self):
                 return dict(self)
 
-    else:  # Where Env Var Names Can Be Mixed Case
+
+    else:
+
         class _Environ(UserDict.IterableUserDict):
+
             def __init__(self, environ):
                 UserDict.UserDict.__init__(self)
                 self.data = environ
+
             def __setitem__(self, key, item):
                 putenv(key, item)
                 self.data[key] = item
-            def update(self,  dict=None, **kwargs):
+
+            def update(self, dict = None, **kwargs):
                 if dict:
                     try:
                         keys = dict.keys()
                     except AttributeError:
-                        # List of (key, value)
                         for k, v in dict:
                             self[k] = v
+
                     else:
-                        # got keys
-                        # cannot use items(), since mappings
-                        # may not have them.
                         for k in keys:
                             self[k] = dict[k]
+
                 if kwargs:
                     self.update(kwargs)
+
             try:
                 unsetenv
             except NameError:
                 pass
             else:
+
                 def __delitem__(self, key):
                     unsetenv(key)
                     del self.data[key]
+
             def copy(self):
                 return dict(self)
 
 
     environ = _Environ(environ)
 
-def getenv(key, default=None):
+def getenv(key, default = None):
     """Get an environment variable, return None if it doesn't exist.
     The optional second argument can specify an alternate default."""
     return environ.get(key, default)
-__all__.append("getenv")
+
+
+__all__.append('getenv')
 
 def _exists(name):
     try:
@@ -525,21 +529,14 @@ def _exists(name):
     except NameError:
         return False
 
-# Supply spawn*() (probably only for Unix)
-if _exists("fork") and not _exists("spawnv") and _exists("execv"):
 
+if _exists('fork') and not _exists('spawnv') and _exists('execv'):
     P_WAIT = 0
     P_NOWAIT = P_NOWAITO = 1
 
-    # XXX Should we support P_DETACH?  I suppose it could fork()**2
-    # and close the std I/O streams.  Also, P_OVERLAY is the same
-    # as execv*()?
-
     def _spawnvef(mode, file, args, env, func):
-        # Internal helper; func is the exec*() function to use
         pid = fork()
         if not pid:
-            # Child
             try:
                 if env is None:
                     func(file, args)
@@ -547,10 +544,10 @@ if _exists("fork") and not _exists("spawnv") and _exists("execv"):
                     func(file, args, env)
             except:
                 _exit(127)
+
         else:
-            # Parent
             if mode == P_NOWAIT:
-                return pid # Caller is responsible for waiting!
+                return pid
             while 1:
                 wpid, sts = waitpid(pid, 0)
                 if WIFSTOPPED(sts):
@@ -560,109 +557,113 @@ if _exists("fork") and not _exists("spawnv") and _exists("execv"):
                 elif WIFEXITED(sts):
                     return WEXITSTATUS(sts)
                 else:
-                    raise error, "Not stopped, signaled or exited???"
+                    raise error, 'Not stopped, signaled or exited???'
+
 
     def spawnv(mode, file, args):
         """spawnv(mode, file, args) -> integer
-
-Execute file with arguments from args in a subprocess.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file with arguments from args in a subprocess.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return _spawnvef(mode, file, args, None, execv)
+
 
     def spawnve(mode, file, args, env):
         """spawnve(mode, file, args, env) -> integer
-
-Execute file with arguments from args in a subprocess with the
-specified environment.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file with arguments from args in a subprocess with the
+        specified environment.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return _spawnvef(mode, file, args, env, execve)
 
-    # Note: spawnvp[e] is't currently supported on Windows
 
     def spawnvp(mode, file, args):
         """spawnvp(mode, file, args) -> integer
-
-Execute file (which is looked for along $PATH) with arguments from
-args in a subprocess.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file (which is looked for along $PATH) with arguments from
+        args in a subprocess.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return _spawnvef(mode, file, args, None, execvp)
+
 
     def spawnvpe(mode, file, args, env):
         """spawnvpe(mode, file, args, env) -> integer
-
-Execute file (which is looked for along $PATH) with arguments from
-args in a subprocess with the supplied environment.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file (which is looked for along $PATH) with arguments from
+        args in a subprocess with the supplied environment.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return _spawnvef(mode, file, args, env, execvpe)
 
-if _exists("spawnv"):
-    # These aren't supplied by the basic Windows code
-    # but can be easily implemented in Python
+
+if _exists('spawnv'):
 
     def spawnl(mode, file, *args):
         """spawnl(mode, file, *args) -> integer
-
-Execute file with arguments from args in a subprocess.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file with arguments from args in a subprocess.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return spawnv(mode, file, args)
+
 
     def spawnle(mode, file, *args):
         """spawnle(mode, file, *args, env) -> integer
-
-Execute file with arguments from args in a subprocess with the
-supplied environment.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file with arguments from args in a subprocess with the
+        supplied environment.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         env = args[-1]
         return spawnve(mode, file, args[:-1], env)
 
 
-    __all__.extend(["spawnv", "spawnve", "spawnl", "spawnle",])
+    __all__.extend(['spawnv',
+     'spawnve',
+     'spawnl',
+     'spawnle'])
+if _exists('spawnvp'):
 
-
-if _exists("spawnvp"):
-    # At the moment, Windows doesn't implement spawnvp[e],
-    # so it won't have spawnlp[e] either.
     def spawnlp(mode, file, *args):
         """spawnlp(mode, file, *args) -> integer
-
-Execute file (which is looked for along $PATH) with arguments from
-args in a subprocess with the supplied environment.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file (which is looked for along $PATH) with arguments from
+        args in a subprocess with the supplied environment.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         return spawnvp(mode, file, args)
+
 
     def spawnlpe(mode, file, *args):
         """spawnlpe(mode, file, *args, env) -> integer
-
-Execute file (which is looked for along $PATH) with arguments from
-args in a subprocess with the supplied environment.
-If mode == P_NOWAIT return the pid of the process.
-If mode == P_WAIT return the process's exit code if it exits normally;
-otherwise return -SIG, where SIG is the signal that killed it. """
+        
+        Execute file (which is looked for along $PATH) with arguments from
+        args in a subprocess with the supplied environment.
+        If mode == P_NOWAIT return the pid of the process.
+        If mode == P_WAIT return the process's exit code if it exits normally;
+        otherwise return -SIG, where SIG is the signal that killed it. """
         env = args[-1]
         return spawnvpe(mode, file, args[:-1], env)
 
 
-    __all__.extend(["spawnvp", "spawnvpe", "spawnlp", "spawnlpe",])
+    __all__.extend(['spawnvp',
+     'spawnvpe',
+     'spawnlp',
+     'spawnlpe'])
+if _exists('fork'):
+    if not _exists('popen2'):
 
-
-# Supply popen2 etc. (for Unix)
-if _exists("fork"):
-    if not _exists("popen2"):
-        def popen2(cmd, mode="t", bufsize=-1):
+        def popen2(cmd, mode = 't', bufsize = -1):
             """Execute the shell command 'cmd' in a sub-process.  On UNIX, 'cmd'
             may be a sequence, in which case arguments will be passed directly to
             the program without shell intervention (as with os.spawnv()).  If 'cmd'
@@ -671,11 +672,13 @@ if _exists("fork"):
             file objects (child_stdin, child_stdout) are returned."""
             import popen2
             stdout, stdin = popen2.popen2(cmd, bufsize)
-            return stdin, stdout
-        __all__.append("popen2")
+            return (stdin, stdout)
 
-    if not _exists("popen3"):
-        def popen3(cmd, mode="t", bufsize=-1):
+
+        __all__.append('popen2')
+    if not _exists('popen3'):
+
+        def popen3(cmd, mode = 't', bufsize = -1):
             """Execute the shell command 'cmd' in a sub-process.  On UNIX, 'cmd'
             may be a sequence, in which case arguments will be passed directly to
             the program without shell intervention (as with os.spawnv()).  If 'cmd'
@@ -684,11 +687,13 @@ if _exists("fork"):
             file objects (child_stdin, child_stdout, child_stderr) are returned."""
             import popen2
             stdout, stdin, stderr = popen2.popen3(cmd, bufsize)
-            return stdin, stdout, stderr
-        __all__.append("popen3")
+            return (stdin, stdout, stderr)
 
-    if not _exists("popen4"):
-        def popen4(cmd, mode="t", bufsize=-1):
+
+        __all__.append('popen3')
+    if not _exists('popen4'):
+
+        def popen4(cmd, mode = 't', bufsize = -1):
             """Execute the shell command 'cmd' in a sub-process.  On UNIX, 'cmd'
             may be a sequence, in which case arguments will be passed directly to
             the program without shell intervention (as with os.spawnv()).  If 'cmd'
@@ -697,49 +702,56 @@ if _exists("fork"):
             file objects (child_stdin, child_stdout_stderr) are returned."""
             import popen2
             stdout, stdin = popen2.popen4(cmd, bufsize)
-            return stdin, stdout
-        __all__.append("popen4")
+            return (stdin, stdout)
 
+
+        __all__.append('popen4')
 import copy_reg as _copy_reg
 
 def _make_stat_result(tup, dict):
     return stat_result(tup, dict)
 
+
 def _pickle_stat_result(sr):
-    (type, args) = sr.__reduce__()
+    type, args = sr.__reduce__()
     return (_make_stat_result, args)
+
 
 try:
     _copy_reg.pickle(stat_result, _pickle_stat_result, _make_stat_result)
-except NameError: # stat_result may not exist
+except NameError:
     pass
 
 def _make_statvfs_result(tup, dict):
     return statvfs_result(tup, dict)
 
+
 def _pickle_statvfs_result(sr):
-    (type, args) = sr.__reduce__()
+    type, args = sr.__reduce__()
     return (_make_statvfs_result, args)
 
+
 try:
-    _copy_reg.pickle(statvfs_result, _pickle_statvfs_result,
-                     _make_statvfs_result)
-except NameError: # statvfs_result may not exist
+    _copy_reg.pickle(statvfs_result, _pickle_statvfs_result, _make_statvfs_result)
+except NameError:
     pass
 
-if not _exists("urandom"):
+if not _exists('urandom'):
+
     def urandom(n):
         """urandom(n) -> str
-
+        
         Return a string of n random bytes suitable for cryptographic use.
-
+        
         """
         try:
-            _urandomfd = open("/dev/urandom", O_RDONLY)
+            _urandomfd = open('/dev/urandom', O_RDONLY)
         except (OSError, IOError):
-            raise NotImplementedError("/dev/urandom (or equivalent) not found")
-        bytes = ""
+            raise NotImplementedError('/dev/urandom (or equivalent) not found')
+
+        bytes = ''
         while len(bytes) < n:
             bytes += read(_urandomfd, n - len(bytes))
+
         close(_urandomfd)
         return bytes

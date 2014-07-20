@@ -1,3 +1,4 @@
+#Embedded file name: /Applications/Ableton Live 9 Suite.app/Contents/App-Resources/MIDI Remote Scripts/LiveControl_2_1_3/__future__.py
 """Record of phased-in incompatible language changes.
 
 Each line is of the form:
@@ -46,28 +47,20 @@ attribute on _Future instances.  These values must match the appropriate
 
 No feature line is ever to be deleted from this file.
 """
-
-all_feature_names = [
-    "nested_scopes",
-    "generators",
-    "division",
-    "absolute_import",
-    "with_statement",
-]
-
-__all__ = ["all_feature_names"] + all_feature_names
-
-# The CO_xxx symbols are defined here under the same names used by
-# compile.h, so that an editor search will find them here.  However,
-# they're not exported in __all__, because they don't really belong to
-# this module.
-CO_NESTED            = 0x0010   # nested_scopes
-CO_GENERATOR_ALLOWED = 0        # generators (obsolete, was 0x1000)
-CO_FUTURE_DIVISION   = 0x2000   # division
-CO_FUTURE_ABSOLUTE_IMPORT = 0x4000 # perform absolute imports by default
-CO_FUTURE_WITH_STATEMENT  = 0x8000   # with statement
+all_feature_names = ['nested_scopes',
+ 'generators',
+ 'division',
+ 'absolute_import',
+ 'with_statement']
+__all__ = ['all_feature_names'] + all_feature_names
+CO_NESTED = 16
+CO_GENERATOR_ALLOWED = 0
+CO_FUTURE_DIVISION = 8192
+CO_FUTURE_ABSOLUTE_IMPORT = 16384
+CO_FUTURE_WITH_STATEMENT = 32768
 
 class _Feature:
+
     def __init__(self, optionalRelease, mandatoryRelease, compiler_flag):
         self.optional = optionalRelease
         self.mandatory = mandatoryRelease
@@ -75,42 +68,25 @@ class _Feature:
 
     def getOptionalRelease(self):
         """Return first release in which this feature was recognized.
-
+        
         This is a 5-tuple, of the same form as sys.version_info.
         """
-
         return self.optional
 
     def getMandatoryRelease(self):
         """Return release in which this feature will become mandatory.
-
+        
         This is a 5-tuple, of the same form as sys.version_info, or, if
         the feature was dropped, is None.
         """
-
         return self.mandatory
 
     def __repr__(self):
-        return "_Feature" + repr((self.optional,
-                                  self.mandatory,
-                                  self.compiler_flag))
+        return '_Feature' + repr((self.optional, self.mandatory, self.compiler_flag))
 
-nested_scopes = _Feature((2, 1, 0, "beta",  1),
-                         (2, 2, 0, "alpha", 0),
-                         CO_NESTED)
 
-generators = _Feature((2, 2, 0, "alpha", 1),
-                      (2, 3, 0, "final", 0),
-                      CO_GENERATOR_ALLOWED)
-
-division = _Feature((2, 2, 0, "alpha", 2),
-                    (3, 0, 0, "alpha", 0),
-                    CO_FUTURE_DIVISION)
-
-absolute_import = _Feature((2, 5, 0, "alpha", 1),
-                           (2, 7, 0, "alpha", 0),
-                           CO_FUTURE_ABSOLUTE_IMPORT)
-
-with_statement = _Feature((2, 5, 0, "alpha", 1),
-                          (2, 6, 0, "alpha", 0),
-                          CO_FUTURE_WITH_STATEMENT)
+nested_scopes = _Feature((2, 1, 0, 'beta', 1), (2, 2, 0, 'alpha', 0), CO_NESTED)
+generators = _Feature((2, 2, 0, 'alpha', 1), (2, 3, 0, 'final', 0), CO_GENERATOR_ALLOWED)
+division = _Feature((2, 2, 0, 'alpha', 2), (3, 0, 0, 'alpha', 0), CO_FUTURE_DIVISION)
+absolute_import = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), CO_FUTURE_ABSOLUTE_IMPORT)
+with_statement = _Feature((2, 5, 0, 'alpha', 1), (2, 6, 0, 'alpha', 0), CO_FUTURE_WITH_STATEMENT)
