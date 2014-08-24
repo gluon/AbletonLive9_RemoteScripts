@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Novation_Impulse/Novation_Impulse.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Novation_Impulse/Novation_Impulse.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

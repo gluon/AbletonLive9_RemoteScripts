@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Novation_Impulse/EncoderModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Novation_Impulse/EncoderModeSelector.py
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 

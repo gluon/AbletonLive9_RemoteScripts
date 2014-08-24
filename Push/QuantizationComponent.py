@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/QuantizationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/QuantizationComponent.py
 import Live
 RecordingQuantization = Live.Song.RecordingQuantization
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

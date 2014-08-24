@@ -1,18 +1,19 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ModesComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ModesComponent.py
 """
 Mode handling components.
 """
-from itertools import imap
+from __future__ import absolute_import
 from functools import partial
-from Dependency import depends
-from ControlSurfaceComponent import ControlSurfaceComponent
-from CompoundComponent import CompoundComponent
-from Resource import StackingResource
-from Util import is_iterable, is_contextmanager, lazy_attribute, infinite_context_manager, NamedTuple
-from SubjectSlot import subject_slot
-from Layer import Layer
-import Task
-import Defaults
+from itertools import imap
+from . import Defaults
+from . import Task
+from .CompoundComponent import CompoundComponent
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .Dependency import depends
+from .Layer import Layer
+from .Resource import StackingResource
+from .SubjectSlot import subject_slot
+from .Util import is_iterable, is_contextmanager, lazy_attribute, infinite_context_manager, NamedTuple
 
 def tomode(thing):
     if thing == None:

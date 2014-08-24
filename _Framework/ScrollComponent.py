@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ScrollComponent.py
-from _Framework.Control import ButtonControl
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework import Task
-from _Framework import Defaults
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ScrollComponent.py
+from __future__ import absolute_import
+from . import Defaults
+from . import Task
+from .Control import ButtonControl
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class Scrollable(object):
     """

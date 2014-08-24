@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/NoteEditorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/NoteEditorComponent.py
 from __future__ import with_statement
 from functools import partial
 from itertools import chain, imap, ifilter
@@ -125,24 +125,24 @@ class NoteEditorComponent(CompoundComponent, Subject):
         self._height = 0
         self._sequencer_clip = None
         self._step_colors = []
-        self._settings_mode = settings_mode
-        self._mute_button = None
-        self._pressed_steps = []
-        self._modified_steps = []
-        self._pressed_step_callback = None
-        self._modify_task = self._tasks.add(Task.run(self._do_modification))
-        self._modify_task.kill()
-        self._modify_all_notes_enabled = False
-        self._step_tap_tasks = {}
-        self._clip_notes = []
-        self._note_index = 36
-        self._grid_resolution = grid_resolution
-        self._on_resolution_changed.subject = self._grid_resolution
-        self._nudge_offset = 0
-        self._length_offset = 0
-        self._velocity_offset = 0
-        if self._settings_mode:
-            self._settings_mode.add_editor(self)
+        if settings_mode:
+            self._settings_mode = self.register_component(settings_mode)
+            self._mute_button = None
+            self._pressed_steps = []
+            self._modified_steps = []
+            self._pressed_step_callback = None
+            self._modify_task = self._tasks.add(Task.run(self._do_modification))
+            self._modify_task.kill()
+            self._modify_all_notes_enabled = False
+            self._step_tap_tasks = {}
+            self._clip_notes = []
+            self._note_index = 36
+            self._grid_resolution = grid_resolution
+            self._on_resolution_changed.subject = self._grid_resolution
+            self._nudge_offset = 0
+            self._length_offset = 0
+            self._velocity_offset = 0
+            self._settings_mode and self._settings_mode.add_editor(self)
             self._settings = settings_mode.settings
             self._on_setting_changed.subject = self._settings
         self._triplet_factor = 1.0

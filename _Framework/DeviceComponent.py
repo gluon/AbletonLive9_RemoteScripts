@@ -1,11 +1,12 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DeviceComponent.py
+from __future__ import absolute_import
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
-from ButtonElement import ButtonElement
-from ControlSurfaceComponent import ControlSurfaceComponent
-from DeviceBankRegistry import DeviceBankRegistry
-from DisplayDataSource import DisplayDataSource
-from SubjectSlot import subject_slot_group, Subject
+from .ButtonElement import ButtonElement
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .DeviceBankRegistry import DeviceBankRegistry
+from .DisplayDataSource import DisplayDataSource
+from .SubjectSlot import subject_slot_group, Subject
 
 class DeviceComponent(ControlSurfaceComponent, Subject):
     """ Class representing a device in Live """

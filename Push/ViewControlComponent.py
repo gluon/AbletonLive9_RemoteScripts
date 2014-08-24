@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/ViewControlComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ViewControlComponent.py
 import Live
 NavDirection = Live.Application.Application.View.NavDirection
 from _Framework.CompoundComponent import CompoundComponent

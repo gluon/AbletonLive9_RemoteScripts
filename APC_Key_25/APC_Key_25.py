@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC_Key_25/APC_Key_25.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC_Key_25/APC_Key_25.py
 from __future__ import with_statement
 from functools import partial
 from _Framework.ButtonMatrixElement import ButtonMatrixElement

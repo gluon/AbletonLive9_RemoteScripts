@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_APC/DetailViewCntrlComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/DetailViewCntrlComponent.py
 import Live
 NavDirection = Live.Application.Application.View.NavDirection
 from _Framework.Control import ButtonControl, ToggleButtonControl

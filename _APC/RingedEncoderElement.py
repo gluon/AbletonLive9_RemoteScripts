@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_APC/RingedEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/RingedEncoderElement.py
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ButtonElement import ButtonElement
 RING_OFF_VALUE = 0

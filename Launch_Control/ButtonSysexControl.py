@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launch_Control/ButtonSysexControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launch_Control/ButtonSysexControl.py
 from _Framework.SysexValueControl import SysexValueControl
 
 class ButtonSysexControl(SysexValueControl):

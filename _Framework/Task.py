@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Task.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Task.py
 """
 Task management.
 """
 import functools
-from Dependency import depends
-from Util import remove_if, find_if, linear as linear_fn, print_message, const
 import traceback
+from .Dependency import depends
+from .Util import remove_if, find_if, linear as linear_fn, print_message, const
 
 class TaskError(Exception):
     pass

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/ActionWithOptionsComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ActionWithOptionsComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Control import ButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

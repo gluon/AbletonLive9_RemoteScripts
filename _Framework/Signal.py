@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Signal.py
-from Util import find_if, nop
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Signal.py
+from __future__ import absolute_import
 from functools import partial
+from .Util import find_if, nop
 
 def default_combiner(results):
     for _ in results:

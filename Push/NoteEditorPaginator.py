@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/NoteEditorPaginator.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/NoteEditorPaginator.py
 from _Framework.Util import forward_property
 from _Framework.SubjectSlot import subject_slot, SlotManager, subject_slot_group
 from LoopSelectorComponent import Paginator

@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ControlSurfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurfaceComponent.py
+from __future__ import absolute_import
 import Live
-from Control import ControlManager
-from Dependency import dependency, depends
-from SubjectSlot import Subject
-from Util import lazy_attribute
-import Task
+from . import Task
+from .Control import ControlManager
+from .Dependency import dependency, depends
+from .SubjectSlot import Subject
+from .Util import lazy_attribute
 
 class ControlSurfaceComponent(ControlManager, Subject):
     """
@@ -18,7 +19,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, *a, **k):
+    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
         if not callable(register_component):
             raise AssertionError
             super(ControlSurfaceComponent, self).__init__(*a, **k)
@@ -27,6 +28,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
             self._explicit_is_enabled = is_enabled
             self._recursive_is_enabled = True
             self._is_enabled = self._explicit_is_enabled
+            self._is_root = is_root
             self._allow_updates = True
             self._update_requests = 0
             self._song = song
@@ -38,6 +40,10 @@ class ControlSurfaceComponent(ControlManager, Subject):
             self._tasks.kill()
             self._tasks.clear()
         super(ControlSurfaceComponent, self).disconnect()
+
+    @property
+    def is_root(self):
+        return self._is_root
 
     def _internal_on_enabled_changed(self):
         if self._layer:

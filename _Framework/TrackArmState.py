@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/TrackArmState.py
-from SubjectSlot import Subject, subject_slot, SlotManager
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/TrackArmState.py
+from __future__ import absolute_import
+from .SubjectSlot import Subject, subject_slot, SlotManager
 
 class TrackArmState(Subject, SlotManager):
     __subject_events__ = ('arm',)

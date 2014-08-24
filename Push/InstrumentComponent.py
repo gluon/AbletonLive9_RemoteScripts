@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/InstrumentComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/InstrumentComponent.py
 from itertools import ifilter
 from functools import partial
 from _Framework.CompoundComponent import CompoundComponent

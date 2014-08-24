@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Control.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Control.py
+from __future__ import absolute_import, with_statement
 from functools import partial
-from Defaults import MOMENTARY_DELAY
-from SubjectSlot import SlotManager
-from Util import clamp, lazy_attribute, mixin, nop
-import Task
+from . import Task
+from .Defaults import MOMENTARY_DELAY
+from .SubjectSlot import SlotManager
+from .Util import clamp, lazy_attribute, mixin, nop
 
 class ControlManager(SlotManager):
 

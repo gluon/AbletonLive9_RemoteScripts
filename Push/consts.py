@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/consts.py
 from _Framework.Resource import DEFAULT_PRIORITY
 import sys
 DISPLAY_LENGTH = 72

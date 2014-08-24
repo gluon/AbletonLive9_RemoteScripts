@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Generic/SelectChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Generic/SelectChanStripComponent.py
 import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
 

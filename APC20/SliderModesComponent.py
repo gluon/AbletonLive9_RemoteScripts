@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC20/SliderModesComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC20/SliderModesComponent.py
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 

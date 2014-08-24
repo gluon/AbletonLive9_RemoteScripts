@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/TouchEncoderElement.py
-from _Framework.EncoderElement import EncoderElement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/TouchEncoderElement.py
+from _Framework.EncoderElement import TouchEncoderElementBase
 from _Framework.SubjectSlot import subject_slot, SlotManager
 from _Framework.Util import nop, const
 
@@ -13,16 +13,8 @@ class TouchEncoderObserver(object):
         pass
 
 
-class TouchEncoderElement(EncoderElement, SlotManager):
+class TouchEncoderElement(TouchEncoderElementBase, SlotManager):
     """ Class representing an encoder that is touch sensitive """
-
-    class ProxiedInterface(EncoderElement.ProxiedInterface):
-        is_pressed = const(False)
-        add_touch_value_listener = nop
-        remove_touch_value_listener = nop
-        touch_value_has_listener = nop
-
-    __subject_events__ = ('touch_value',)
 
     def __init__(self, msg_type, channel, identifier, map_mode, undo_step_handler = None, delete_handler = None, touch_button = None, *a, **k):
         super(TouchEncoderElement, self).__init__(msg_type, channel, identifier, map_mode, *a, **k)

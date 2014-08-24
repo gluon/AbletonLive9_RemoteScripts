@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlElement.py
+from __future__ import absolute_import
 import traceback
-from Resource import StackingResource
-from Util import lazy_attribute, nop, const, second, print_message
-from Disconnectable import Disconnectable
-from Dependency import depends
-import Task
+from . import Task
+from .Dependency import depends
+from .Disconnectable import Disconnectable
+from .Resource import StackingResource
+from .Util import lazy_attribute, nop, const, second, print_message
 
 class ControlElementClient(object):
 

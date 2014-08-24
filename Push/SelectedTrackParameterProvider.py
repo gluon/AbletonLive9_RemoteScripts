@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SelectedTrackParameterProvider.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SelectedTrackParameterProvider.py
 from _Framework.Dependency import depends
 from _Framework.SubjectSlot import subject_slot, SlotManager
 from DeviceParameterComponent import ParameterProvider

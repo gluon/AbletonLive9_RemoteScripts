@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Serato/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Serato/SpecialSessionComponent.py
 import Live
 from _Framework.SessionComponent import SessionComponent
 from _Framework.InputControlElement import *

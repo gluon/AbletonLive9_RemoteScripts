@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launchkey_Mini/LaunchkeyMini.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchkey_Mini/LaunchkeyMini.py
 from Launchkey.Launchkey import Launchkey, LaunchkeyControlFactory, make_button
 
 class LaunchkeyMiniControlFactory(LaunchkeyControlFactory):

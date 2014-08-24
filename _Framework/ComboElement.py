@@ -1,17 +1,17 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ComboElement.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ComboElement.py
+from __future__ import absolute_import, with_statement
 from itertools import imap
 from contextlib import contextmanager
-from _Framework import Task, Defaults
-from _Framework.Util import const, find_if, lazy_attribute, nop
-from _Framework.Dependency import depends
-from _Framework.CompoundElement import CompoundElement
-from _Framework.SubjectSlot import SlotManager, Subject, subject_slot
-from _Framework.ButtonElement import ButtonElementMixin
-from _Framework.NotifyingControlElement import NotifyingControlElement
-from _Framework.InputControlElement import ParameterSlot
-from _Framework.Proxy import ProxyBase
-from _Framework.Resource import DEFAULT_PRIORITY
+from . import Task, Defaults
+from .ButtonElement import ButtonElementMixin
+from .CompoundElement import CompoundElement
+from .Dependency import depends
+from .InputControlElement import ParameterSlot
+from .NotifyingControlElement import NotifyingControlElement
+from .Proxy import ProxyBase
+from .Resource import DEFAULT_PRIORITY
+from .SubjectSlot import SlotManager, Subject, subject_slot
+from .Util import const, find_if, lazy_attribute, nop
 
 class WrapperElement(CompoundElement, ProxyBase):
     """

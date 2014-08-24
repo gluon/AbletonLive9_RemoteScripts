@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SessionRecordingComponent.py
 from functools import partial
 from _Framework.SessionRecordingComponent import SessionRecordingComponent
 from _Framework.Util import forward_property

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/MatrixMaps.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/MatrixMaps.py
 """
 Pad Translations for Drum Rack (pad_x, pad_y, note, channel)
 """

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/MPK261/MPK261.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MPK261/MPK261.py
 from __future__ import with_statement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.Layer import Layer

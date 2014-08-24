@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ButtonSliderElement.py
-from SliderElement import SliderElement
-from InputControlElement import InputControlElement, MIDI_INVALID_TYPE
-from SubjectSlot import SlotManager
-from ButtonElement import ButtonElement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ButtonSliderElement.py
+from __future__ import absolute_import
+from .ButtonElement import ButtonElement
+from .InputControlElement import InputControlElement, MIDI_INVALID_TYPE
+from .SliderElement import SliderElement
+from .SubjectSlot import SlotManager
 
 class ButtonSliderElement(SliderElement, SlotManager):
     """ Class representing a set of buttons used as a slider """

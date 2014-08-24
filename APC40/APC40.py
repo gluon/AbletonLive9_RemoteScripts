@@ -1,12 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/APC40/APC40.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC40/APC40.py
 from __future__ import with_statement
 from functools import partial
-from _Framework.BackgroundComponent import BackgroundComponent
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ComboElement import ComboElement
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
 from _Framework.ControlSurface import OptimizedControlSurface
-from _Framework.Layer import Layer
+from _Framework.Layer import Layer, SimpleLayerOwner
 from _Framework.ModesComponent import ModesComponent
 from _Framework.Resource import PrioritizedResource
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
@@ -23,7 +22,7 @@ from SessionComponent import SessionComponent
 SESSION_WIDTH = 8
 SESSION_HEIGHT = 5
 MIXER_SIZE = 8
-BACKGROUND_PRIORITY = -1
+FALLBACK_CONTROL_OWNER_PRIORITY = -1
 
 class APC40(APC, OptimizedControlSurface):
     """ Script for Akai's APC40 Controller """
@@ -40,7 +39,7 @@ class APC40(APC, OptimizedControlSurface):
             self._create_detail_view_control()
             self._create_transport()
             self._create_global_control()
-            self._create_background()
+            self._create_fallback_control_owner()
             self._session.set_mixer(self._mixer)
             self.set_highlighting_session_component(self._session)
             self.set_device_component(self._device)
@@ -178,8 +177,8 @@ class APC40(APC, OptimizedControlSurface):
         encoder_modes.layer = Layer(pan_button=self._global_bank_buttons[0], send_a_button=self._global_bank_buttons[1], send_b_button=self._global_bank_buttons[2], send_c_button=self._global_bank_buttons[3])
         self._translation_selector = ChannelTranslationSelector(name='Global_Translations')
 
-    def _create_background(self):
-        self._background = BackgroundComponent(name='Background', is_enabled=False, layer=Layer(matrix=self._session_matrix, priority=BACKGROUND_PRIORITY))
+    def _create_fallback_control_owner(self):
+        self.register_disconnectable(SimpleLayerOwner(layer=Layer(_matrix=self._session_matrix, priority=FALLBACK_CONTROL_OWNER_PRIORITY)))
 
     def get_matrix_button(self, column, row):
         return self._matrix_rows_raw[row][column]

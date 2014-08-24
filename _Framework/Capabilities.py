@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Capabilities.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Capabilities.py
 PORTS_KEY = 'ports'
 CONTROLLER_ID_KEY = 'controller_id'
 TYPE_KEY = 'surface_type'

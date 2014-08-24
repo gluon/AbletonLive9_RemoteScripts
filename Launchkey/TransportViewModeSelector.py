@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launchkey/TransportViewModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchkey/TransportViewModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class TransportViewModeSelector(ModeSelectorComponent):

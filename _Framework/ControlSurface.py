@@ -1,20 +1,20 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ControlSurface.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurface.py
+from __future__ import absolute_import, with_statement
 from functools import partial, wraps
 from itertools import chain, imap
 from contextlib import contextmanager
 import traceback
 import Live
-from Profile import profile
-from Dependency import inject
-from Util import BooleanContext, first, find_if, const, in_range
-from Debug import debug_print
-from ControlElement import OptimizedOwnershipHandler
-from SubjectSlot import SlotManager
-from PhysicalDisplayElement import PhysicalDisplayElement
-from InputControlElement import InputControlElement, MIDI_CC_TYPE, MIDI_PB_TYPE, MIDI_NOTE_TYPE, MIDI_SYSEX_TYPE, MIDI_PB_STATUS
-import Task
-import Defaults
+from . import Defaults
+from . import Task
+from .ControlElement import OptimizedOwnershipHandler
+from .Debug import debug_print
+from .Dependency import inject
+from .InputControlElement import InputControlElement, MIDI_CC_TYPE, MIDI_PB_TYPE, MIDI_NOTE_TYPE, MIDI_SYSEX_TYPE, MIDI_PB_STATUS
+from .PhysicalDisplayElement import PhysicalDisplayElement
+from .Profile import profile
+from .SubjectSlot import SlotManager
+from .Util import BooleanContext, first, find_if, const, in_range
 
 class _ModuleLoadedCheck(object):
     """
@@ -108,6 +108,10 @@ class ControlSurface(SlotManager):
     @property
     def components(self):
         return tuple(filter(lambda comp: not comp.is_private, self._components))
+
+    @property
+    def root_components(self):
+        return tuple(filter(lambda comp: comp.is_root and not comp.is_private, self._components))
 
     def _get_tasks(self):
         return self._task_group
@@ -430,7 +434,9 @@ class ControlSurface(SlotManager):
         if self._enabled != bool_enable:
             with self.component_guard():
                 self._enabled = bool_enable
-                for component in self._components:
+                root_components = self.root_components
+                components = root_components if len(root_components) > 0 else self._components
+                for component in components:
                     component._set_enabled_recursive(bool_enable)
 
     def schedule_message(self, delay_in_ticks, callback, parameter = None):

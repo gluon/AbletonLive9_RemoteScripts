@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Axiom_AIR_25_49_61/DeviceNavComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/DeviceNavComponent.py
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 

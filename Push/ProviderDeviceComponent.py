@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/ProviderDeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ProviderDeviceComponent.py
 from _Framework.DeviceComponent import DeviceComponent
 from DeviceParameterComponent import ParameterProvider
 

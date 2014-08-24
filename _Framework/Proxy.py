@@ -1,6 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Proxy.py
-from __future__ import with_statement
-from _Framework.Util import BooleanContext
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Proxy.py
+from __future__ import absolute_import, with_statement
+from .Util import BooleanContext
 
 class ProxyBase(object):
     """

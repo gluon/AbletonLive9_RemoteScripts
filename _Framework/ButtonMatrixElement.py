@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ButtonMatrixElement.py
-from CompoundElement import CompoundElement
-from Util import in_range, product, const, slicer, to_slice
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ButtonMatrixElement.py
+from __future__ import absolute_import
+from .CompoundElement import CompoundElement
+from .Util import in_range, product, const, slicer, to_slice
 
 class ButtonMatrixElement(CompoundElement):
     """

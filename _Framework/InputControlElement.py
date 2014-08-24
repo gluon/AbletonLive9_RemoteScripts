@@ -1,14 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/InputControlElement.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/InputControlElement.py
+from __future__ import absolute_import, with_statement
 import contextlib
-from Dependency import depends
-from SubjectSlot import SubjectEvent
-from Signal import Signal
-from NotifyingControlElement import NotifyingControlElement
-from Util import in_range, const, nop
-from Debug import debug_print
-from Disconnectable import Disconnectable
-import Task
+from . import Task
+from .Debug import debug_print
+from .Dependency import depends
+from .Disconnectable import Disconnectable
+from .NotifyingControlElement import NotifyingControlElement
+from .Signal import Signal
+from .SubjectSlot import SubjectEvent
+from .Util import in_range, const, nop
 MIDI_NOTE_TYPE = 0
 MIDI_CC_TYPE = 1
 MIDI_PB_TYPE = 2

@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/IdentifiableControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/IdentifiableControlSurface.py
+from __future__ import absolute_import
 from .ControlSurface import ControlSurface
-import Task
+from . import Task
 SYSEX_IDENTITY_REQUEST = (240, 126, 0, 6, 1, 247)
 
 class IdentifiableControlSurface(ControlSurface):

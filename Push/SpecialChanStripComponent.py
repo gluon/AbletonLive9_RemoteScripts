@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SpecialChanStripComponent.py
 from _Framework.Util import flatten
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot, subject_slot_group

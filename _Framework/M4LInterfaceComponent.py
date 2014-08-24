@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/M4LInterfaceComponent.py
-from __future__ import with_statement
-from ControlElement import ControlElementClient
-from ControlSurfaceComponent import ControlSurfaceComponent
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/M4LInterfaceComponent.py
+from __future__ import absolute_import, with_statement
+from .ControlElement import ControlElementClient
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
     """

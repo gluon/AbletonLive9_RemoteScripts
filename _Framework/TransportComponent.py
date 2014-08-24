@@ -1,11 +1,12 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/TransportComponent.py
-import Live
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/TransportComponent.py
+from __future__ import absolute_import
 from functools import partial
-from CompoundComponent import CompoundComponent
-from ToggleComponent import ToggleComponent
-from Util import const, in_range, clamp
-from SubjectSlot import subject_slot
-import Task
+import Live
+from . import Task
+from .CompoundComponent import CompoundComponent
+from .SubjectSlot import subject_slot
+from .ToggleComponent import ToggleComponent
+from .Util import const, in_range, clamp
 TEMPO_TOP = 200.0
 TEMPO_BOTTOM = 60.0
 TEMPO_FINE_RANGE = 2.56

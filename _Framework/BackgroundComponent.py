@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/BackgroundComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/BackgroundComponent.py
+from __future__ import absolute_import
 from functools import partial
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.SubjectSlot import SubjectSlotError
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .SubjectSlot import SubjectSlotError
 
 class BackgroundComponent(ControlSurfaceComponent):
     """

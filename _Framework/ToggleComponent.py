@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ToggleComponent.py
-from SubjectSlot import subject_slot
-from ControlSurfaceComponent import ControlSurfaceComponent
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ToggleComponent.py
+from __future__ import absolute_import
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .SubjectSlot import subject_slot
 
 class ToggleComponent(ControlSurfaceComponent):
     """

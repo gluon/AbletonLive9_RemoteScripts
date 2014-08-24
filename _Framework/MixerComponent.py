@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/MixerComponent.py
-from ChannelStripComponent import ChannelStripComponent, release_control
-from CompoundComponent import CompoundComponent
-from SubjectSlot import subject_slot
-from Util import clamp
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/MixerComponent.py
+from __future__ import absolute_import
+from .ChannelStripComponent import ChannelStripComponent, release_control
+from .CompoundComponent import CompoundComponent
+from .SubjectSlot import subject_slot
+from .Util import clamp
 
 def turn_button_on_off(button, on = True):
     if button != None:

@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ButtonElement.py
+from __future__ import absolute_import
 import Live
-from InputControlElement import InputControlElement, MIDI_CC_TYPE
-from Skin import Skin, SkinColorMissingError
-from Util import nop
+from .InputControlElement import InputControlElement, MIDI_CC_TYPE
+from .Skin import Skin, SkinColorMissingError
+from .Util import nop
 
 class ButtonValue(object):
     """

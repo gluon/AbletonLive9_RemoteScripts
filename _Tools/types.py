@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Tools/types.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Tools/types.py
 """Define names for all type symbols known in the standard interpreter.
 
 Types that are part of optional modules (e.g. array) are not listed.

@@ -1,14 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/PhysicalDisplayElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/PhysicalDisplayElement.py
+from __future__ import absolute_import
 from itertools import ifilter, izip, starmap, chain, imap
 from functools import partial
-from Resource import StackingResource, ProxyResource, ClientWrapper
-from CompoundElement import CompoundElement
-from ControlElement import ControlElement
-from LogicalDisplaySegment import LogicalDisplaySegment
-from DisplayDataSource import adjust_string
-from Util import in_range, slicer, to_slice, slice_size, const, second, maybe, lazy_attribute, first, nop, group
-from NotifyingControlElement import NotifyingControlElement
-import Task
+from . import Task
+from .ControlElement import ControlElement
+from .DisplayDataSource import adjust_string
+from .LogicalDisplaySegment import LogicalDisplaySegment
+from .NotifyingControlElement import NotifyingControlElement
+from .Resource import StackingResource, ProxyResource, ClientWrapper
+from .Util import in_range, slicer, to_slice, slice_size, const, group, second, maybe, lazy_attribute, first, nop
 
 class _DisplayCentralResource(StackingResource):
     """

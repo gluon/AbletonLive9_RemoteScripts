@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/TouchStripElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/TouchStripElement.py
 import Live
 import Sysex
 from _Framework.Util import group, in_range, nop, NamedTuple, clamp

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launch_Control/LaunchControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launch_Control/LaunchControl.py
 from __future__ import with_statement
 from functools import partial
 import Live
@@ -93,6 +93,7 @@ class LaunchControl(ControlSurface):
         sends_layer = Layer(sends_controls=ButtonMatrixElement(rows=[bottom_encoders, top_encoders]))
         modes_layer = Layer(pan_volume_button=make_button(114, 'Pan_Volume_Mode_Button'), sends_button=make_button(115, 'Sends_Mode_Button'))
         self._mixer = SpecialMixerComponent(8, modes_layer, pan_volume_layer, sends_layer)
+        self._mixer.set_enabled(False)
         self._mixer.name = 'Mixer'
         self._mixer.selected_strip().name = 'Selected_Channel_Strip'
         self._mixer.master_strip().name = 'Master_Channel_Strip'
@@ -158,7 +159,7 @@ class LaunchControl(ControlSurface):
         self._view_control.layer = Layer(next_track_button=make_button(117, 'Device_Next_Track_Button'), prev_track_button=make_button(116, 'Device_Prev_Track_Button'))
 
     def _init_modes(self):
-        self._modes = ModesComponent()
+        self._modes = ModesComponent(is_root=True)
         self._modes.add_mode('mixer', [partial(self._session.set_mixer, self._mixer),
          LayerMode(self._session, self._mixer_track_nav_layer),
          self._mixer,

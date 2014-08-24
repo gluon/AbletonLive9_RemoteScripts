@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Launch_Control_XL/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launch_Control_XL/DeviceComponent.py
 import Live
 from _Framework.Control import control_list, ButtonControl
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase

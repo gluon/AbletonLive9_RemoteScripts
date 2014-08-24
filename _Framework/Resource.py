@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Resource.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Resource.py
+from __future__ import absolute_import
 from functools import partial
-from _Framework.Proxy import Proxy
-from _Framework.Util import index_if, nop, first, NamedTuple
+from .Proxy import Proxy
+from .Util import index_if, nop, first, NamedTuple
 DEFAULT_PRIORITY = 0
 
 class Resource(object):

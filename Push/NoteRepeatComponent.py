@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/NoteRepeatComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/NoteRepeatComponent.py
 from _Framework.ModesComponent import ModesComponent
 from _Framework import Task
 from _Framework.CompoundComponent import CompoundComponent

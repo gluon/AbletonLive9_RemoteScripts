@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/DeviceParameterComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/DeviceParameterComponent.py
 from itertools import chain, repeat, ifilter
 import Live
 AutomationState = Live.DeviceParameter.AutomationState

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/DisplayDataSource.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DisplayDataSource.py
+from __future__ import absolute_import
 from functools import partial
 
 def adjust_string_crop(original, length):

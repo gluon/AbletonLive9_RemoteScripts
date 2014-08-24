@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/MidiMap.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/MidiMap.py
+from __future__ import absolute_import
 import Live
 from .ButtonMatrixElement import ButtonMatrixElement
 from .ButtonElement import ButtonElement

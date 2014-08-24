@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/VCM600/VCM600.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/VCM600/VCM600.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

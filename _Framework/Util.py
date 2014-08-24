@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Util.py
 """
 Various utilities.
 """
+from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
 from itertools import chain

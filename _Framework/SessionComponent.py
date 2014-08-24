@@ -1,11 +1,12 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/SessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/SessionComponent.py
+from __future__ import absolute_import
 from itertools import count
 import Live
-from CompoundComponent import CompoundComponent
-from SceneComponent import SceneComponent
-from SubjectSlot import subject_slot, subject_slot_group
-from ScrollComponent import ScrollComponent
-from Util import in_range, product
+from .CompoundComponent import CompoundComponent
+from .SceneComponent import SceneComponent
+from .ScrollComponent import ScrollComponent
+from .SubjectSlot import subject_slot, subject_slot_group
+from .Util import in_range, product
 
 class SessionComponent(CompoundComponent):
     """

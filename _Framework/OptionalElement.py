@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/OptionalElement.py
-from _Framework.ComboElement import ToggleElement
-from _Framework.SubjectSlot import SlotManager, subject_slot, Subject, SubjectEvent
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/OptionalElement.py
+from __future__ import absolute_import
+from .ComboElement import ToggleElement
+from .SubjectSlot import SlotManager, subject_slot
 
 class ChoosingElement(ToggleElement, SlotManager):
     """

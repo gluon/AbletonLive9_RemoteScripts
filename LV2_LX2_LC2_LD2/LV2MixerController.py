@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/LV2_LX2_LC2_LD2/LV2MixerController.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/LV2_LX2_LC2_LD2/LV2MixerController.py
 import Live
 from ParamMap import ParamMap
 from FaderfoxMixerController import FaderfoxMixerController

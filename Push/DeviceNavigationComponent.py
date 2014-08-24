@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/Push/DeviceNavigationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/DeviceNavigationComponent.py
 from __future__ import with_statement
 from functools import partial
 from contextlib import contextmanager

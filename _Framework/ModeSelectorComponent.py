@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ModeSelectorComponent.py
-from ControlSurfaceComponent import ControlSurfaceComponent
-from ButtonElement import ButtonElement
-from MomentaryModeObserver import MomentaryModeObserver
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ModeSelectorComponent.py
+from __future__ import absolute_import
+from .ButtonElement import ButtonElement
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .MomentaryModeObserver import MomentaryModeObserver
 
 class ModeSelectorComponent(ControlSurfaceComponent):
     """ Class for switching between modes, handle several functions with few controls """

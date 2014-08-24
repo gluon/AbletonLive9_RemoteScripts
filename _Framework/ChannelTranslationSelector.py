@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/ChannelTranslationSelector.py
-from ModeSelectorComponent import ModeSelectorComponent
-from InputControlElement import InputControlElement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ChannelTranslationSelector.py
+from __future__ import absolute_import
+from .InputControlElement import InputControlElement
+from .ModeSelectorComponent import ModeSelectorComponent
 
 class ChannelTranslationSelector(ModeSelectorComponent):
     """ Class switches modes by translating the given controls' message channel """

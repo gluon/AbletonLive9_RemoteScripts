@@ -1,12 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_static/midi-remote-scripts/_Framework/Layer.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Layer.py
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
-from ControlElement import ControlElementClient
-from Util import nop
+from __future__ import absolute_import
 from itertools import repeat, izip
-from Resource import ExclusiveResource, CompoundResource
+from .ControlElement import ControlElementClient
+from .Util import nop
+from .Resource import ExclusiveResource, CompoundResource
+from .Disconnectable import Disconnectable
 
 class LayerError(Exception):
     pass
@@ -14,6 +16,19 @@ class LayerError(Exception):
 
 class UnhandledControlError(LayerError):
     pass
+
+
+class SimpleLayerOwner(Disconnectable):
+    """
+    Simple owner that grabs a given layer until it's disconnected
+    """
+
+    def __init__(self, layer = None):
+        self._layer = layer
+        self._layer.grab(self)
+
+    def disconnect(self):
+        self._layer.release(self)
 
 
 class LayerClient(ControlElementClient):
