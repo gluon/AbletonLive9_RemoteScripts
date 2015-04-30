@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_DirectLink/DetailViewCntrlComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_DirectLink/DetailViewCntrlComponent.py
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
@@ -39,6 +39,7 @@ class DetailViewCntrlComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(DetailViewCntrlComponent, self).update()
         if self.is_enabled():
             if self._left_button != None:
                 self._left_button.turn_off()

@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/MomentaryModeObserver.py
-import Defaults
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/MomentaryModeObserver.py
+from __future__ import absolute_import
+from . import Defaults
 
 class MomentaryModeObserver(object):
     """ Listens to the changes of a given set of controls and decides which mode to use """

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/DeviceNavComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_Mini32/DeviceNavComponent.py
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 
@@ -34,10 +34,6 @@ class DeviceNavComponent(ControlSurfaceComponent):
 
     def on_enabled_changed(self):
         self.update()
-
-    def update(self):
-        if self.is_enabled():
-            pass
 
     def _nav_value(self, value, sender):
         if self.is_enabled():

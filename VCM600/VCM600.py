@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/VCM600/VCM600.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/VCM600/VCM600.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -7,15 +7,14 @@ from _Framework.SliderElement import SliderElement
 from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement
 from _Framework.ChannelStripComponent import ChannelStripComponent
-from _Framework.MixerComponent import MixerComponent
 from _Framework.DeviceComponent import DeviceComponent
 from _Framework.TransportComponent import TransportComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
 from ViewTogglerComponent import ViewTogglerComponent
+from MixerComponent import MixerComponent
 NUM_TRACKS = 12
 
 class VCM600(ControlSurface):
@@ -44,7 +43,7 @@ class VCM600(ControlSurface):
 
     def _setup_mixer_control(self):
         is_momentary = True
-        mixer = MixerComponent(NUM_TRACKS, 2, with_eqs=True, with_filters=True)
+        mixer = MixerComponent(NUM_TRACKS, 2)
         for track in range(NUM_TRACKS):
             strip = mixer.channel_strip(track)
             strip.set_volume_control(SliderElement(MIDI_CC_TYPE, track, 23))

@@ -1,6 +1,6 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/TouchStripController.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/TouchStripController.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from TouchStripElement import TouchStripElement
+from TouchStripElement import TouchStripModes, SimpleBehaviour
 from TouchEncoderElement import TouchEncoderObserver
 import consts
 
@@ -15,9 +15,6 @@ class TouchStripControllerComponent(ControlSurfaceComponent):
         self._parameter = parameter
         self._update_strip_state()
 
-    def update(self):
-        pass
-
     def set_touch_strip(self, touch_strip):
         self._touch_strip = touch_strip
         self._update_strip_state()
@@ -25,16 +22,16 @@ class TouchStripControllerComponent(ControlSurfaceComponent):
     def _update_strip_state(self):
         if self._touch_strip != None:
             if self._parameter != None:
-                self._touch_strip.mode = self._calculate_strip_mode()
+                self._touch_strip.behaviour = SimpleBehaviour(self._calculate_strip_mode())
                 self._touch_strip.connect_to(self._parameter)
             else:
                 self._touch_strip.release_parameter()
 
     def _calculate_strip_mode(self):
         if self._parameter.min == -1 * self._parameter.max:
-            mode = TouchStripElement.MODE_CUSTOM_PAN
+            mode = TouchStripModes.CUSTOM_PAN
         else:
-            mode = TouchStripElement.MODE_CUSTOM_DISCRETE if self._parameter.is_quantized else TouchStripElement.MODE_CUSTOM_VOLUME
+            mode = TouchStripModes.CUSTOM_DISCRETE if self._parameter.is_quantized else TouchStripModes.CUSTOM_VOLUME
         return mode
 
 
@@ -55,9 +52,6 @@ class TouchStripEncoderConnection(ControlSurfaceComponent, TouchEncoderObserver)
 
     def on_encoder_parameter(self, encoder):
         self._on_encoder_change(encoder)
-
-    def update(self):
-        pass
 
     def _on_encoder_change(self, encoder):
         if consts.PROTO_TOUCH_ENCODER_TO_STRIP and self._encoder in (encoder, None):

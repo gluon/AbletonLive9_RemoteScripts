@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/MixerOrDeviceModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/MixerOrDeviceModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -79,6 +79,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(MixerOrDeviceModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._device.set_parameter_controls(None)

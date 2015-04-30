@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/EncoderMixerModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_Mini32/EncoderMixerModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class EncoderMixerModeSelector(ModeSelectorComponent):
@@ -26,6 +26,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(EncoderMixerModeSelector, self).update()
         if self.is_enabled() and self._controls != None:
             mode = self._mode_index
             for index in range(len(self._controls)):

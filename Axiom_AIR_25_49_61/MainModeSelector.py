@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/MainModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/MainModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from consts import *
 
@@ -36,6 +36,7 @@ class MainModeSelector(ModeSelectorComponent):
         return 2
 
     def update(self):
+        super(MainModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._modes_buttons[0].send_value(GRN_FULL, True)
@@ -44,13 +45,15 @@ class MainModeSelector(ModeSelectorComponent):
                 self._device_0.set_bank_nav_buttons(None, None)
                 self._device_1.set_bank_nav_buttons(None, None)
                 self._device_nav.set_device_nav_buttons(None, None)
-                self._session.set_track_bank_buttons(self._right_button, self._left_button)
+                self._session.set_page_left_button(self._left_button)
+                self._session.set_page_right_button(self._right_button)
                 self._session.set_track_select_buttons(self._down_button, self._up_button)
                 self._mixer.selected_strip().set_arm_button(self._select_button)
             elif self._mode_index == 1:
                 self._modes_buttons[0].send_value(LED_OFF, True)
                 self._modes_buttons[1].send_value(GRN_FULL, True)
-                self._session.set_track_bank_buttons(None, None)
+                self._session.set_page_left_button(None)
+                self._session.set_page_right_button(None)
                 self._session.set_track_select_buttons(None, None)
                 self._mixer.selected_strip().set_arm_button(None)
                 self._device_0.set_on_off_button(self._select_button)

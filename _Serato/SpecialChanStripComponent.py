@@ -1,5 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialChanStripComponent.py
-import Live
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Serato/SpecialChanStripComponent.py
 from _Framework.ChannelStripComponent import ChannelStripComponent
 
 class SpecialChanStripComponent(ChannelStripComponent):

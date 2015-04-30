@@ -1,20 +1,21 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DeviceComponent.py
+from __future__ import absolute_import
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
-from ControlSurfaceComponent import ControlSurfaceComponent
-from ButtonElement import ButtonElement
-from DisplayDataSource import DisplayDataSource
-from DeviceBankRegistry import DeviceBankRegistry
+from .ButtonElement import ButtonElement
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .DeviceBankRegistry import DeviceBankRegistry
+from .DisplayDataSource import DisplayDataSource
+from .SubjectSlot import subject_slot_group, Subject
 
-class DeviceComponent(ControlSurfaceComponent):
+class DeviceComponent(ControlSurfaceComponent, Subject):
     """ Class representing a device in Live """
+    __subject_events__ = ('device',)
 
     def __init__(self, device_bank_registry = None, *a, **k):
         super(DeviceComponent, self).__init__(*a, **k)
         self._device_bank_registry = device_bank_registry or DeviceBankRegistry()
-        self._device_bank_registry.add_device_bank_listener(self._on_device_bank_changed)
         self._device = None
-        self._device_listeners = []
         self._parameter_controls = None
         self._bank_up_button = None
         self._bank_down_button = None
@@ -27,37 +28,35 @@ class DeviceComponent(ControlSurfaceComponent):
         self._bank_name = '<No Bank>'
         self._locked_to_device = False
 
+        def make_property_slot(name, alias = None):
+            alias = alias or name
+            return self.register_slot(None, getattr(self, '_on_%s_changed' % alias), name)
+
+        self._on_off_property_slot = make_property_slot('value', alias='device_on_off')
+        self._name_property_slot = make_property_slot('name', alias='device_name')
+        self._parameters_property_slot = make_property_slot('parameters')
+        self._device_bank_property_slot = make_property_slot('device_bank')
+
+        def make_button_slot(name):
+            return self.register_slot(None, getattr(self, '_%s_value' % name), 'value')
+
+        self._bank_up_button_slot = make_button_slot('bank_up')
+        self._bank_down_button_slot = make_button_slot('bank_down')
+        self._lock_button_slot = make_button_slot('lock')
+        self._on_off_button_slot = make_button_slot('on_off')
+        self._device_bank_property_slot.subject = self._device_bank_registry
+
     def disconnect(self):
-        self._device_bank_registry.remove_device_bank_listener(self._on_device_bank_changed)
         self._device_bank_registry = None
         self._lock_callback = None
         self._release_parameters(self._parameter_controls)
         self._parameter_controls = None
-        if self._bank_up_button != None:
-            self._bank_up_button.remove_value_listener(self._bank_up_value)
-            self._bank_up_button = None
-        if self._bank_down_button != None:
-            self._bank_down_button.remove_value_listener(self._bank_down_value)
-            self._bank_down_button = None
-        if self._bank_buttons != None:
-            for button in self._bank_buttons:
-                button.remove_value_listener(self._bank_value)
-
+        self._bank_up_button = None
+        self._bank_down_button = None
         self._bank_buttons = None
-        if self._on_off_button != None:
-            self._on_off_button.remove_value_listener(self._on_off_value)
-            self._on_off_button = None
-        if self._lock_button != None:
-            self._lock_button.remove_value_listener(self._lock_value)
-            self._lock_button = None
-        if self._device != None:
-            parameter = self._on_off_parameter()
-            if parameter != None:
-                parameter.remove_value_listener(self._on_on_off_changed)
-            self._device.remove_name_listener(self._on_device_name_changed)
-            self._device.remove_parameters_listener(self._on_parameters_changed)
-            self._device = None
-        self._device_listeners = None
+        self._on_off_button = None
+        self._lock_button = None
+        self._device = None
         super(DeviceComponent, self).disconnect()
 
     def on_enabled_changed(self):
@@ -69,62 +68,39 @@ class DeviceComponent(ControlSurfaceComponent):
     def set_device(self, device):
         if not (device == None or isinstance(device, Live.Device.Device)):
             raise AssertionError
-            if not self._locked_to_device and device != self._device:
+            if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
                 if self._device != None:
-                    self._device.remove_name_listener(self._on_device_name_changed)
-                    self._device.remove_parameters_listener(self._on_parameters_changed)
-                    parameter = self._on_off_parameter()
-                    if parameter != None:
-                        parameter.remove_value_listener(self._on_on_off_changed)
                     self._release_parameters(self._parameter_controls)
                 self._device = device
-                if self._device != None:
-                    self._bank_index = 0
-                    self._device.add_name_listener(self._on_device_name_changed)
-                    self._device.add_parameters_listener(self._on_parameters_changed)
-                    parameter = self._on_off_parameter()
-                    parameter != None and parameter.add_value_listener(self._on_on_off_changed)
+                self._name_property_slot.subject = device
+                self._parameters_property_slot.subject = device
+                self._on_off_property_slot.subject = self._on_off_parameter()
+                self._bank_index = self._device != None and 0
             self._bank_index = self._device_bank_registry.get_device_bank(self._device)
             self._bank_name = '<No Bank>'
             self._on_device_name_changed()
             self.update()
-            for listener in self._device_listeners:
-                listener()
+            self.notify_device()
+
+    def set_bank_prev_button(self, button):
+        if button != self._bank_down_button:
+            self._bank_down_button = button
+            self._bank_down_button_slot.subject = button
+            self.update()
+
+    def set_bank_next_button(self, button):
+        if button != self._bank_up_button:
+            self._bank_up_button = button
+            self._bank_up_button_slot.subject = button
+            self.update()
 
     def set_bank_nav_buttons(self, down_button, up_button):
-        if not (up_button != None or down_button == None):
-            raise AssertionError
-            if not (up_button == None or isinstance(up_button, ButtonElement)):
-                raise AssertionError
-                if not (down_button == None or isinstance(down_button, ButtonElement)):
-                    raise AssertionError
-                    do_update = False
-                    if up_button != self._bank_up_button:
-                        do_update = True
-                        if self._bank_up_button != None:
-                            self._bank_up_button.remove_value_listener(self._bank_up_value)
-                        self._bank_up_button = up_button
-                        if self._bank_up_button != None:
-                            self._bank_up_button.add_value_listener(self._bank_up_value)
-                    if down_button != self._bank_down_button:
-                        do_update = True
-                        self._bank_down_button != None and self._bank_down_button.remove_value_listener(self._bank_down_value)
-                    self._bank_down_button = down_button
-                    self._bank_down_button != None and self._bank_down_button.add_value_listener(self._bank_down_value)
-            do_update and self.update()
+        self.set_bank_prev_button(down_button)
+        self.set_bank_next_button(up_button)
 
     def set_bank_buttons(self, buttons):
-        if not (buttons == None or isinstance(buttons, tuple)):
-            raise AssertionError
-            if self._bank_buttons != None:
-                for button in self._bank_buttons:
-                    button.remove_value_listener(self._bank_value)
-
-            self._bank_buttons = buttons
-            identify_sender = self._bank_buttons != None and True
-            for button in self._bank_buttons:
-                button.add_value_listener(self._bank_value, identify_sender)
-
+        self._bank_buttons = buttons
+        self._on_bank_value.replace_subjects(buttons or [])
         self.update()
 
     def set_parameter_controls(self, controls):
@@ -136,33 +112,20 @@ class DeviceComponent(ControlSurfaceComponent):
         if lock:
             self.set_device(device)
         self._locked_to_device = lock
-        if self.is_enabled() and self._lock_button != None:
-            self._lock_button.set_light(self._locked_to_device)
+        self._update_lock_button()
 
     def set_lock_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            if self._lock_button != None:
-                self._lock_button.remove_value_listener(self._lock_value)
-                self._lock_button = None
-            self._lock_button = button
-            self._lock_button != None and self._lock_button.add_value_listener(self._lock_value)
-        self.update()
+        raise button == None or isinstance(button, ButtonElement) or AssertionError
+        self._lock_button = button
+        self._lock_button_slot.subject = button
+        self._update_lock_button()
 
     def set_on_off_button(self, button):
-        if not (button == None or isinstance(button, ButtonElement)):
-            raise AssertionError
-            if self._on_off_button != None:
-                self._on_off_button.remove_value_listener(self._on_off_value)
-                self._on_off_button = None
-            self._on_off_button = button
-            self._on_off_button != None and self._on_off_button.add_value_listener(self._on_off_value)
-        self.update()
+        self._on_off_button = button
+        self._on_off_button_slot.subject = button
+        self._update_on_off_button()
 
     def set_lock_callback(self, callback):
-        raise self._lock_callback == None or AssertionError
-        raise callback != None or AssertionError
-        raise dir(callback).count('im_func') is 1 or AssertionError
         self._lock_callback = callback
 
     def restore_bank(self, bank_index):
@@ -176,18 +139,8 @@ class DeviceComponent(ControlSurfaceComponent):
             self._on_device_name_changed()
         return self._device_name_data_source
 
-    def device_has_listener(self, listener):
-        return listener in self._device_listeners
-
-    def add_device_listener(self, listener):
-        raise not self.device_has_listener(listener) or AssertionError
-        self._device_listeners.append(listener)
-
-    def remove_device_listener(self, listener):
-        raise self.device_has_listener(listener) or AssertionError
-        self._device_listeners.remove(listener)
-
     def update(self):
+        super(DeviceComponent, self).update()
         if self.is_enabled() and self._device != None:
             self._device_bank_registry.set_device_bank(self._device, self._bank_index)
             if self._parameter_controls != None:
@@ -195,28 +148,13 @@ class DeviceComponent(ControlSurfaceComponent):
                 self._assign_parameters()
                 if self._bank_name != old_bank_name:
                     self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
-            if self._bank_up_button != None and self._bank_down_button != None:
-                can_bank_up = self._bank_index == None or self._number_of_parameter_banks() > self._bank_index + 1
-                can_bank_down = self._bank_index == None or self._bank_index > 0
-                self._bank_up_button.set_light(can_bank_up)
-                self._bank_down_button.set_light(can_bank_down)
-            if self._bank_buttons != None:
-                for index, button in enumerate(self._bank_buttons):
-                    button.set_light(index == self._bank_index)
-
-        else:
-            if self._lock_button != None:
-                self._lock_button.turn_off()
-            if self._bank_up_button != None:
-                self._bank_up_button.turn_off()
-            if self._bank_down_button != None:
-                self._bank_down_button.turn_off()
-            if self._bank_buttons != None:
-                for button in self._bank_buttons:
-                    button.turn_off()
-
-            if self._parameter_controls != None:
-                self._release_parameters(self._parameter_controls)
+        elif self._parameter_controls != None:
+            self._release_parameters(self._parameter_controls)
+        if self.is_enabled():
+            self._update_on_off_button()
+            self._update_lock_button()
+            self._update_device_bank_buttons()
+            self._update_device_bank_nav_buttons()
 
     def _bank_up_value(self, value):
         raise self._bank_up_button != None or AssertionError
@@ -262,19 +200,17 @@ class DeviceComponent(ControlSurfaceComponent):
                 parameter = (not self._on_off_button.is_momentary() or value is not 0) and self._on_off_parameter()
                 parameter.value = parameter != None and parameter.is_enabled and float(int(parameter.value == 0.0))
 
+    @subject_slot_group('value')
+    def _on_bank_value(self, value, button):
+        self._bank_value(value, button)
+
     def _bank_value(self, value, button):
-        if not self._bank_buttons != None:
-            raise AssertionError
-            raise value != None or AssertionError
-            raise button != None or AssertionError
-            raise isinstance(value, int) or AssertionError
-            raise isinstance(button, ButtonElement) or AssertionError
-            if not list(self._bank_buttons).count(button) == 1:
-                raise AssertionError
-                if self.is_enabled() and self._device != None:
-                    if not button.is_momentary() or value is not 0:
-                        bank = list(self._bank_buttons).index(button)
-                        self._bank_name = bank != self._bank_index and self._number_of_parameter_banks() > bank and ''
+        if self.is_enabled() and self._device != None:
+            if not button.is_momentary() or value is not 0:
+                bank = list(self._bank_buttons).index(button)
+                if bank != self._bank_index:
+                    if self._number_of_parameter_banks() > bank:
+                        self._bank_name = ''
                         self._bank_index = bank
                         self.update()
                 else:
@@ -300,12 +236,12 @@ class DeviceComponent(ControlSurfaceComponent):
 
         self._release_parameters(self._parameter_controls[len(bank):])
 
+    def _on_device_on_off_changed(self):
+        self._update_on_off_button()
+
     def _on_device_name_changed(self):
         if self._device_name_data_source != None:
-            if self.is_enabled() and self._device != None:
-                self._device_name_data_source.set_display_string(self._device.name)
-            else:
-                self._device_name_data_source.set_display_string('No Device')
+            self._device_name_data_source.set_display_string(self._device.name if self.is_enabled() and self._device != None else 'No Device')
 
     def _on_parameters_changed(self):
         self.update()
@@ -320,16 +256,31 @@ class DeviceComponent(ControlSurfaceComponent):
 
         return result
 
-    def _on_on_off_changed(self):
+    def _update_on_off_button(self):
         if self.is_enabled() and self._on_off_button != None:
             turn_on = False
             if self._device != None:
                 parameter = self._on_off_parameter()
-                if parameter != None:
-                    turn_on = parameter.value > 0.0
-                turn_on and self._on_off_button.turn_on()
-            else:
-                self._on_off_button.turn_off()
+                turn_on = parameter != None and parameter.value > 0.0
+            self._on_off_button.set_light(turn_on)
+
+    def _update_lock_button(self):
+        if self.is_enabled() and self._lock_button != None:
+            self._lock_button.set_light(self._locked_to_device)
+
+    def _update_device_bank_buttons(self):
+        if self.is_enabled():
+            for index, button in enumerate(self._bank_buttons or []):
+                if button:
+                    button.set_light(index == self._bank_index and self._device)
+
+    def _update_device_bank_nav_buttons(self):
+        if self.is_enabled():
+            if self._bank_up_button != None and self._bank_down_button != None:
+                can_bank_up = self._bank_index == None or self._number_of_parameter_banks() > self._bank_index + 1
+                can_bank_down = self._bank_index == None or self._bank_index > 0
+                self._bank_up_button.set_light(self._device and can_bank_up)
+                self._bank_down_button.set_light(self._device and can_bank_down)
 
     def _best_of_parameter_bank(self):
         return best_of_parameter_bank(self._device)

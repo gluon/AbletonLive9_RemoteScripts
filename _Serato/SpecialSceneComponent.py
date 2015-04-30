@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Serato/SpecialSceneComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Serato/SpecialSceneComponent.py
 import Live
 from _Framework.SceneComponent import SceneComponent
 from _Framework.InputControlElement import *
@@ -56,11 +56,6 @@ class SpecialSceneComponent(SceneComponent):
 
     def _create_clip_slot(self):
         return SpecialClipSlotComponent()
-
-    def _on_is_triggered_changed(self):
-        raise self._scene != None or AssertionError
-        if self._scene.is_triggered:
-            pass
 
     def _on_name_changed(self):
         if self._serato_interface != None and self._index > -1:

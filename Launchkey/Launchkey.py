@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/Launchkey.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchkey/Launchkey.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -7,11 +7,12 @@ from _Framework.SliderElement import SliderElement
 from _Framework.ButtonElement import ButtonElement
 from _Framework.EncoderElement import EncoderElement
 from _Framework.DeviceComponent import DeviceComponent
+from _Framework.SessionComponent import SessionComponent
 from _Framework.TransportComponent import TransportComponent
 from Launchpad.ConfigurableButtonElement import ConfigurableButtonElement
+from SessionNavigationComponent import SessionNavigationComponent
 from TransportViewModeSelector import TransportViewModeSelector
 from SpecialMixerComponent import SpecialMixerComponent
-from SpecialSessionComponent import SpecialSessionComponent
 from consts import *
 IS_MOMENTARY = True
 
@@ -21,8 +22,8 @@ def make_button(cc_no, name):
     return button
 
 
-def make_configurable_button(cc_no, name):
-    button = ConfigurableButtonElement(IS_MOMENTARY, MIDI_NOTE_TYPE, 0, cc_no)
+def make_configurable_button(cc_no, name, type = MIDI_NOTE_TYPE, channel = 0):
+    button = ConfigurableButtonElement(IS_MOMENTARY, type, channel, cc_no)
     button.name = name
     return button
 
@@ -41,11 +42,34 @@ def make_slider(cc_no, name):
     return slider
 
 
+class LaunchkeyControlFactory(object):
+
+    def create_next_track_button(self):
+        return make_button(103, 'Next_Track_Button')
+
+    def create_prev_track_button(self):
+        return make_button(102, 'Prev_Track_Button')
+
+    def create_scene_launch_button(self):
+        return make_configurable_button(104, 'Scene_Launch_Button')
+
+    def create_scene_stop_button(self):
+        return make_configurable_button(120, 'Scene_Stop_Button')
+
+    def create_clip_launch_button(self, index):
+        return make_configurable_button(96 + index, 'Clip_Launch_%d' % index)
+
+    def create_clip_stop_button(self, index):
+        return make_configurable_button(112 + index, 'Clip_Stop_%d' % index)
+
+
 class Launchkey(ControlSurface):
     """ Script for Novation's Launchkey 25/49/61 keyboards """
 
-    def __init__(self, c_instance):
+    def __init__(self, c_instance, control_factory = LaunchkeyControlFactory(), identity_response = SIZE_RESPONSE):
         ControlSurface.__init__(self, c_instance)
+        self._control_factory = control_factory
+        self._identity_response = identity_response
         with self.component_guard():
             self.set_pad_translations(PAD_TRANSLATIONS)
             self._device_selection_follows_track_selection = True
@@ -64,6 +88,7 @@ class Launchkey(ControlSurface):
             self._setup_session()
             self._setup_transport()
             self._setup_device()
+            self._setup_navigation()
             for component in self.components:
                 component.set_enabled(False)
 
@@ -73,7 +98,7 @@ class Launchkey(ControlSurface):
         self.schedule_message(3, self._send_midi, SIZE_QUERY)
 
     def handle_sysex(self, midi_bytes):
-        if midi_bytes[0:11] == SIZE_RESPONSE:
+        if midi_bytes[0:11] == self._identity_response:
             self._has_sliders = midi_bytes[11] != 48
             self._send_midi(LED_FLASHING_ON)
             self._update_mixer_offset()
@@ -119,12 +144,9 @@ class Launchkey(ControlSurface):
         ControlSurface.build_midi_map(self, midi_map_handle)
 
     def _setup_mixer(self):
-        self._next_nav_button = make_button(103, 'Next_Track_Button')
-        self._prev_nav_button = make_button(102, 'Prev_Track_Button')
         mute_solo_flip_button = make_button(59, 'Master_Button')
         self._mixer = SpecialMixerComponent(8)
         self._mixer.name = 'Mixer'
-        self._mixer.set_select_buttons(self._next_nav_button, self._prev_nav_button)
         self._mixer.selected_strip().name = 'Selected_Channel_Strip'
         self._mixer.master_strip().name = 'Master_Channel_Strip'
         self._mixer.master_strip().set_volume_control(self._master_slider)
@@ -141,9 +163,9 @@ class Launchkey(ControlSurface):
         self._mixer.set_strip_mute_solo_buttons(tuple(self._strip_buttons), mute_solo_flip_button)
 
     def _setup_session(self):
-        scene_launch_button = make_configurable_button(104, 'Scene_Launch_Button')
-        scene_stop_button = make_configurable_button(120, 'Scene_Stop_Button')
-        self._session = SpecialSessionComponent(8, 0)
+        scene_launch_button = self._control_factory.create_scene_launch_button()
+        scene_stop_button = self._control_factory.create_scene_stop_button()
+        self._session = SessionComponent(8, 0)
         self._session.name = 'Session_Control'
         self._session.selected_scene().name = 'Selected_Scene'
         self._session.selected_scene().set_launch_button(scene_launch_button)
@@ -151,13 +173,13 @@ class Launchkey(ControlSurface):
         self._session.set_stop_all_clips_button(scene_stop_button)
         scene_stop_button.set_on_off_values(AMBER_FULL, LED_OFF)
         self._session.set_mixer(self._mixer)
-        self._session.set_track_banking_increment(8)
-        self._session.set_stop_track_clip_value(GREEN_BLINK)
+        self._session.set_stop_clip_value(AMBER_HALF)
+        self._session.set_stop_clip_triggered_value(GREEN_BLINK)
         clip_launch_buttons = []
         clip_stop_buttons = []
         for index in range(8):
-            clip_launch_buttons.append(make_configurable_button(96 + index, 'Clip_Launch_%d' % index))
-            clip_stop_buttons.append(make_configurable_button(112 + index, 'Clip_Stop_%d' % index))
+            clip_launch_buttons.append(self._control_factory.create_clip_launch_button(index))
+            clip_stop_buttons.append(self._control_factory.create_clip_stop_button(index))
             clip_slot = self._session.selected_scene().clip_slot(index)
             clip_slot.set_triggered_to_play_value(GREEN_BLINK)
             clip_slot.set_triggered_to_record_value(RED_BLINK)
@@ -192,6 +214,13 @@ class Launchkey(ControlSurface):
         device.name = 'Device_Component'
         self.set_device_component(device)
         device.set_parameter_controls(self._encoders)
+
+    def _setup_navigation(self):
+        self._next_track_button = self._control_factory.create_next_track_button()
+        self._prev_track_button = self._control_factory.create_prev_track_button()
+        self._session_navigation = SessionNavigationComponent(name='Session_Navigation')
+        self._session_navigation.set_next_track_button(self._next_track_button)
+        self._session_navigation.set_prev_track_button(self._prev_track_button)
 
     def _dummy_listener(self, value):
         pass

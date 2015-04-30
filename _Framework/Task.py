@@ -1,9 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Task.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Task.py
 """
 Task management.
 """
 import functools
-import Util
+import traceback
+from .Dependency import depends
+from .Util import remove_if, find_if, linear as linear_fn, print_message, const
 
 class TaskError(Exception):
     pass
@@ -208,14 +210,20 @@ class TaskGroup(Task):
         self._tasks = []
         super(TaskGroup, self).clear()
 
-    def do_update(self, timer):
+    @depends(log_message=const(print_message), traceback=const(traceback))
+    def do_update(self, timer, log_message = None, traceback = None):
         super(TaskGroup, self).do_update(timer)
         for task in self._tasks:
             if not task.is_killed:
-                task.update(timer)
+                try:
+                    task.update(timer)
+                except Exception:
+                    task.kill()
+                    log_message('Error when executing task')
+                    traceback.print_exc()
 
         if self.auto_remove:
-            self._tasks = Util.remove_if(lambda t: t.is_killed, self._tasks)
+            self._tasks = remove_if(lambda t: t.is_killed, self._tasks)
         all_killed = len(filter(lambda t: t.is_killed, self._tasks)) == self.count
         if self.auto_kill and all_killed:
             self.kill()
@@ -235,7 +243,7 @@ class TaskGroup(Task):
         task._set_parent(None)
 
     def find(self, task):
-        return Util.find_if(lambda t: t._task_equivalent(task), self._tasks)
+        return find_if(lambda t: t._task_equivalent(task), self._tasks)
 
     def restart(self):
         super(TaskGroup, self).restart()
@@ -401,7 +409,7 @@ def invfade(f, *a, **k):
 
 
 def linear(f, min, max, *a, **k):
-    return fade((lambda x: f(Util.linear(min, max, x))), *a, **k)
+    return fade((lambda x: f(linear_fn(min, max, x))), *a, **k)
 
 
 try:

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/NavigationNode.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/NavigationNode.py
 import Live.DrumPad
 import Live.Song
 import Live.Track
@@ -255,11 +255,11 @@ class ChainNode(ModelNode):
 
     def _set_selected_child_in_model(self, selected):
         song = self._get_song()
-        if isinstance(selected, Live.DrumPad.DrumPad) and selected:
+        if selected and isinstance(selected, Live.DrumPad.DrumPad):
             if selected.chains and selected.chains[0].devices:
                 song.view.select_device(selected.chains[0].devices[0])
             selected.canonical_parent.view.selected_drum_pad = selected
-        elif isinstance(selected, Live.Device.Device):
+        elif selected and isinstance(selected, Live.Device.Device):
             song.view.select_device(selected)
             self._device_bank_registry.set_device_bank(selected, None)
 

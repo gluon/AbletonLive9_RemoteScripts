@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Util.py
 """
 Various utilities.
 """
+from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
 from itertools import chain
@@ -35,7 +36,19 @@ def sign(value):
     return 1.0 if value >= 0.0 else -1.0
 
 
-class memoize(object):
+def to_slice(obj):
+    return obj if isinstance(obj, slice) else (slice(obj, obj + 1) if obj != -1 else slice(obj, None))
+
+
+def slice_size(slice, width):
+    return len(range(width)[slice])
+
+
+def maybe(fn):
+    return lambda x: fn(x) if x is not None else None
+
+
+def memoize(function):
     """
     Decorator to use automatic memoization on a given function, such
     that results are chached and, if called a second time, the
@@ -66,22 +79,22 @@ class memoize(object):
     Note that every computed value is cached in global state, so this
     can be inapropiate when the function domain is very big.
     """
+    memoized = {}
 
-    def __init__(self, function):
-        self.function = function
-        self.memoized = {}
-
-    def __call__(self, *args):
+    @wraps(function)
+    def wrapper(*args):
         try:
-            ret = self.memoized[args]
+            ret = memoized[args]
         except KeyError:
-            ret = self.memoized[args] = self.function(*args)
+            ret = memoized[args] = function(*args)
 
         return ret
 
+    return wrapper
+
 
 @memoize
-def mixin(one, two, *args):
+def mixin(*args):
     """
     Dynamically creates a class that inherits from all the classes
     passed as parameters. Example::
@@ -97,15 +110,10 @@ def mixin(one, two, *args):
     
         assert mixin(A, B) == mixin(A, B)
     """
-
-    class Mixin(one, two):
-
-        def __init__(self, *args, **kws):
-            super(Mixin, self).__init__(*args, **kws)
-
-    if args:
-        return mixin(Mixin, *args)
-    return Mixin
+    if len(args) == 1:
+        return args[0]
+    name = 'Mixin_%s' % '_'.join((cls.__name__ for cls in args))
+    return type(name, args, {})
 
 
 def monkeypatch(target, name = None, override = False, doc = None):
@@ -207,7 +215,7 @@ def instance_decorator(decorator):
     as second argument. The decorator method will be called lazily the
     first time the method is accessed.
     
-    For an example see @signal_slot in SubjectSlot module.
+    For an example see @subject_slot in SubjectSlot module.
     """
 
     class Decorator(object):
@@ -413,6 +421,16 @@ def recursive_map(fn, element, sequence_type = None):
         return fn(element)
 
 
+def chain_from_iterable(iterables):
+    """
+    Alternate constructor for chain(). Gets chained inputs from a single iterable
+    argument that is evaluated lazily.
+    """
+    for it in iterables:
+        for element in it:
+            yield element
+
+
 def first(seq):
     return seq[0]
 
@@ -500,14 +518,11 @@ class BooleanContext(object):
     def __nonzero__(self):
         return bool(self._current_value)
 
-    def __bool__(self):
-        return bool(self._current_value)
-
-    def __call__(self):
+    def __call__(self, update_value = None):
         """
         Makes a context manager for the boolean context
         """
-        return self.Manager(self)
+        return self.Manager(self, update_value)
 
     @property
     def value(self):
@@ -515,14 +530,15 @@ class BooleanContext(object):
 
     class Manager(object):
 
-        def __init__(self, managed = None, *a, **k):
+        def __init__(self, managed = None, update_value = None, *a, **k):
             super(BooleanContext.Manager, self).__init__(*a, **k)
             self._managed = managed
+            self._update_value = update_value if update_value is not None else not managed.default_value
 
         def __enter__(self):
             managed = self._managed
             self._old_value = managed._current_value
-            managed._current_value = not managed.default_value
+            managed._current_value = self._update_value
             return self
 
         def __exit__(self, *a, **k):
@@ -558,7 +574,7 @@ class NamedTuple(object):
             self.__dict__.update(diff)
 
         self.__dict__.update(k)
-        if hasattr(self, '_eq_dict'):
+        if '_eq_dict' in self.__dict__:
             self._eq_dict.update(k)
 
     def __setattr__(self, name, value):
@@ -632,6 +648,8 @@ class Slicer(object):
         return self
 
 
+get_slice = Slicer()
+
 def slicer(dimensions):
     """
     Slicer decorator.  Returns a decorator that will decorate a
@@ -649,6 +667,10 @@ def slicer(dimensions):
     return decorator
 
 
+def print_message(*messages):
+    print ' '.join(map(str, messages))
+
+
 def trace_value(value, msg = 'Value: '):
     """
     Prints value and returns value. Useful when debugging the results
@@ -656,10 +678,6 @@ def trace_value(value, msg = 'Value: '):
     """
     print msg, value
     return value
-
-
-def count_calls(fn = nop):
-    return wraps(fn)(CallCounter(fn))
 
 
 class Bindable(object):
@@ -684,26 +702,3 @@ class Bindable(object):
 
     def bind(self, bind_to_object):
         raise NotImplementedError
-
-
-class CallCounter(Bindable):
-    """
-    Function object that counts the number of times it is called.
-    """
-
-    def __init__(self, fn = nop, current_self = None, *a, **k):
-        super(CallCounter, self).__init__(*a, **k)
-        wraps(fn)(self)
-        self.fn = fn
-        self.count = 0
-        self.current_self = current_self
-
-    def bind(self, obj):
-        return CallCounter(fn=self.fn, current_self=obj)
-
-    def __call__(self, *a, **k):
-        self.count += 1
-        if self.current_self is not None:
-            return self.fn(self.current_self, *a, **k)
-        else:
-            return self.fn(*a, **k)

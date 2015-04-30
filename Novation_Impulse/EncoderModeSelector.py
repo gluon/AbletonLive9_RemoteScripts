@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/EncoderModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Novation_Impulse/EncoderModeSelector.py
 import Live
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
@@ -51,6 +51,7 @@ class EncoderModeSelector(ModeSelectorComponent):
         return self._number_of_modes
 
     def update(self):
+        super(EncoderModeSelector, self).update()
         if not self._mode_index in range(self.number_of_modes()):
             raise AssertionError
             if self.is_enabled():

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/LV1_LX1/LV1_LX1.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/LV1_LX1/LV1_LX1.py
 from LV2_LX2_LC2_LD2.FaderfoxComponent import FaderfoxComponent
 from LV2_LX2_LC2_LD2.FaderfoxScript import FaderfoxScript
 from LV2_LX2_LC2_LD2.FaderfoxMixerController import FaderfoxMixerController

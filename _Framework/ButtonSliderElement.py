@@ -1,9 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonSliderElement.py
-from SliderElement import SliderElement
-from InputControlElement import InputControlElement, MIDI_INVALID_TYPE
-from ButtonElement import ButtonElement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ButtonSliderElement.py
+from __future__ import absolute_import
+from .ButtonElement import ButtonElement
+from .InputControlElement import InputControlElement, MIDI_INVALID_TYPE
+from .SliderElement import SliderElement
+from .SubjectSlot import SlotManager
 
-class ButtonSliderElement(SliderElement):
+class ButtonSliderElement(SliderElement, SlotManager):
     """ Class representing a set of buttons used as a slider """
     _last_sent_value = -1
 
@@ -12,17 +14,15 @@ class ButtonSliderElement(SliderElement):
         raise isinstance(buttons, tuple) or AssertionError
         raise len(buttons) > 1 or AssertionError
         SliderElement.__init__(self, MIDI_INVALID_TYPE, 0, 0)
+        self._parameter_value_slot = self.register_slot(None, self._on_parameter_changed, 'value')
         self._buttons = buttons
-        self._last_button_lit = -1
-        identify_sender = True
-        for new_button in self._buttons:
-            raise new_button != None or AssertionError
-            raise isinstance(new_button, ButtonElement) or AssertionError
-            new_button.add_value_listener(self._button_value, identify_sender)
+        self._button_slots = self.register_slot_manager()
+        for button in self._buttons:
+            raise button != None or AssertionError
+            raise isinstance(button, ButtonElement) or AssertionError
+            self._button_slots.register_slot(button, self._button_value, 'value', extra_kws={'identify_sender': True})
 
     def disconnect(self):
-        if self._parameter_to_map_to != None:
-            self._parameter_to_map_to.remove_value_listener(self._on_parameter_changed)
         SliderElement.disconnect(self)
         self._buttons = None
 
@@ -39,16 +39,13 @@ class ButtonSliderElement(SliderElement):
         pass
 
     def connect_to(self, parameter):
-        if self._parameter_to_map_to != None:
-            self._parameter_to_map_to.remove_value_listener(self._on_parameter_changed)
         InputControlElement.connect_to(self, parameter)
+        self._parameter_value_slot.subject = parameter
         if self._parameter_to_map_to != None:
-            self._parameter_to_map_to.add_value_listener(self._on_parameter_changed)
             self._on_parameter_changed()
 
     def release_parameter(self):
-        if self._parameter_to_map_to != None:
-            self._parameter_to_map_to.remove_value_listener(self._on_parameter_changed)
+        self._parameter_value_slot.subject = None
         InputControlElement.release_parameter(self)
 
     def identifier_bytes(self):
@@ -56,17 +53,16 @@ class ButtonSliderElement(SliderElement):
 
     def send_value(self, value):
         if value != self._last_sent_value:
+            num_buttons = len(self._buttons)
             index_to_light = 0
-            if value > 0:
-                index_to_light = int((len(self._buttons) - 1) * value / 127)
-            for index in xrange(len(self._buttons)):
+            index_to_light = int((num_buttons - 1) * value / 127) if value > 0 else 0
+            for index in xrange(num_buttons):
                 if index == index_to_light:
                     self._buttons[index].turn_on()
                 else:
                     self._buttons[index].turn_off()
 
             self._last_sent_value = value
-            self._last_button_lit = index_to_light
 
     def _button_value(self, value, sender):
         self.clear_send_cache()
@@ -81,7 +77,6 @@ class ButtonSliderElement(SliderElement):
                     if param_value > self._parameter_to_map_to.max:
                         param_value = self._parameter_to_map_to.max
                 self._parameter_to_map_to.value = param_value
-            self._last_button_lit = index_of_sender
             self.notify_value(midi_value)
 
     def _on_parameter_changed(self):

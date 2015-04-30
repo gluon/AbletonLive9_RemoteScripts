@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchpad/SpecialMixerComponent.py
 import Live
 from _Framework.MixerComponent import MixerComponent
 from DefChannelStripComponent import DefChannelStripComponent
@@ -7,8 +7,8 @@ from _Framework.ButtonElement import ButtonElement
 class SpecialMixerComponent(MixerComponent):
     """ Class encompassing several defaultable channel strips to form a mixer """
 
-    def __init__(self, num_tracks, num_returns = 0, with_eqs = False, with_filters = False):
-        MixerComponent.__init__(self, num_tracks, num_returns, with_eqs, with_filters)
+    def __init__(self, num_tracks, num_returns = 0):
+        MixerComponent.__init__(self, num_tracks, num_returns)
         self._unarm_all_button = None
         self._unsolo_all_button = None
         self._unmute_all_button = None

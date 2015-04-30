@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ScrollComponent.py
-from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.SubjectSlot import subject_slot
-from _Framework import Task
-from _Framework import Defaults
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ScrollComponent.py
+from __future__ import absolute_import
+from . import Defaults
+from . import Task
+from .Control import ButtonControl
+from .ControlSurfaceComponent import ControlSurfaceComponent
 
 class Scrollable(object):
     """
@@ -34,6 +35,9 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
     default_scrollable = Scrollable()
     default_pager = Scrollable()
     _scrollable = default_scrollable
+    default_scroll_skin = dict(color='Enabled', pressed_color='Pressed', disabled_color=False)
+    scroll_up_button = ButtonControl(**default_scroll_skin)
+    scroll_down_button = ButtonControl(**default_scroll_skin)
 
     def __init__(self, scrollable = None, *a, **k):
         super(ScrollComponent, self).__init__(*a, **k)
@@ -52,7 +56,7 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
 
     def _set_scrollable(self, scrollable):
         self._scrollable = scrollable
-        self.update()
+        self._update_scroll_buttons()
 
     scrollable = property(_get_scrollable, _set_scrollable)
 
@@ -69,75 +73,57 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
         return self._scrollable.scroll_down()
 
     def set_scroll_up_button(self, button):
-        self._on_scroll_up_value.subject = button
-        if not button or not button.is_pressed():
-            self._scroll_task_up.kill()
-        self._update_scroll_up_button()
+        self.scroll_up_button.set_control_element(button)
 
     def set_scroll_down_button(self, button):
-        self._on_scroll_down_value.subject = button
-        if not button or not button.is_pressed():
-            self._scroll_task_down.kill()
-        self._update_scroll_down_button()
+        self.scroll_down_button.set_control_element(button)
 
-    def update(self):
-        self._update_scroll_down_button()
-        self._update_scroll_up_button()
+    def _update_scroll_buttons(self):
+        self.scroll_up_button.enabled = self.can_scroll_up()
+        self.scroll_down_button.enabled = self.can_scroll_down()
 
-    def _update_scroll_up_button(self):
-        button = self._on_scroll_up_value.subject
-        if self.is_enabled() and button:
-            if button.is_momentary():
-                is_pressed = button.is_pressed()
-                can_scroll_up = self.can_scroll_up()
-                can_scroll_up and button.set_light('Pressed' if is_pressed else 'Enabled')
-            else:
-                button.turn_off()
+    @scroll_up_button.pressed
+    def scroll_up_button(self, button):
+        self._on_scroll_pressed(button, self._do_scroll_up, self._scroll_task_up)
 
-    def _update_scroll_down_button(self):
-        button = self._on_scroll_down_value.subject
-        if self.is_enabled() and button:
-            if button.is_momentary():
-                is_pressed = button.is_pressed()
-                can_scroll_down = self.can_scroll_down()
-                can_scroll_down and button.set_light('Pressed' if is_pressed else 'Enabled')
-            else:
-                button.turn_off()
+    @scroll_up_button.released
+    def scroll_up_button(self, button):
+        self._on_scroll_released(self._scroll_task_up)
 
-    @subject_slot('value')
-    def _on_scroll_up_value(self, value):
-        self._on_scroll_value(value, self._on_scroll_up_value.subject, self._do_scroll_up, self._scroll_task_up)
+    @scroll_down_button.pressed
+    def scroll_down_button(self, button):
+        self._on_scroll_pressed(button, self._do_scroll_down, self._scroll_task_down)
 
-    @subject_slot('value')
-    def _on_scroll_down_value(self, value):
-        self._on_scroll_value(value, self._on_scroll_down_value.subject, self._do_scroll_down, self._scroll_task_down)
+    @scroll_down_button.released
+    def scroll_down_button(self, button):
+        self._on_scroll_released(self._scroll_task_down)
 
     def _do_scroll_up(self):
         self.scroll_up()
-        self._update_scroll_up_button()
-        self._update_scroll_down_button()
+        self._update_scroll_buttons()
 
     def _do_scroll_down(self):
         self.scroll_down()
-        self._update_scroll_up_button()
-        self._update_scroll_down_button()
+        self._update_scroll_buttons()
 
-    def _on_scroll_value(self, value, button, scroll_step, scroll_task):
-        if self.is_enabled():
-            is_momentary = button.is_momentary()
-            if not not self._scroll_task_up.is_killed:
-                is_scrolling = not self._scroll_task_down.is_killed
-                if not is_scrolling or not is_momentary:
-                    scroll_step()
-                scroll_task.kill()
-                is_momentary and value and scroll_task.restart()
-            self._ensure_scroll_one_direction()
-            self.update()
+    def update(self):
+        super(ScrollComponent, self).update()
+        self._update_scroll_buttons()
+
+    def _on_scroll_pressed(self, button, scroll_step, scroll_task):
+        if not not self._scroll_task_up.is_killed:
+            is_scrolling = not self._scroll_task_down.is_killed
+            if not is_scrolling:
+                scroll_step()
+            button.enabled and scroll_task.restart()
+        self._ensure_scroll_one_direction()
+
+    def _on_scroll_released(self, scroll_task):
+        scroll_task.kill()
+        self._ensure_scroll_one_direction()
 
     def _ensure_scroll_one_direction(self):
-        scroll_up_button = self._on_scroll_up_value.subject
-        scroll_down_button = self._on_scroll_down_value.subject
-        if scroll_up_button and scroll_up_button.is_pressed() and scroll_down_button and scroll_down_button.is_pressed():
+        if self.scroll_up_button.is_pressed and self.scroll_down_button.is_pressed:
             self._scroll_task_up.pause()
             self._scroll_task_down.pause()
         else:

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/VCM600/ViewTogglerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/VCM600/ViewTogglerComponent.py
 import Live
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ButtonElement import ButtonElement
@@ -62,6 +62,7 @@ class ViewTogglerComponent(ControlSurfaceComponent):
         self.update()
 
     def update(self):
+        super(ViewTogglerComponent, self).update()
         if self.is_enabled():
             self._update_buttons()
         else:

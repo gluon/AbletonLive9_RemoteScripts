@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl/ChannelStrip.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MackieControl/ChannelStrip.py
 from MackieControlComponent import *
 from itertools import chain
 
@@ -16,7 +16,6 @@ class ChannelStrip(MackieControlComponent):
         self.__v_pot_parameter = None
         self.__v_pot_display_mode = VPOT_DISPLAY_SINGLE_DOT
         self.__fader_parameter = None
-        self.__signal_led_enabled = True
         self.__meters_enabled = False
         self.__last_meter_value = -1
         self.__send_meter_mode()
@@ -30,7 +29,6 @@ class ChannelStrip(MackieControlComponent):
             self.__remove_listeners()
         self.__assigned_track = None
         self.send_midi((208, 0 + (self.__strip_index << 4)))
-        self.__signal_led_enabled = False
         self.__meters_enabled = False
         self.__send_meter_mode()
         self.refresh_state()
@@ -98,13 +96,10 @@ class ChannelStrip(MackieControlComponent):
         if not parameter:
             self.reset_fader()
 
-    def enable_meter_mode(self, Enabled):
+    def enable_meter_mode(self, Enabled, needs_to_send_meter_mode = True):
         self.__meters_enabled = Enabled
-        self.__send_meter_mode()
-
-    def enable_signal_leds(self, Enable):
-        self.__signal_led_enabled = Enable
-        self.__send_meter_mode()
+        if needs_to_send_meter_mode or Enabled:
+            self.__send_meter_mode()
 
     def reset_fader(self):
         self.send_midi((PB_STATUS + self.__strip_index, 0, 0))
@@ -170,7 +165,7 @@ class ChannelStrip(MackieControlComponent):
             self.unlight_vpot_leds()
 
     def on_update_display_timer(self):
-        if self.__signal_led_enabled or self.__meters_enabled:
+        if not self.main_script().is_pro_version or self.__meters_enabled and self.__channel_strip_controller.assignment_mode() == CSM_VOLPAN:
             if self.__assigned_track:
                 if self.__assigned_track.can_be_armed and self.__assigned_track.arm:
                     meter_value = self.__assigned_track.input_meter_level
@@ -238,10 +233,8 @@ class ChannelStrip(MackieControlComponent):
         self.song().view.remove_selected_track_listener(self.__update_track_is_selected_led)
 
     def __send_meter_mode(self):
-        on_mode = 0
+        on_mode = 1
         off_mode = 0
-        if self.__signal_led_enabled:
-            on_mode = on_mode | 1
         if self.__meters_enabled:
             on_mode = on_mode | 2
         if self.__assigned_track:

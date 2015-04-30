@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/ProjectMixIO/ProjectMixIO.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/ProjectMixIO/ProjectMixIO.py
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.MainDisplayController import MainDisplayController
@@ -37,6 +37,7 @@ class ProjectMixIO:
         self.__option_is_pressed = False
         self.__ctrl_is_pressed = False
         self.__alt_is_pressed = False
+        self.is_pro_version = False
 
     def disconnect(self):
         for c in self.__components:

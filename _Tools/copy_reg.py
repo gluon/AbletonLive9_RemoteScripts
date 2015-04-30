@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Tools/copy_reg.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Tools/copy_reg.py
 """Helper to provide extensibility for pickle/cPickle.
 
 This is only useful to add pickle support for extension types defined in

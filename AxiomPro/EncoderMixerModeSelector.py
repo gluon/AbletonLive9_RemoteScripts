@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/EncoderMixerModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/EncoderMixerModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -91,6 +91,7 @@ class EncoderMixerModeSelector(ModeSelectorComponent):
         return 4
 
     def update(self):
+        super(EncoderMixerModeSelector, self).update()
         if not self._modes_buttons != None:
             raise AssertionError
             if self.is_enabled() and self._controls != None:

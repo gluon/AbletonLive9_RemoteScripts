@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DeviceBankRegistry.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DeviceBankRegistry.py
 """
 Classes to keep a global registry of the currently selected bank for
 given device instances.
@@ -6,7 +6,8 @@ given device instances.
 [jbo] After some though about this, I personally believe that moving
 banking to the C++ code is the best mid-term solution.
 """
-from SubjectSlot import Subject
+from __future__ import absolute_import
+from .SubjectSlot import Subject
 
 class DeviceBankRegistry(Subject):
     __subject_events__ = ('device_bank',)

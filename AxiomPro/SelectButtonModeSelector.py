@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/SelectButtonModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/SelectButtonModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
@@ -31,6 +31,7 @@ class SelectButtonModeSelector(ModeSelectorComponent):
         return 4
 
     def update(self):
+        super(SelectButtonModeSelector, self).update()
         if self.is_enabled():
             for index in range(len(self._buttons)):
                 if self._mode_index == 0:

@@ -1,12 +1,15 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ClipControlComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ClipControlComponent.py
+from __future__ import with_statement
 import Live
+from contextlib import contextmanager
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.DisplayDataSource import DisplayDataSource
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ModesComponent import ModesComponent
-from _Framework.Util import clamp
+from _Framework.Util import clamp, second
 ONE_THIRTYSECOND_IN_BEATS = 0.125
 ONE_SIXTEENTH_IN_BEATS = 0.25
+ONE_YEAR_AT_120BPM_IN_BEATS = 63072000.0
 GRID_QUANTIZATION_LIST = [Live.Clip.GridQuantization.no_grid,
  Live.Clip.GridQuantization.g_thirtysecond,
  Live.Clip.GridQuantization.g_sixteenth,
@@ -43,39 +46,21 @@ def is_new_recording(clip):
     return clip.is_recording and not clip.is_overdubbing
 
 
-class NoClipSettingsComponent(ControlSurfaceComponent):
-    """
-    Active component when no clip is selected
-    """
-
-    def __init__(self, name_data_sources = None, param_data_sources = None, *a, **k):
-        super(NoClipSettingsComponent, self).__init__(*a, **k)
-        self._name_data_sources = name_data_sources
-        self._param_data_sources = param_data_sources
-
-    def update(self):
-        if self.is_enabled():
-            for data_source in self._name_data_sources:
-                data_source.set_display_string('')
-
-            for data_source in self._param_data_sources:
-                data_source.set_display_string('')
-
-
 class LoopSettingsComponent(ControlSurfaceComponent):
     """
     Component for managing loop settings of a clip
     """
 
-    def __init__(self, name_data_sources = None, param_data_sources = None, *a, **k):
+    def __init__(self, *a, **k):
         super(LoopSettingsComponent, self).__init__(*a, **k)
         self._clip = None
-        self._name_sources = name_data_sources
-        self._clip_value_sources = param_data_sources
+        self._name_sources = [ DisplayDataSource() for _ in xrange(4) ]
+        self._value_sources = [ DisplayDataSource() for _ in xrange(4) ]
         self._clip_is_looping = False
         self._clip_loop_start = None
         self._clip_loop_end = None
         self._clip_loop_length = None
+        self._lowest_note_time = 0.0
         self._encoder_factor = 4.0
         self._shift_button = None
 
@@ -87,6 +72,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._on_looping_changed.subject = clip
         self._on_loop_start_changed.subject = clip
         self._on_loop_end_changed.subject = clip
+        self._on_clip_notes_changed.subject = clip if clip != None and clip.is_midi_clip else None
         self.update()
 
     clip = property(_get_clip, _set_clip)
@@ -96,17 +82,19 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._on_shift_value.subject = button
         self._update_encoder_factor()
 
-    def set_clip_start_control(self, control):
-        self._on_clip_start_value.subject = control
+    def set_encoders(self, encoders):
+        self._on_clip_start_value.subject = encoders[0] if encoders else None
+        self._on_clip_position_value.subject = encoders[1] if encoders else None
+        self._on_clip_end_value.subject = encoders[2] if encoders else None
+        self._on_clip_looping_value.subject = encoders[3] if encoders else None
 
-    def set_clip_position_control(self, control):
-        self._on_clip_position_value.subject = control
+    def set_name_display(self, display):
+        if display:
+            display.set_data_sources(self._name_sources)
 
-    def set_clip_end_control(self, control):
-        self._on_clip_end_value.subject = control
-
-    def set_clip_looping_control(self, control):
-        self._on_clip_looping_value.subject = control
+    def set_value_display(self, display):
+        if display:
+            display.set_data_sources(self._value_sources)
 
     @subject_slot('value')
     def _on_shift_value(self, value):
@@ -124,34 +112,54 @@ class LoopSettingsComponent(ControlSurfaceComponent):
                 self._clip_loop_end = self._clip.loop_end
                 self._update_loop_length()
 
-    @subject_slot('normalized_value')
-    def _on_clip_start_value(self, value):
-        if self._clip != None:
-            self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, 0.0)
-            loop_start = max(0.0, self._round_beats(self._clip_loop_start, value > 0))
-            if loop_start < self._clip.loop_end:
-                self._clip.loop_start = loop_start
-            elif not self._clip.looping:
-                self._clip_loop_start = self._clip.loop_end - ONE_SIXTEENTH_IN_BEATS
-                self._clip.loop_start = self._clip_loop_start
-            else:
-                self._clip_loop_start = self._clip.loop_start
+    def _calc_new_loop_start(self, value):
+        self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, min(0.0, self._clip_loop_start))
+        round_up = value > 0
+        loop_start = self._round_beats(self._clip_loop_start, round_up)
+        if loop_start < 0.0:
+            lowest_event_time = min(0, self._clip.start_marker, self._lowest_note_time)
+            if lowest_event_time >= self._clip_loop_start:
+                loop_start = max(self._clip_loop_start, loop_start)
+        return loop_start
 
     def _round_beats(self, value, round_up = False):
         factor = 0.5 if round_up else -0.5
+        rounded = 0.0
         if self._shift_button and self._shift_button.is_pressed():
-            return int(round(value + factor))
+            rounded = int(round(value + factor))
         else:
             measure = self._one_measure_in_beats()
-            return int(round(value / measure + factor) * measure)
+            rounded = int(round(value / measure + factor) * measure)
+        return float(rounded)
+
+    @contextmanager
+    def _clip_view_update_guard(self):
+        clip = self._clip
+        old_loop_start, old_loop_end = clip.loop_start, clip.loop_end
+        yield
+        if clip.loop_start < old_loop_start or clip.loop_end > old_loop_end:
+            self._clip.view.show_loop()
+
+    @subject_slot('normalized_value')
+    def _on_clip_start_value(self, value):
+        if self._clip != None:
+            with self._clip_view_update_guard():
+                loop_start = self._calc_new_loop_start(value)
+                if loop_start < self._clip.loop_end:
+                    self._clip.loop_start = loop_start
+                elif not self._clip.looping:
+                    self._clip_loop_start = self._clip.loop_end - ONE_SIXTEENTH_IN_BEATS
+                    self._clip.loop_start = self._clip_loop_start
+                else:
+                    self._clip_loop_start = self._clip.loop_start
 
     @subject_slot('normalized_value')
     def _on_clip_position_value(self, value):
         if self._clip != None and not is_new_recording(self._clip):
-            self._clip_loop_start = max(self._clip_loop_start + value * self._one_measure_in_beats() * self._encoder_factor, 0.0)
-            self._clip_loop_end = self._clip_loop_start + self._clip_loop_length
-            loop_start = max(0.0, self._round_beats(self._clip_loop_start, value > 0))
+            loop_start = self._calc_new_loop_start(value)
             loop_end = loop_start + self._clip_loop_length
+            self._clip_loop_start = loop_start
+            self._clip_loop_end = loop_end
             if value > 0:
                 self._clip.loop_end = loop_end
                 self._clip.loop_start = loop_start
@@ -185,6 +193,14 @@ class LoopSettingsComponent(ControlSurfaceComponent):
         self._update_position_source()
         self._update_loop_end_source()
 
+    @subject_slot('notes')
+    def _on_clip_notes_changed(self):
+        self._lowest_note_time = 0.0
+        if self._clip != None and self._clip.is_midi_clip:
+            earliest_time = -ONE_YEAR_AT_120BPM_IN_BEATS
+            negative_notes = self._clip.get_notes(earliest_time, 0, -earliest_time, 128)
+            self._lowest_note_time = min([0.0] + map(second, negative_notes))
+
     @subject_slot('normalized_value')
     def _on_clip_end_value(self, value):
         if self._clip != None and not is_new_recording(self._clip):
@@ -194,8 +210,10 @@ class LoopSettingsComponent(ControlSurfaceComponent):
                     self._clip_loop_end = self._clip.loop_start + ONE_SIXTEENTH_IN_BEATS
                     self._clip.loop_end = self._clip_loop_end
             else:
-                self._clip.loop_end = self._round_beats(self._clip_loop_end, value > 0)
-                self._clip.view.show_loop()
+                loop_end = self._round_beats(self._clip_loop_end, value > 0)
+                if loop_end > self._clip.loop_start:
+                    self._clip.loop_end = loop_end
+                    self._clip.view.show_loop()
 
     @subject_slot('normalized_value')
     def _on_clip_looping_value(self, value):
@@ -214,23 +232,24 @@ class LoopSettingsComponent(ControlSurfaceComponent):
             self._clip_loop_length = self._clip.loop_end - self._clip.loop_start
 
     def _update_loop_start_source(self):
-        self._clip_value_sources[0].set_display_string(convert_time_to_bars_beats_sixteenths(self._clip.loop_start) if self._clip else '-')
+        self._value_sources[0].set_display_string(convert_time_to_bars_beats_sixteenths(self._clip.loop_start) if self._clip else '-')
 
     def _update_loop_end_source(self):
         if self._clip and not is_new_recording(self._clip):
-            self._clip_value_sources[2].set_display_string(convert_length_to_bars_beats_sixteenths(self._clip_loop_length) if self._clip_is_looping else convert_time_to_bars_beats_sixteenths(self._clip.loop_end))
-            self._clip_value_sources[3].set_display_string('On' if self._clip_is_looping else 'Off')
+            self._value_sources[2].set_display_string(convert_length_to_bars_beats_sixteenths(self._clip_loop_length) if self._clip_is_looping else convert_time_to_bars_beats_sixteenths(self._clip.loop_end))
+            self._value_sources[3].set_display_string('On' if self._clip_is_looping else 'Off')
         else:
-            self._clip_value_sources[2].set_display_string('-')
-            self._clip_value_sources[3].set_display_string('-')
+            self._value_sources[2].set_display_string('-')
+            self._value_sources[3].set_display_string('-')
 
     def _update_position_source(self):
-        self._clip_value_sources[1].set_display_string(convert_time_to_bars_beats_sixteenths(self._clip.loop_start) if self._clip else '-')
+        self._value_sources[1].set_display_string(convert_time_to_bars_beats_sixteenths(self._clip.loop_start) if self._clip else '-')
 
     def _one_measure_in_beats(self):
         return 4.0 * self.song().signature_numerator / self.song().signature_denominator
 
     def update(self):
+        super(LoopSettingsComponent, self).update()
         if self.is_enabled():
             for index, label in enumerate(['Start',
              'Position',
@@ -242,38 +261,7 @@ class LoopSettingsComponent(ControlSurfaceComponent):
             self._on_loop_start_changed()
             self._on_loop_end_changed()
             self._on_looping_changed()
-
-
-class MidiClipSettingsComponent(ControlSurfaceComponent):
-    """
-    Component for managing settings of a MIDI clip
-    """
-
-    def __init__(self, name_data_sources = None, param_data_sources = None, *a, **k):
-        super(MidiClipSettingsComponent, self).__init__(*a, **k)
-        self._clip = None
-        self._name_sources = name_data_sources
-        self._param_sources = param_data_sources
-
-    def _get_clip(self):
-        return self._clip
-
-    def _set_clip(self, clip):
-        self._clip = clip
-        self.update()
-
-    clip = property(_get_clip, _set_clip)
-
-    def update(self):
-        if self.is_enabled():
-            for index, label in enumerate([' ',
-             ' ',
-             ' ',
-             ' ']):
-                self._name_sources[index].set_display_string(label)
-
-            for data_source in self._param_sources:
-                data_source.set_display_string(' ')
+            self._on_clip_notes_changed()
 
 
 class AudioClipSettingsComponent(ControlSurfaceComponent):
@@ -281,7 +269,7 @@ class AudioClipSettingsComponent(ControlSurfaceComponent):
     Component for managing settings of an audio clip
     """
 
-    def __init__(self, name_data_sources = None, param_data_sources = None, *a, **k):
+    def __init__(self, *a, **k):
         super(AudioClipSettingsComponent, self).__init__(*a, **k)
         self._clip = None
         self._warp_mode_names = {Live.Clip.WarpMode.beats: 'Beats',
@@ -299,8 +287,8 @@ class AudioClipSettingsComponent(ControlSurfaceComponent):
         self._warp_mode = None
         self._warp_mode_encoder_value = 0.0
         self._encoder_factor = 1.0
-        self._name_sources = name_data_sources
-        self._param_sources = param_data_sources
+        self._name_sources = [ DisplayDataSource() for _ in xrange(4) ]
+        self._value_sources = [ DisplayDataSource() for _ in xrange(4) ]
         self._shift_button = None
 
     def _get_clip(self):
@@ -325,22 +313,24 @@ class AudioClipSettingsComponent(ControlSurfaceComponent):
 
     clip = property(_get_clip, _set_clip)
 
-    def set_warp_mode_control(self, control):
-        self._on_clip_warp_mode_value.subject = control
-
-    def set_detune_control(self, control):
-        self._on_clip_detune_value.subject = control
-
-    def set_transpose_control(self, control):
-        self._on_clip_transpose_value.subject = control
-
-    def set_gain_control(self, control):
-        self._on_clip_gain_value.subject = control
+    def set_encoders(self, encoders):
+        self._on_clip_warp_mode_value.subject = encoders[0] if encoders else None
+        self._on_clip_detune_value.subject = encoders[1] if encoders else None
+        self._on_clip_transpose_value.subject = encoders[2] if encoders else None
+        self._on_clip_gain_value.subject = encoders[3] if encoders else None
 
     def set_shift_button(self, button):
         self._shift_button = button
         self._on_shift_value.subject = button
         self._update_encoder_factor()
+
+    def set_name_display(self, display):
+        if display:
+            display.set_data_sources(self._name_sources)
+
+    def set_value_display(self, display):
+        if display:
+            display.set_data_sources(self._value_sources)
 
     @subject_slot('value')
     def _on_shift_value(self, value):
@@ -440,21 +430,22 @@ class AudioClipSettingsComponent(ControlSurfaceComponent):
             value = self._warp_mode_names[self._warp_mode] if self._warping else 'Off'
         else:
             value = '-'
-        self._param_sources[0].set_display_string(value)
+        self._value_sources[0].set_display_string(value)
 
     def _update_gain_source(self):
         value = self._clip.gain_display_string if self._clip and self._gain != None else '-'
-        self._param_sources[3].set_display_string(value)
+        self._value_sources[3].set_display_string(value)
 
     def _update_pitch_fine_source(self):
         value = str(int(self._pitch_fine)) + ' ct' if self._clip and self._clip.pitch_fine != None else '-'
-        self._param_sources[1].set_display_string(value)
+        self._value_sources[1].set_display_string(value)
 
     def _update_pitch_coarse_source(self):
         value = str(int(self._pitch_coarse)) + ' st' if self._clip and self._clip.pitch_coarse != None else '-'
-        self._param_sources[2].set_display_string(value)
+        self._value_sources[2].set_display_string(value)
 
     def update(self):
+        super(AudioClipSettingsComponent, self).update()
         if self.is_enabled():
             for index, label in enumerate(['WarpMode',
              'Detune',
@@ -474,29 +465,35 @@ class ClipNameComponent(ControlSurfaceComponent):
     """
     Component for showing the clip name
     """
+    num_label_segments = 4
 
-    def __init__(self, name_data_source = None, *a, **k):
+    def __init__(self, *a, **k):
         super(ClipNameComponent, self).__init__(*a, **k)
         self._clip = None
-        self._clip_name = ''
-        self._name_data_source = name_data_source
+        self._name_data_sources = [ DisplayDataSource() for _ in xrange(self.num_label_segments) ]
+        self._name_data_sources[0].set_display_string('Clip Selection:')
 
     def _get_clip(self):
         return self._clip
 
     def _set_clip(self, clip):
         self._clip = clip
-        self._clip_name = self._name_for_clip(clip)
+        self._update_clip_name()
         self._on_name_changed.subject = clip
         self.update()
 
     clip = property(_get_clip, _set_clip)
 
+    def set_display(self, display):
+        if display:
+            display.set_num_segments(self.num_label_segments)
+            for idx in xrange(self.num_label_segments):
+                display.segment(idx).set_data_source(self._name_data_sources[idx])
+
     @subject_slot('name')
     def _on_name_changed(self):
         if self.is_enabled():
-            self._clip_name = self._name_for_clip(self._clip)
-            self._update_clip_name_source()
+            self._update_clip_name()
 
     def _name_for_clip(self, clip):
         if clip:
@@ -504,81 +501,29 @@ class ClipNameComponent(ControlSurfaceComponent):
         else:
             return '[none]'
 
-    def _update_clip_name_source(self):
-        self._name_data_source.set_display_string(self._clip_name)
+    def _update_clip_name(self):
+        self._name_data_sources[1].set_display_string(self._name_for_clip(self._clip))
 
     def update(self):
+        super(ClipNameComponent, self).update()
         if self.is_enabled():
-            self._update_clip_name_source()
+            self._update_clip_name()
 
 
 class ClipControlComponent(ModesComponent):
     """
     Component that modifies clip properties
     """
-    num_label_segments = 4
 
-    def __init__(self, *a, **k):
+    def __init__(self, loop_layer = None, audio_layer = None, clip_name_layer = None, *a, **k):
         super(ClipControlComponent, self).__init__(*a, **k)
-        self._clip_param_sources = [ DisplayDataSource() for _ in xrange(8) ]
-        self._clip_value_sources = [ DisplayDataSource() for _ in xrange(8) ]
-        self._clip_name_data_sources = [ DisplayDataSource() for _ in xrange(self.num_label_segments) ]
-        self._clip_name_data_sources[0].set_display_string('Clip Selection:')
-        self._no_settings = NoClipSettingsComponent(self._clip_param_sources, self._clip_value_sources)
-        self._midi_clip_settings = MidiClipSettingsComponent(self._clip_param_sources[4:], self._clip_value_sources[4:])
-        self._midi_clip_settings.set_enabled(False)
-        self._audio_clip_settings = AudioClipSettingsComponent(self._clip_param_sources[4:], self._clip_value_sources[4:])
-        self._audio_clip_settings.set_enabled(False)
-        self._loop_settings = LoopSettingsComponent(self._clip_param_sources[:4], self._clip_value_sources[:4])
-        self._loop_settings.set_enabled(False)
-        self._clip_name = ClipNameComponent(self._clip_name_data_sources[1])
-        self._clip_name.set_enabled(False)
-        self.register_components(self._no_settings, self._loop_settings, self._midi_clip_settings, self._audio_clip_settings, self._clip_name)
-        self.add_mode('no_clip', (self._no_settings, self._clip_name))
-        self.add_mode('midi', (self._loop_settings, self._midi_clip_settings, self._clip_name))
+        self._audio_clip_settings, self._loop_settings, self._clip_name = self.register_components(AudioClipSettingsComponent(is_enabled=False, layer=audio_layer), LoopSettingsComponent(is_enabled=False, layer=loop_layer), ClipNameComponent(is_enabled=False, layer=clip_name_layer))
+        self.add_mode('no_clip', (self._clip_name,))
+        self.add_mode('midi', (self._loop_settings, self._clip_name))
         self.add_mode('audio', (self._loop_settings, self._audio_clip_settings, self._clip_name))
         self.selected_mode = 'no_clip'
         self._update_clip()
         self._on_detail_clip_changed.subject = self.song().view
-
-    def set_controls(self, controls):
-        if not (not controls or len(controls) == 8):
-            raise AssertionError
-            controls != None and self._loop_settings.set_clip_start_control(controls[0])
-            self._loop_settings.set_clip_position_control(controls[1])
-            self._loop_settings.set_clip_end_control(controls[2])
-            self._loop_settings.set_clip_looping_control(controls[3])
-            self._audio_clip_settings.set_warp_mode_control(controls[4])
-            self._audio_clip_settings.set_detune_control(controls[5])
-            self._audio_clip_settings.set_transpose_control(controls[6])
-            self._audio_clip_settings.set_gain_control(controls[7])
-        else:
-            self._loop_settings.set_clip_start_control(None)
-            self._loop_settings.set_clip_position_control(None)
-            self._loop_settings.set_clip_end_control(None)
-            self._loop_settings.set_clip_looping_control(None)
-            self._audio_clip_settings.set_warp_mode_control(None)
-            self._audio_clip_settings.set_detune_control(None)
-            self._audio_clip_settings.set_transpose_control(None)
-            self._audio_clip_settings.set_gain_control(None)
-
-    def set_param_display(self, display):
-        if display:
-            display.set_data_sources(self._clip_param_sources)
-
-    def set_value_display(self, display):
-        if display:
-            display.set_data_sources(self._clip_value_sources)
-
-    def set_clip_name_display(self, display):
-        if display:
-            display.set_num_segments(self.num_label_segments)
-            for idx in xrange(self.num_label_segments):
-                display.segment(idx).set_data_source(self._clip_name_data_sources[idx])
-
-    def set_shift_button(self, button):
-        self._loop_settings.set_shift_button(button)
-        self._audio_clip_settings.set_shift_button(button)
 
     def on_selected_scene_changed(self):
         self._update_clip()
@@ -591,21 +536,21 @@ class ClipControlComponent(ModesComponent):
         self._update_clip()
 
     def update(self):
+        super(ClipControlComponent, self).update()
         if self.is_enabled():
             self._update_clip()
 
+    def _update_mode(self):
+        track = self.song().view.selected_track
+        new_mode = 'no_clip'
+        if track.clip_slots and (track.has_midi_input or track.has_audio_input):
+            new_mode = 'midi' if track.has_midi_input else 'audio'
+        self.selected_mode = new_mode
+
     def _update_clip(self):
+        self._update_mode()
         clip = self.song().view.detail_clip if self.is_enabled() else None
-        selected_track = self.song().view.selected_track
-        if selected_track.has_midi_input and selected_track.can_be_armed:
-            self.selected_mode = 'midi'
-        elif selected_track.has_audio_input and selected_track.can_be_armed:
-            self.selected_mode = 'audio'
-        else:
-            self.selected_mode = 'no_clip'
-        midi_clip = clip if clip and not clip.is_audio_clip else None
         audio_clip = clip if clip and clip.is_audio_clip else None
         self._clip_name.clip = clip
         self._loop_settings.clip = clip
-        self._midi_clip_settings.clip = midi_clip
         self._audio_clip_settings.clip = audio_clip

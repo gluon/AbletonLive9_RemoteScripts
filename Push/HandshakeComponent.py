@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/HandshakeComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/HandshakeComponent.py
 """
 Component for handling the initialization process of Push.
 """
@@ -7,6 +7,7 @@ from _Framework import Task
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Util import NamedTuple
+from FirmwareHandling import get_version_number_from_string
 from functools import partial
 HANDSHAKE_TIMEOUT = 10.0
 DONGLE_SIZE = 16
@@ -70,21 +71,13 @@ class HandshakeComponent(ControlSurfaceComponent):
 
     @property
     def firmware_version(self):
-        version = 0.0
-        if self._hardware_identity != None:
-            version_bytes = self._hardware_identity.firmware
-            major = float((version_bytes[0] << 7) + version_bytes[1])
-            minor = float((version_bytes[2] << 7) + version_bytes[3])
-            version = major + minor / 100.0
-        return version
+        version_bytes = self._hardware_identity.firmware if self._hardware_identity != None else 4 * (0,)
+        return get_version_number_from_string(' %d %d %d %d' % version_bytes)
 
     def on_enabled_changed(self):
         super(HandshakeComponent, self).on_enabled_changed()
         if self._handshake_succeeded == None:
             self._do_fail()
-
-    def update(self):
-        pass
 
     def _start_handshake(self):
         self._handshake_succeeded = None
@@ -94,9 +87,12 @@ class HandshakeComponent(ControlSurfaceComponent):
     @subject_slot('value')
     def _on_identity_value(self, value):
         if len(value) == 25:
-            self._hardware_identity = HardwareIdentity(firmware=value[:4], serial=value[4:8], manufacturing=value[8:25])
-            self._presentation_control.enquire_value()
-            self._dongle_control.enquire_value()
+            if value[9:] == tuple(range(1, 17)):
+                self._do_fail(bootloader_mode=True)
+            else:
+                self._hardware_identity = HardwareIdentity(firmware=value[:4], serial=value[4:8], manufacturing=value[8:25])
+                self._presentation_control.enquire_value()
+                self._dongle_control.enquire_value()
         else:
             self._do_fail()
 
@@ -118,8 +114,8 @@ class HandshakeComponent(ControlSurfaceComponent):
             self._identification_timeout_task.kill()
             self.notify_success()
 
-    def _do_fail(self):
+    def _do_fail(self, bootloader_mode = False):
         if self._handshake_succeeded == None:
             self._handshake_succeeded = False
             self._identification_timeout_task.kill()
-            self.notify_failure()
+            self.notify_failure(bootloader_mode)

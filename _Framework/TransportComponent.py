@@ -1,11 +1,12 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/TransportComponent.py
-import Live
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/TransportComponent.py
+from __future__ import absolute_import
 from functools import partial
-from CompoundComponent import CompoundComponent
-from ToggleComponent import ToggleComponent
-from Util import const, in_range, clamp
-from SubjectSlot import subject_slot
-import Task
+import Live
+from . import Task
+from .CompoundComponent import CompoundComponent
+from .SubjectSlot import subject_slot
+from .ToggleComponent import ToggleComponent
+from .Util import const, in_range, clamp
 TEMPO_TOP = 200.0
 TEMPO_BOTTOM = 60.0
 TEMPO_FINE_RANGE = 2.56
@@ -16,7 +17,7 @@ class TransportComponent(CompoundComponent):
     Class encapsulating all functions in Live's transport section.
     """
 
-    def __init__(self, *a, **k):
+    def __init__(self, play_toggle_model_transform = const(True), *a, **k):
         super(TransportComponent, self).__init__(*a, **k)
         self._ffwd_button = None
         self._rwd_button = None
@@ -31,7 +32,7 @@ class TransportComponent(CompoundComponent):
         self._end_undo_step_task = self._tasks.add(Task.sequence(Task.wait(1.5), Task.run(self.song().end_undo_step)))
         self._end_undo_step_task.kill()
         song = self.song()
-        self._loop_toggle, self._punch_in_toggle, self._punch_out_toggle, self._record_toggle, self._play_toggle, self._stop_toggle, self._nudge_down_toggle, self._nudge_up_toggle, self._metronome_toggle, self._session_record_toggle, self.arrangement_overdub_toggle, self._overdub_toggle = self.register_components(ToggleComponent('loop', song), ToggleComponent('punch_in', song, is_momentary=True), ToggleComponent('punch_out', song, is_momentary=True), ToggleComponent('record_mode', song), ToggleComponent('is_playing', song, model_transform=const(True)), ToggleComponent('is_playing', song, model_transform=const(False), view_transform=const(False)), ToggleComponent('nudge_down', song, is_momentary=True), ToggleComponent('nudge_up', song, is_momentary=True), ToggleComponent('metronome', song), ToggleComponent('session_record', song), ToggleComponent('arrangement_overdub', song), ToggleComponent('overdub', song))
+        self._loop_toggle, self._punch_in_toggle, self._punch_out_toggle, self._record_toggle, self._play_toggle, self._stop_toggle, self._nudge_down_toggle, self._nudge_up_toggle, self._metronome_toggle, self._session_record_toggle, self.arrangement_overdub_toggle, self._overdub_toggle = self.register_components(ToggleComponent('loop', song), ToggleComponent('punch_in', song, is_momentary=True), ToggleComponent('punch_out', song, is_momentary=True), ToggleComponent('record_mode', song), ToggleComponent('is_playing', song, model_transform=play_toggle_model_transform), ToggleComponent('is_playing', song, model_transform=const(False), view_transform=const(False)), ToggleComponent('nudge_down', song, is_momentary=True), ToggleComponent('nudge_up', song, is_momentary=True), ToggleComponent('metronome', song), ToggleComponent('session_record', song), ToggleComponent('arrangement_overdub', song), ToggleComponent('overdub', song))
 
     def set_stop_button(self, button):
         self._stop_toggle.set_toggle_button(button)
@@ -131,6 +132,7 @@ class TransportComponent(CompoundComponent):
             self._song_position_value.subject = control
 
     def update(self):
+        super(TransportComponent, self).update()
         if self.is_enabled():
             self._update_tap_tempo_button()
 

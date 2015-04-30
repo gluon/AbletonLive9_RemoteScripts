@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MackieControl_Classic/ChannelStripController.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MackieControl_Classic/ChannelStripController.py
 from MackieControlComponent import *
 from _Generic.Devices import *
 from itertools import chain
@@ -77,6 +77,7 @@ class ChannelStripController(MackieControlComponent):
 
         self.__reassign_channel_strip_offsets()
         self.__reassign_channel_strip_parameters(for_display_only=False)
+        self._last_assignment_mode = self.__assignment_mode
 
     def destroy(self):
         self.song().remove_visible_tracks_listener(self.__on_tracks_added_or_deleted)
@@ -155,7 +156,7 @@ class ChannelStripController(MackieControlComponent):
     def toggle_meter_mode(self):
         """ called from the main script when the display toggle button was pressed """
         self.__meters_enabled = not self.__meters_enabled
-        self.__apply_meter_mode()
+        self.__apply_meter_mode(meter_state_changed=True)
 
     def handle_assignment_switch_ids(self, switch_id, value):
         if switch_id == SID_ASSIGNMENT_IO:
@@ -265,6 +266,9 @@ class ChannelStripController(MackieControlComponent):
                 self.__reorder_parameters()
                 self.__plugin_mode_offsets[PCM_PARAMETERS] = 0
                 self.__set_plugin_mode(PCM_PARAMETERS)
+
+    def assignment_mode(self):
+        return self.__assignment_mode
 
     def __strip_offset(self):
         """ return the bank_channel offset depending if we are in return mode or not
@@ -571,13 +575,18 @@ class ChannelStripController(MackieControlComponent):
         if len(display_parameters):
             self.__main_display_controller.set_parameters(display_parameters)
 
-    def __apply_meter_mode(self):
+    def _need_to_update_meter(self, meter_state_changed):
+        return meter_state_changed and self.__assignment_mode == CSM_VOLPAN
+
+    def __apply_meter_mode(self, meter_state_changed = False):
         """ Update the meter mode in the displays and channel strips """
         enabled = self.__meters_enabled and self.__assignment_mode is CSM_VOLPAN
+        send_meter_mode = self._last_assignment_mode != self.__assignment_mode or self._need_to_update_meter(meter_state_changed)
         for s in self.__channel_strips:
-            s.enable_meter_mode(enabled)
+            s.enable_meter_mode(enabled, needs_to_send_meter_mode=send_meter_mode)
 
         self.__main_display_controller.enable_meters(enabled)
+        self._last_assignment_mode = self.__assignment_mode
 
     def __toggle_flip(self):
         """ En/Disable V-Pot / Fader flipping

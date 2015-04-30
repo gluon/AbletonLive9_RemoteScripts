@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchkey/TransportViewModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchkey/TransportViewModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class TransportViewModeSelector(ModeSelectorComponent):
@@ -22,6 +22,7 @@ class TransportViewModeSelector(ModeSelectorComponent):
         self._app_view().remove_is_view_visible_listener('Session', self._on_view_changed)
 
     def update(self):
+        super(TransportViewModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._transport.set_seek_buttons(self._ffwd_button, self._rwd_button)

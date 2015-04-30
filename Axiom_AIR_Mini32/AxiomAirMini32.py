@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/AxiomAirMini32.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_Mini32/AxiomAirMini32.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -71,8 +71,7 @@ class AxiomAirMini32(ControlSurface):
             transport.set_stop_button(stop_button)
             transport.set_play_button(play_button)
             transport.set_record_button(record_button)
-            session = SessionComponent(0, 0)
-            session.set_track_banking_increment(8)
+            session = SessionComponent(8, 0)
             device = BestBankDeviceComponent()
             self.set_device_component(device)
             device_nav = DeviceNavComponent()

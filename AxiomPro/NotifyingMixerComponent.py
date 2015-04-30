@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/AxiomPro/NotifyingMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/NotifyingMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
 
@@ -33,7 +33,7 @@ class NotifyingMixerComponent(MixerComponent):
             self.set_track_offset(new_offset)
 
     def update(self):
-        MixerComponent.update(self)
+        super(NotifyingMixerComponent, self).update()
         if self._update_callback != None:
             self._update_callback()
 

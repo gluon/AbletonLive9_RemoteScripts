@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Novation_Impulse/Novation_Impulse.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Novation_Impulse/Novation_Impulse.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -175,12 +175,14 @@ class Novation_Impulse(ControlSurface):
 
     def _setup_session(self):
         num_pads = len(PAD_TRANSLATIONS)
+        self._track_left_button = ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 36)
+        self._track_right_button = ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 35)
         self._session = SessionComponent(8, 0)
         self._session.name = 'Session_Control'
         self._session.selected_scene().name = 'Selected_Scene'
         self._session.set_mixer(self._mixer)
-        self._session.set_track_banking_increment(num_pads)
-        self._session.set_track_bank_buttons(ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 35), ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 36))
+        self._session.set_page_left_button(self._track_left_button)
+        self._session.set_page_right_button(self._track_right_button)
         pads = []
         for index in range(num_pads):
             pads.append(ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 60 + index))

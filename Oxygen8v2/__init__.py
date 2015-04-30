@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Oxygen8v2/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Oxygen8v2/__init__.py
 from _Generic.GenericScript import GenericScript
 import Live
 from config import *

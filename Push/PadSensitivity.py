@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/PadSensitivity.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/PadSensitivity.py
 from itertools import repeat
 from _Framework import Task
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -93,6 +93,7 @@ class PadUpdateComponent(ControlSurfaceComponent):
             self._profile_count[new_profile] += 1
 
     def update(self):
+        super(PadUpdateComponent, self).update()
         self._add_modified_pads(self._all_pads)
         self._update_modified()
 

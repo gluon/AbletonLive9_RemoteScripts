@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_Mini32/MixerOrDeviceModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_Mini32/MixerOrDeviceModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class MixerOrDeviceModeSelector(ModeSelectorComponent):
@@ -36,6 +36,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
         return 3
 
     def update(self):
+        super(MixerOrDeviceModeSelector, self).update()
         if self.is_enabled():
             if self._mode_index == 0:
                 self._device.set_parameter_controls(None)
@@ -43,14 +44,16 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
                 self._device.set_bank_nav_buttons(None, None)
                 self._device_nav.set_device_nav_buttons(None, None)
                 self._mixer.set_select_buttons(self._down_button, self._up_button)
-                self._session.set_track_bank_buttons(self._right_button, self._left_button)
+                self._session.set_page_left_button(self._left_button)
+                self._session.set_page_right_button(self._right_button)
                 self._device.set_on_off_button(None)
                 self._mixer.selected_strip().set_arm_button(self._select_button)
             elif self._mode_index == 1:
                 self._mixer_modes.set_controls(None)
                 self._device.set_parameter_controls(self._encoders)
                 self._mixer.set_select_buttons(None, None)
-                self._session.set_track_bank_buttons(None, None)
+                self._session.set_page_left_button(None)
+                self._session.set_page_right_button(None)
                 self._device.set_bank_nav_buttons(self._left_button, self._right_button)
                 self._device_nav.set_device_nav_buttons(self._up_button, self._down_button)
                 self._mixer.selected_strip().set_arm_button(None)
@@ -61,6 +64,7 @@ class MixerOrDeviceModeSelector(ModeSelectorComponent):
                 self._device.set_bank_nav_buttons(None, None)
                 self._device_nav.set_device_nav_buttons(None, None)
                 self._mixer.set_select_buttons(None, None)
-                self._session.set_track_bank_buttons(None, None)
+                self._session.set_page_left_button(None)
+                self._session.set_page_right_button(None)
                 self._device.set_on_off_button(None)
                 self._mixer.selected_strip().set_arm_button(None)

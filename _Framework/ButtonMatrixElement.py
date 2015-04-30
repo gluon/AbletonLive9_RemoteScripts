@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ButtonMatrixElement.py
-from CompoundElement import CompoundElement
-from Util import in_range, product, const, slicer
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ButtonMatrixElement.py
+from __future__ import absolute_import
+from .CompoundElement import CompoundElement
+from .Util import in_range, product, const, slicer, to_slice
 
 class ButtonMatrixElement(CompoundElement):
     """
@@ -15,6 +16,7 @@ class ButtonMatrixElement(CompoundElement):
     def __init__(self, rows = [], *a, **k):
         super(ButtonMatrixElement, self).__init__(*a, **k)
         self._buttons = []
+        self._orig_buttons = []
         self._button_coordinates = {}
         self._max_row_width = 0
         map(self.add_row, rows)
@@ -22,18 +24,14 @@ class ButtonMatrixElement(CompoundElement):
     @property
     @slicer(2)
     def submatrix(self, col_slice, row_slice):
-
-        def toslice(obj):
-            return obj if isinstance(obj, slice) else (slice(obj, obj + 1) if obj != -1 else slice(obj, None))
-
-        col_slice = toslice(col_slice)
-        row_slice = toslice(row_slice)
-        rows = [ row[col_slice] for row in self._buttons[row_slice] ]
-        raise all(map(all, rows)) or AssertionError, 'Can not make submatrix with unknowned buttons'
+        col_slice = to_slice(col_slice)
+        row_slice = to_slice(row_slice)
+        rows = [ row[col_slice] for row in self._orig_buttons[row_slice] ]
         return ButtonMatrixElement(rows=rows)
 
     def add_row(self, buttons):
         self._buttons.append([None] * len(buttons))
+        self._orig_buttons.append(buttons)
         for index, button in enumerate(buttons):
             self._button_coordinates[button] = (index, len(self._buttons) - 1)
             self.register_control_element(button)
@@ -54,7 +52,7 @@ class ButtonMatrixElement(CompoundElement):
             if not in_range(row, 0, self.height()):
                 raise AssertionError
                 button = len(self._buttons[row]) > column and self._buttons[row][column]
-                button and button.send_value(value, force)
+                button and button.send_value(value, force=force)
 
     def set_light(self, column, row, value):
         if not in_range(column, 0, self.width()):
@@ -76,7 +74,7 @@ class ButtonMatrixElement(CompoundElement):
                 button.reset()
 
     def __iter__(self):
-        for i, j in product(xrange(self.width()), xrange(self.height())):
+        for j, i in product(xrange(self.height()), xrange(self.width())):
             button = self.get_button(i, j)
             yield button
 
@@ -98,7 +96,7 @@ class ButtonMatrixElement(CompoundElement):
         return self.width() * self.height()
 
     def iterbuttons(self):
-        for i, j in product(xrange(self.width()), xrange(self.height())):
+        for j, i in product(xrange(self.height()), xrange(self.width())):
             button = self.get_button(i, j)
             yield (button, (i, j))
 
@@ -108,10 +106,10 @@ class ButtonMatrixElement(CompoundElement):
         is_momentary = getattr(sender, 'is_momentary', const(None))()
         self.notify_value(value, x, y, is_momentary)
 
-    def on_nested_control_element_grabbed(self, control):
+    def on_nested_control_element_received(self, control):
         x, y = self._button_coordinates[control]
         self._buttons[y][x] = control
 
-    def on_nested_control_element_released(self, control):
+    def on_nested_control_element_lost(self, control):
         x, y = self._button_coordinates[control]
         self._buttons[y][x] = None

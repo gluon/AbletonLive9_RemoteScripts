@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/DeviceNavigationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/DeviceNavigationComponent.py
 from __future__ import with_statement
 from functools import partial
+from contextlib import contextmanager
 import Live.DrumPad
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.SubjectSlot import subject_slot
-from _Framework.Util import find_if, in_range, NamedTuple, forward_property
+from _Framework.Util import find_if, in_range, NamedTuple, const
 from _Framework.Disconnectable import disconnectable
 from _Framework.Dependency import depends, inject
 from MessageBoxComponent import MessageBoxComponent
@@ -18,25 +19,22 @@ class DeviceNavigationComponent(CompoundComponent):
     track and navigates in its hierarchy.
     """
 
-    def __init__(self, device_bank_registry = None, *a, **k):
+    def __init__(self, device_bank_registry = None, info_layer = None, delete_handler = None, *a, **k):
         super(DeviceNavigationComponent, self).__init__(*a, **k)
         self._make_navigation_node = partial(make_navigation_node, device_bank_registry=device_bank_registry)
         self._state_buttons = None
-        self._delete_button = None
+        self._delete_handler = delete_handler
         self._device_list = self.register_component(ScrollableListWithTogglesComponent())
         self._on_selection_clicked_in_controller.subject = self._device_list
         self._on_selection_changed_in_controller.subject = self._device_list
         self._on_state_changed_in_controller.subject = self._device_list
         self._current_node = None
-        self._message_box = self.register_component(MessageBoxComponent())
+        self._message_box = self.register_component(MessageBoxComponent(layer=info_layer, is_enabled=False))
         self._message_box.text = consts.MessageBoxText.EMPTY_DEVICE_CHAIN
-        self._message_box.set_enabled(False)
         self._selected_track = None
         self._on_selected_track_changed.subject = self.song().view
-        with inject(selection=lambda : NamedTuple(selected_device=None)).everywhere():
+        with inject(selection=const(NamedTuple(selected_device=None))).everywhere():
             self._on_selected_track_changed()
-
-    info_layer = forward_property('_message_box')('layer')
 
     @property
     def current_node(self):
@@ -58,10 +56,6 @@ class DeviceNavigationComponent(CompoundComponent):
         raise not enter_button or enter_button.is_momentary() or AssertionError
         self._on_enter_value.subject = enter_button
         self._update_enter_button()
-
-    def set_delete_button(self, button):
-        raise not button or button.is_momentary() or AssertionError
-        self._delete_button = button
 
     def set_display_line(self, line):
         self._device_list.set_display_line(line)
@@ -134,14 +128,23 @@ class DeviceNavigationComponent(CompoundComponent):
             self._message_box.set_enabled(False)
 
     def update(self):
+        super(DeviceNavigationComponent, self).update()
         if self.is_enabled():
             self._update_enter_button()
             self._update_exit_button()
             self._update_info()
 
+    @contextmanager
+    def _deactivated_option_listener(self):
+        old_subject = self._on_state_changed_in_controller.subject
+        self._on_state_changed_in_controller.subject = None
+        yield
+        self._on_state_changed_in_controller.subject = old_subject
+
     @subject_slot('state')
     def _on_state_changed_in_node(self, index, value):
-        self._device_list.set_option_state(index, value)
+        with self._deactivated_option_listener():
+            self._device_list.set_option_state(index, value)
 
     @subject_slot('children')
     def _on_children_changed_in_node(self):
@@ -158,12 +161,22 @@ class DeviceNavigationComponent(CompoundComponent):
         self._update_exit_button()
         self._update_info()
 
+    @property
+    def _is_deleting(self):
+        return self._delete_handler and self._delete_handler.is_deleting
+
     @subject_slot('toggle_option')
     def _on_state_changed_in_controller(self, index, value):
         if self._current_node:
-            self._current_node.set_state(index, value)
+            if self._is_deleting:
+                _, child = self._current_node.children[index]
+                if child != None and isinstance(child, Live.Device.Device):
+                    self._delete_handler.delete_clip_envelope(child.parameters[0])
+            else:
+                self._current_node.set_state(index, value)
             if self._current_node.state[index] != value:
-                self._device_list.set_option_state(index, self._current_node.state[index])
+                with self._deactivated_option_listener():
+                    self._device_list.set_option_state(index, self._current_node.state[index])
 
     @subject_slot('change_option')
     def _on_selection_changed_in_controller(self, value):
@@ -174,7 +187,7 @@ class DeviceNavigationComponent(CompoundComponent):
 
     @subject_slot('press_option', in_front=True)
     def _on_selection_clicked_in_controller(self, index):
-        if self._delete_button and self._delete_button.is_pressed():
+        if self._is_deleting:
             if self._current_node:
                 self._current_node.delete_child(index)
             return True

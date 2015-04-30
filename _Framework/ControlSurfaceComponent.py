@@ -1,11 +1,13 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ControlSurfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurfaceComponent.py
+from __future__ import absolute_import
 import Live
-from Dependency import dependency, depends
-from SubjectSlot import SlotManager, Subject
-from Util import lazy_attribute
-import Task
+from . import Task
+from .Control import ControlManager
+from .Dependency import dependency, depends
+from .SubjectSlot import Subject
+from .Util import lazy_attribute
 
-class ControlSurfaceComponent(SlotManager, Subject):
+class ControlSurfaceComponent(ControlManager, Subject):
     """
     Base class for all classes encapsulating functions in Live
     """
@@ -17,16 +19,20 @@ class ControlSurfaceComponent(SlotManager, Subject):
     _layer = None
 
     @depends(register_component=None, song=None)
-    def __init__(self, name = '', register_component = None, song = None, *a, **k):
-        raise callable(register_component) or AssertionError
-        super(ControlSurfaceComponent, self).__init__(*a, **k)
-        self.name = name
-        self._is_enabled = True
-        self._explicit_is_enabled = True
-        self._recursive_is_enabled = True
-        self._allow_updates = True
-        self._update_requests = 0
-        self._song = song
+    def __init__(self, name = '', register_component = None, song = None, layer = None, is_enabled = True, is_root = False, *a, **k):
+        if not callable(register_component):
+            raise AssertionError
+            super(ControlSurfaceComponent, self).__init__(*a, **k)
+            self.name = name
+            raise layer is None or not is_enabled or AssertionError
+            self._explicit_is_enabled = is_enabled
+            self._recursive_is_enabled = True
+            self._is_enabled = self._explicit_is_enabled
+            self._is_root = is_root
+            self._allow_updates = True
+            self._update_requests = 0
+            self._song = song
+            self._layer = layer is not None and layer
         register_component(self)
 
     def disconnect(self):
@@ -34,6 +40,10 @@ class ControlSurfaceComponent(SlotManager, Subject):
             self._tasks.kill()
             self._tasks.clear()
         super(ControlSurfaceComponent, self).disconnect()
+
+    @property
+    def is_root(self):
+        return self._is_root
 
     def _internal_on_enabled_changed(self):
         if self._layer:
@@ -50,9 +60,6 @@ class ControlSurfaceComponent(SlotManager, Subject):
 
     def on_enabled_changed(self):
         self.update()
-
-    def update(self):
-        raise NotImplementedError, self.__class__
 
     def update_all(self):
         self.update()
@@ -79,6 +86,9 @@ class ControlSurfaceComponent(SlotManager, Subject):
             if self._allow_updates and self._update_requests > 0:
                 self._update_requests = 0
                 self.update()
+
+    def control_notifications_enabled(self):
+        return self.is_enabled()
 
     def application(self):
         return Live.Application.get_application()

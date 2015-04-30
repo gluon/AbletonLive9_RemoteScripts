@@ -1,6 +1,6 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/Selection.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Selection.py
 """
-Object that encapsulates selection in the L9C controller.
+Object that encapsulates selection in the Push controller.
 """
 import Live
 
@@ -11,7 +11,7 @@ class Selection(object):
     [jbo] The intent of this object is to grow its interface until no
     'view.selected_*' access are done in any part of the script.  This
     way, it should be easy to change our selection model such that
-    multiple-L9C controllers can play together properly.  Also, feel
+    multiple-Push controllers can play together properly.  Also, feel
     free to make these properties listenables when neccesary.
     """
 
@@ -51,16 +51,16 @@ class Selection(object):
         raise NotImplementedError
 
 
-class L9CSelection(Selection):
+class PushSelection(Selection):
     """
-    L9C selection object.  So far it is read-only and just accesses
+    Push selection object.  So far it is read-only and just accesses
     the appropiate components.  Ideally we should refactor a bit and
     make all components set and query the selection via this object
     and not otherwise.
     """
 
     def __init__(self, application = None, device_component = None, navigation_component = None, *a, **k):
-        super(L9CSelection, self).__init__(*a, **k)
+        super(PushSelection, self).__init__(*a, **k)
         self._device_component = device_component
         self._navigation_component = navigation_component
         self._application = application

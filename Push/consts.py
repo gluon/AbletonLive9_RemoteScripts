@@ -1,13 +1,28 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/consts.py
-from _Framework.Resource import PrioritizedResource
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/consts.py
+from _Framework.Resource import DEFAULT_PRIORITY
 import sys
 DISPLAY_LENGTH = 72
-TAPPING_DELAY = 0.4
+DISPLAY_BLOCK_LENGTH = 18
+HANDSHAKE_TIMEOUT = 1.0
 SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.Off',
  True: 'DefaultButton.On',
  False: 'DefaultButton.Disabled'}
-MUSICAL_MODES = ['Major',
+SIDE_BUTTON_COLORS = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
+MUSICAL_MODES = ['All',
+ [0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11],
+  'Major',
  [0,
   2,
   4,
@@ -206,15 +221,12 @@ PROTO_FAST_DEVICE_NAVIGATION = False
 PROTO_AUDIO_NOTE_MODE = False
 PROTO_SONG_IS_ROOT = False
 PROTO_TOUCH_ENCODER_TO_STRIP = False
-DEFAULT_PRIORITY = PrioritizedResource.default_priority
 SHARED_PRIORITY = DEFAULT_PRIORITY
-M4L_PRIORITY = DEFAULT_PRIORITY + 6
-MESSAGE_BOX_PRIORITY = DEFAULT_PRIORITY + 5
-DIALOG_PRIORITY = DEFAULT_PRIORITY + 4
-MODAL_DIALOG_PRIORITY = DEFAULT_PRIORITY + 3
-BROWSER_PRIORITY = DEFAULT_PRIORITY + 2
+M4L_PRIORITY = DEFAULT_PRIORITY + 5
+MESSAGE_BOX_PRIORITY = DEFAULT_PRIORITY + 4
+DIALOG_PRIORITY = DEFAULT_PRIORITY + 3
+MODAL_DIALOG_PRIORITY = DEFAULT_PRIORITY + 2
 NOTIFICATION_PRIORITY = DEFAULT_PRIORITY + 1
-HIDDEN_SESSION_PRIORITY = DEFAULT_PRIORITY - 2
 BACKGROUND_PRIORITY = DEFAULT_PRIORITY - 3
 ENCODER_SENSITIVITY = 0.5
 CONTINUOUS_MAPPING_SENSITIVITY = 2.0
@@ -253,6 +265,7 @@ class MessageBoxText:
     DUPLICATE_CLIP = '                  Clip duplicated:  %s'
     QUANTIZE_CLIP = '                  Quantized to:     %(to)s, %(amount)s'
     QUANTIZE_CLIP_PITCH = '                  Quantized pad to: %(to)s, %(amount)s'
+    DELETE_NOTES = '                  Notes deleted:    %s'
     CAPTURE_AND_INSERT_SCENE = '                      Duplicated to scene %s'
     DUPLICATE_LOOP = '                   New loop length: %(length)s'
     DELETE_SCENE = '                  Scene deleted:    %s'
@@ -260,6 +273,12 @@ class MessageBoxText:
     DELETE_ENVELOPE = '                  Delete automation %(automation)s'
     EMPTY_DEVICE_CHAIN = '\n\n               No Devices.    Press [Browse] to add a device.'
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
+    UNDO = '            Undo:     Reverted last action'
+    REDO = '            Redo: Re-performed last undone action'
+    TRACK_FROZEN_INFO = '                    ' + 'Cannot modify a frozen track'
+    SELECTED_CLIP_BLINK = ' Press            to edit playing   clip'
+    PLAYING_CLIP_ABOVE_SELECTED_CLIP = ' Press Up Arrow   to edit playing   clip'
+    PLAYING_CLIP_BELOW_SELECTED_CLIP = ' Press Down Arrow to edit playing   clip'
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

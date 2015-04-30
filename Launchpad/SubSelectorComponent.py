@@ -1,14 +1,9 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Launchpad/SubSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchpad/SubSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
-from _Framework.ClipSlotComponent import ClipSlotComponent
-from _Framework.ChannelStripComponent import ChannelStripComponent
-from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionComponent import SessionComponent
-from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from SpecialMixerComponent import SpecialMixerComponent
-from ConfigurableButtonElement import ConfigurableButtonElement
 from PreciseButtonSliderElement import *
 LED_OFF = 4
 RED_FULL = 7
@@ -130,6 +125,7 @@ class SubSelectorComponent(ModeSelectorComponent):
         self._session.set_stop_all_clips_button(None)
 
     def update(self):
+        super(SubSelectorComponent, self).update()
         if not self._modes_buttons != None:
             raise AssertionError
             if self.is_enabled():

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/SingleFaderButtonModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/SingleFaderButtonModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from consts import *
 
@@ -27,6 +27,7 @@ class SingleFaderButtonModeSelector(ModeSelectorComponent):
         return self._number_of_modes
 
     def update(self):
+        super(SingleFaderButtonModeSelector, self).update()
         if self.is_enabled():
             strip = self._mixer.selected_strip()
             fader_button = self._fader_button

@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/NotifyingControlElement.py
-from SubjectSlot import Subject, SubjectEvent
-from ControlElement import ControlElement
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/NotifyingControlElement.py
+from __future__ import absolute_import
+from .SubjectSlot import Subject, SubjectEvent
+from .ControlElement import ControlElement
 
 class NotifyingControlElement(Subject, ControlElement):
     """

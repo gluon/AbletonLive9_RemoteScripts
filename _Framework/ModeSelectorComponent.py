@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/ModeSelectorComponent.py
-from ControlSurfaceComponent import ControlSurfaceComponent
-from ButtonElement import ButtonElement
-from MomentaryModeObserver import MomentaryModeObserver
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ModeSelectorComponent.py
+from __future__ import absolute_import
+from .ButtonElement import ButtonElement
+from .ControlSurfaceComponent import ControlSurfaceComponent
+from .MomentaryModeObserver import MomentaryModeObserver
 
 class ModeSelectorComponent(ControlSurfaceComponent):
     """ Class for switching between modes, handle several functions with few controls """
@@ -100,9 +101,6 @@ class ModeSelectorComponent(ControlSurfaceComponent):
     def remove_mode_index_listener(self, listener):
         raise listener in self._mode_listeners or AssertionError
         self._mode_listeners.remove(listener)
-
-    def update(self):
-        raise NotImplementedError
 
     def _mode_value(self, value, sender):
         raise len(self._modes_buttons) > 0 or AssertionError

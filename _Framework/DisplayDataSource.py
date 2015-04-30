@@ -1,4 +1,34 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/_Framework/DisplayDataSource.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DisplayDataSource.py
+from __future__ import absolute_import
+from functools import partial
+
+def adjust_string_crop(original, length):
+    return original[:length].ljust(length)
+
+
+def adjust_string(original, length):
+    """
+    Brings the string to the given length by either removing
+    characters or adding spaces. The algorithm is adopted from ede's
+    old implementation for the Mackie.
+    """
+    if not length > 0:
+        raise AssertionError
+        resulting_string = original
+        if len(resulting_string) > length:
+            if resulting_string.endswith('dB'):
+                unit_db = resulting_string.find('.') != -1
+                resulting_string = len(resulting_string.strip()) > length and unit_db and resulting_string[:-2]
+            if len(resulting_string) > length:
+                for char in (' ', '_', 'i', 'o', 'u', 'e', 'a'):
+                    offset = 0 if char == ' ' else 1
+                    while len(resulting_string) > length and resulting_string.rfind(char, offset) > 0:
+                        char_pos = resulting_string.rfind(char, offset)
+                        resulting_string = resulting_string[:char_pos] + resulting_string[char_pos + 1:]
+
+                resulting_string = resulting_string[:length]
+        resulting_string = len(resulting_string) < length and resulting_string.ljust(length)
+    return resulting_string
 
 
 class DisplayDataSource(object):
@@ -6,13 +36,17 @@ class DisplayDataSource(object):
     Data object that is fed with a specific string and notifies a
     observer via its update_callback.
     """
+    _separator = ''
+    _adjust_string_fn = partial(adjust_string)
 
-    def __init__(self, display_string = '', separator = None, *a, **k):
+    def __init__(self, display_string = '', separator = None, adjust_string_fn = adjust_string, *a, **k):
         super(DisplayDataSource, self).__init__(*a, **k)
+        if adjust_string_fn is not None:
+            self._adjust_string_fn = partial(adjust_string_fn)
+        if separator is not None:
+            self._separator = separator
         self._display_string = display_string
-        self._separator = separator
         self._update_callback = None
-        self._represented_data_source = None
         self._in_update = False
 
     def _get_separator(self):
@@ -32,28 +66,13 @@ class DisplayDataSource(object):
             update_callback and self.update()
 
     def set_display_string(self, new_string):
-        if not new_string != None:
-            raise AssertionError
-            raise isinstance(new_string, str) or isinstance(new_string, unicode) or AssertionError
-            self._display_string = self._display_string != new_string and new_string
+        if self._display_string != new_string:
+            self._display_string = new_string
             self.update()
 
     def clear(self):
         self.set_display_string('')
-        self.separator = None
-
-    def connect_to(self, data_source):
-        if self._represented_data_source != None:
-            self._represented_data_source.set_update_callback(None)
-        self._represented_data_source = data_source
-        if self._represented_data_source != None:
-            self._represented_data_source.set_update_callback(self.update)
-        self.update()
-
-    def disconnect_from(self, data_source):
-        raise data_source != None or AssertionError
-        raise data_source == self._represented_data_source or AssertionError
-        self.connect_to(None)
+        self.separator = ''
 
     def update(self):
         if not not self._in_update:
@@ -63,4 +82,7 @@ class DisplayDataSource(object):
         self._in_update = False
 
     def display_string(self):
-        return self._display_string if self._represented_data_source == None else self._represented_data_source.display_string()
+        return self._display_string
+
+    def adjust_string(self, width):
+        return self._adjust_string_fn(self.display_string(), width)

@@ -1,6 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialMixerComponent.py
-from functools import partial
-from _Framework import Task
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SpecialMixerComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.MixerComponent import MixerComponent
 from _Framework.DisplayDataSource import DisplayDataSource
@@ -14,7 +12,7 @@ class SpecialMixerComponent(MixerComponent):
     """
     Special mixer class that uses return tracks alongside midi and
     audio tracks.  This provides also a more convenient interface to
-    set controls for the different modes of the L9C.
+    set controls for the different modes of Push.
     """
     num_label_segments = 4
 
@@ -26,17 +24,11 @@ class SpecialMixerComponent(MixerComponent):
         self._pan_send_values_display = None
         self._pan_send_graphics_display = None
         self._pan_send_toggle_skip = False
-        self._pan_send_alt_display = None
-        self._volume_alt_display = None
-        self._track_mix_alt_display = None
-        self._volume_touch_buttons = []
-        self._pan_send_touch_buttons = []
-        self._track_mix_touch_buttons = []
         self._selected_track_data_sources = map(DisplayDataSource, ('',) * self.num_label_segments)
         self._selected_track_data_sources[0].set_display_string('Track Selection:')
         self._selected_track_name_data_source = self._selected_track_data_sources[1]
         self._on_selected_track_changed.subject = self.song().view
-        self._update_selected_track()
+        self._update_selected_track_name()
 
     def tracks_to_use(self):
         return tracks_to_use_from_song(self.song())
@@ -95,45 +87,6 @@ class SpecialMixerComponent(MixerComponent):
         if display:
             sources = [ strip.track_name_data_source() for strip in self._channel_strips ]
             display.set_data_sources(sources)
-
-    def set_volume_touch_buttons(self, encoder_touch_buttons):
-        if not encoder_touch_buttons:
-            encoder_touch_buttons = []
-            self._volume_touch_buttons = self._volume_touch_buttons != encoder_touch_buttons and encoder_touch_buttons
-        self._on_volume_touch_value.subject = encoder_touch_buttons or None
-        self._try_set_volume_alt_display()
-
-    def set_pan_send_touch_buttons(self, encoder_touch_buttons):
-        if not encoder_touch_buttons:
-            encoder_touch_buttons = []
-            self._pan_send_touch_buttons = self._pan_send_touch_buttons != encoder_touch_buttons and encoder_touch_buttons
-        self._on_pan_send_touch_value.subject = encoder_touch_buttons or None
-        self._try_set_pan_send_alt_display()
-
-    def set_track_mix_touch_buttons(self, encoder_touch_buttons):
-        if not encoder_touch_buttons:
-            encoder_touch_buttons = []
-            self._track_mix_touch_buttons = self._track_mix_touch_buttons != encoder_touch_buttons and encoder_touch_buttons
-        self._on_track_mix_touch_value.subject = encoder_touch_buttons or None
-        self._try_set_track_mix_alt_display()
-
-    def set_volume_alt_display(self, display):
-        if not display:
-            display = None
-            self._volume_alt_display = self._volume_alt_display != display and display
-        self._try_set_volume_alt_display()
-
-    def set_pan_send_alt_display(self, display):
-        if not display:
-            display = None
-            self._pan_send_alt_display = self._pan_send_alt_display != display and display
-        self._try_set_pan_send_alt_display()
-
-    def set_track_mix_alt_display(self, display):
-        if not display:
-            display = None
-            self._track_mix_alt_display = self._track_mix_alt_display != display and display
-        self._try_set_track_mix_alt_display()
 
     def set_volume_names_display(self, display):
         self._set_parameter_names_display(display, 0)
@@ -213,18 +166,6 @@ class SpecialMixerComponent(MixerComponent):
             display.set_data_sources(sources)
 
     @subject_slot('value')
-    def _on_volume_touch_value(self, value, x, y, is_momentary):
-        self._try_set_volume_alt_display()
-
-    @subject_slot('value')
-    def _on_pan_send_touch_value(self, value, x, y, is_momentary):
-        self._try_set_pan_send_alt_display()
-
-    @subject_slot('value')
-    def _on_track_mix_touch_value(self, value, x, y, is_momentary):
-        self._try_set_track_mix_alt_display()
-
-    @subject_slot('value')
     def _on_pan_send_value(self, value):
         if not self._pan_send_toggle_skip and self.is_enabled() and (value or not self._pan_send_toggle.is_momentary()):
             self._pan_send_index += 1
@@ -235,34 +176,6 @@ class SpecialMixerComponent(MixerComponent):
         self.set_pan_send_controls(self._pan_send_controls)
         self.set_pan_send_names_display(self._pan_send_names_display)
         self.set_pan_send_graphics_display(self._pan_send_graphics_display)
-        self._try_set_pan_send_alt_display()
-
-    def _try_set_volume_alt_display(self):
-        if self._volume_alt_display != None:
-            for button in self._volume_touch_buttons:
-                if button != None and button.is_pressed():
-                    self.set_volume_values_display(self._volume_alt_display)
-                    return
-            else:
-                self.set_selected_track_name_display(self._volume_alt_display)
-
-    def _try_set_pan_send_alt_display(self):
-        if self._pan_send_alt_display != None:
-            for button in self._pan_send_touch_buttons:
-                if button != None and button.is_pressed():
-                    self.set_pan_send_values_display(self._pan_send_alt_display)
-                    return
-            else:
-                self.set_selected_track_name_display(self._pan_send_alt_display)
-
-    def _try_set_track_mix_alt_display(self):
-        if self._track_mix_alt_display != None:
-            for button in self._track_mix_touch_buttons:
-                if button != None and button.is_pressed():
-                    self.set_selected_values_display(self._track_mix_alt_display)
-                    return
-            else:
-                self.set_selected_track_name_display(self._track_mix_alt_display)
 
     def _normalize_pan_send_index(self):
         if len(self.song().tracks) == 0 or self._pan_send_index > len(self.song().tracks[0].mixer_device.sends):
@@ -285,10 +198,10 @@ class SpecialMixerComponent(MixerComponent):
             else:
                 self._channel_strips[index - num_visible_returns].set_track(None)
 
-    @subject_slot('selected_track')
+    @subject_slot('selected_track.name')
     def _on_selected_track_changed(self):
-        self._update_selected_track()
+        self._update_selected_track_name()
 
-    def _update_selected_track(self):
+    def _update_selected_track_name(self):
         selected = self.song().view.selected_track
         self._selected_track_name_data_source.set_display_string(selected.name)

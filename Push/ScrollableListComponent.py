@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/ScrollableListComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ScrollableListComponent.py
 """
 Scrollable list component.
 """
@@ -124,6 +124,7 @@ class ScrollableListComponent(ControlSurfaceComponent):
             return ''
 
     def update(self):
+        super(ScrollableListComponent, self).update()
         if not self.is_enabled():
             return
         first_segment, max_segment = 0, self.num_segments

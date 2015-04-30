@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/MasterControl/MasterControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MasterControl/MasterControl.py
 from MackieControl.MackieControl import MackieControl
 
 class MasterControl(MackieControl):

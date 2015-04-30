@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Axiom_AIR_25_49_61/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/SpecialSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 
 class SpecialSessionComponent(SessionComponent):
@@ -54,9 +54,6 @@ class SpecialSessionComponent(SessionComponent):
         else:
             list_of_tracks = self.song().visible_tracks
         return list_of_tracks
-
-    def track_banking_increment(self):
-        return self._track_banking_increment
 
     def _change_offsets(self, track_increment, scene_increment):
         if not track_increment != 0:

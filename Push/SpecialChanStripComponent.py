@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Hudson/live/Projects/AppLive/Resources/MIDI Remote Scripts/Push/SpecialChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SpecialChanStripComponent.py
 from _Framework.Util import flatten
 from _Framework import Task
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
@@ -34,9 +34,9 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         super(SpecialChanStripComponent, self).__init__(*a, **k)
         self.empty_color = 'Option.Unused'
         self._invert_mute_feedback = True
-        self._delete_button = None
         self._duplicate_button = None
         self._selector_button = None
+        self._delete_handler = None
         self._track_parameter_name_sources = [ DisplayDataSource(' ') for _ in xrange(14) ]
         self._track_parameter_data_sources = [ DisplayDataSource(' ') for _ in xrange(14) ]
         self._track_parameter_graphic_sources = [ DisplayDataSource(' ') for _ in xrange(14) ]
@@ -46,6 +46,9 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         self._cue_volume_slot = self.register_disconnectable(ParameterSlot())
         self._track_state = self.register_disconnectable(TrackArmState())
         self._on_arm_state_changed.subject = self._track_state
+
+    def set_delete_handler(self, delete_handler):
+        self._delete_handler = delete_handler
 
     def set_volume_control(self, control):
         if control != None:
@@ -69,9 +72,6 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
         if control != None:
             control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
         self._cue_volume_slot.control = control
-
-    def set_delete_button(self, delete_button):
-        self._delete_button = delete_button
 
     def set_duplicate_button(self, duplicate_button):
         self._duplicate_button = duplicate_button
@@ -158,16 +158,28 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
             else:
                 self._track_name_data_source.set_display_string(' ')
 
+    @property
+    def _is_deleting(self):
+        return self._delete_handler and self._delete_handler.is_deleting
+
     def _select_value(self, value):
         if self.is_enabled() and self._track:
             if value and self._duplicate_button and self._duplicate_button.is_pressed():
                 self._do_duplicate_track(self._track)
-            elif value and self._delete_button and self._delete_button.is_pressed():
+            elif value and self._is_deleting:
                 self._do_delete_track(self._track)
             elif value and self._shift_pressed:
                 self._do_toggle_arm(exclusive=False)
             else:
                 self._select_value_without_modifier(value)
+
+    def _mute_value(self, value):
+        if self.is_enabled() and self._track != None:
+            if not self._mute_button.is_momentary() or value != 0:
+                if self._is_deleting:
+                    self._delete_handler.delete_clip_envelope(self._track.mixer_device.track_activator)
+                else:
+                    super(SpecialChanStripComponent, self)._mute_value(value)
 
     def _do_toggle_arm(self, exclusive = False):
         if self._track.can_be_armed:
@@ -179,7 +191,7 @@ class SpecialChanStripComponent(ChannelStripComponent, Messenger):
 
     def _select_value_without_modifier(self, value):
         if value and self.song().view.selected_track == self._track:
-            self._do_toggle_arm(exclusive=True)
+            self._do_toggle_arm(exclusive=self.song().exclusive_arm)
         else:
             super(SpecialChanStripComponent, self)._select_value(value)
         if value and self._track.is_foldable and self._select_button.is_momentary():
