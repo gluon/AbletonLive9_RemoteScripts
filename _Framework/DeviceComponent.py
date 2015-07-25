@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/DeviceComponent.py
 from __future__ import absolute_import
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
@@ -66,16 +66,15 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         return self._device
 
     def set_device(self, device):
-        if not (device == None or isinstance(device, Live.Device.Device)):
-            raise AssertionError
-            if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
-                if self._device != None:
-                    self._release_parameters(self._parameter_controls)
-                self._device = device
-                self._name_property_slot.subject = device
-                self._parameters_property_slot.subject = device
-                self._on_off_property_slot.subject = self._on_off_parameter()
-                self._bank_index = self._device != None and 0
+        if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
+            if self._device != None:
+                self._release_parameters(self._parameter_controls)
+            self._device = device
+            self._name_property_slot.subject = device
+            self._parameters_property_slot.subject = device
+            self._on_off_property_slot.subject = self._on_off_parameter()
+            if self._device != None:
+                self._bank_index = 0
             self._bank_index = self._device_bank_registry.get_device_bank(self._device)
             self._bank_name = '<No Bank>'
             self._on_device_name_changed()

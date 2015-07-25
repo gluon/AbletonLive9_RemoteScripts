@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/RemoteSL/RemoteSL.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/RemoteSL/RemoteSL.py
 import Live
 import MidiRemoteScript
 from EffectController import EffectController

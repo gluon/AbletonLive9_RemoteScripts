@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/BestBankDeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/BestBankDeviceComponent.py
 from _Framework.DeviceComponent import DeviceComponent
 from _Generic.Devices import parameter_bank_names, parameter_banks, DEVICE_DICT, BANK_NAME_DICT, DEVICE_BOB_DICT
 BOP_BANK_NAME = 'Best of Parameters'

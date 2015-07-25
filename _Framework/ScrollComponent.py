@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ScrollComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ScrollComponent.py
 from __future__ import absolute_import
 from . import Defaults
 from . import Task
@@ -74,9 +74,11 @@ class ScrollComponent(ControlSurfaceComponent, Scrollable):
 
     def set_scroll_up_button(self, button):
         self.scroll_up_button.set_control_element(button)
+        self._update_scroll_buttons()
 
     def set_scroll_down_button(self, button):
         self.scroll_down_button.set_control_element(button)
+        self._update_scroll_buttons()
 
     def _update_scroll_buttons(self):
         self.scroll_up_button.enabled = self.can_scroll_up()

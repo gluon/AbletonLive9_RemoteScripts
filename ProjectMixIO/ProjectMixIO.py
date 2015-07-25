@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/ProjectMixIO/ProjectMixIO.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ProjectMixIO/ProjectMixIO.py
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.MainDisplayController import MainDisplayController

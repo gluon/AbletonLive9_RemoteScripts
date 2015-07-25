@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ChannelStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ChannelStripComponent.py
 from __future__ import absolute_import
 from itertools import chain
 import Live
@@ -235,6 +235,10 @@ class ChannelStripComponent(ControlSurfaceComponent):
 
     def track_name_data_source(self):
         return self._track_name_data_source
+
+    @property
+    def track(self):
+        return self._track
 
     def _connect_parameters(self):
         if self._pan_control != None:

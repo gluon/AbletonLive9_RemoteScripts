@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/MixerComponent.py
 from __future__ import absolute_import
 from .ChannelStripComponent import ChannelStripComponent, release_control
 from .CompoundComponent import CompoundComponent
@@ -16,7 +16,7 @@ def turn_button_on_off(button, on = True):
 class MixerComponent(CompoundComponent):
     """ Class encompassing several channel strips to form a mixer """
 
-    def __init__(self, num_tracks, num_returns = 0, auto_name = False, invert_mute_feedback = False, *a, **k):
+    def __init__(self, num_tracks = 0, num_returns = 0, auto_name = False, invert_mute_feedback = False, *a, **k):
         if not num_tracks >= 0:
             raise AssertionError
             raise num_returns >= 0 or AssertionError

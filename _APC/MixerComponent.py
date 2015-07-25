@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_APC/MixerComponent.py
 from _Framework.ChannelStripComponent import ChannelStripComponent as ChannelStripComponentBase
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 TRACK_FOLD_DELAY = 5

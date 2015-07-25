@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/RemoteSL_Classic/EffectController.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/RemoteSL_Classic/EffectController.py
 import Live
 from RemoteSLComponent import RemoteSLComponent
 from consts import *

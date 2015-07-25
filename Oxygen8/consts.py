@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Oxygen8/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Oxygen8/consts.py
 """ The following consts should be substituted with the Sys Ex messages for requesting
 a controller's ID response and that response to allow for automatic lookup"""
 ID_REQUEST = 0

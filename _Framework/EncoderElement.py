@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/EncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/EncoderElement.py
 from __future__ import absolute_import
 import Live
+from .ComboElement import WrapperElement
 from .CompoundElement import CompoundElement
 from .InputControlElement import InputControlElement, MIDI_CC_TYPE, InputSignal
 from .SubjectSlot import SubjectEvent
-from .Util import nop, const
+from .Util import nop, const, forward_property
 
 def _not_implemented(value):
     raise NotImplementedError
@@ -104,3 +105,54 @@ class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
 
     def on_nested_control_element_lost(self, control):
         pass
+
+
+class FineGrainWithModifierEncoderElement(WrapperElement):
+
+    def __init__(self, encoder = None, modifier = None, modified_sensitivity = 0.1, default_sensitivity = None, *a, **k):
+        super(FineGrainWithModifierEncoderElement, self).__init__(wrapped_control=encoder, *a, **k)
+        raise encoder is not None or AssertionError
+        raise modifier is not None or AssertionError
+        self._modified_sensitivity = modified_sensitivity
+        self._default_sensitivity = default_sensitivity or self.wrapped_control.mapping_sensitivity
+        self._modifier = modifier
+        self.register_control_elements(modifier, encoder)
+        self._on_nested_control_element_value.add_subject(self._modifier)
+
+    @forward_property('wrapped_control')
+    def add_normalized_value_listener(self):
+        pass
+
+    @forward_property('wrapped_control')
+    def remove_normalized_value_listener(self):
+        pass
+
+    @forward_property('wrapped_control')
+    def normalized_value_has_listener(self):
+        pass
+
+    def on_nested_control_element_received(self, control):
+        super(FineGrainWithModifierEncoderElement, self).on_nested_control_element_received(control)
+        self._enforce_control_invariant()
+
+    def on_nested_control_element_lost(self, control):
+        super(FineGrainWithModifierEncoderElement, self).on_nested_control_element_lost(control)
+        self._enforce_control_invariant()
+
+    def on_nested_control_element_value(self, value, control):
+        if control == self._modifier:
+            self._enforce_control_invariant()
+        else:
+            super(FineGrainWithModifierEncoderElement, self).on_nested_control_element_value(value, control)
+
+    def _enforce_control_invariant(self):
+        if self.owns_control_element(self._wrapped_control):
+            if self._modifier.is_pressed():
+                self.wrapped_control.mapping_sensitivity = self._modified_sensitivity
+            else:
+                self.wrapped_control.mapping_sensitivity = self._default_sensitivity
+
+    def set_sensitivities(self, default, modified):
+        self._default_sensitivity = default
+        self._modified_sensitivity = modified
+        self._enforce_control_invariant()

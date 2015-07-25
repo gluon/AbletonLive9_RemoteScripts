@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Push.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/Push.py
 from __future__ import with_statement
 import Live
 from contextlib import contextmanager
@@ -8,6 +8,7 @@ from _Framework.BackgroundComponent import BackgroundComponent, ModifierBackgrou
 from _Framework.Dependency import inject
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ControlSurface import OptimizedControlSurface
+from _Framework.EncoderElement import FineGrainWithModifierEncoderElement
 from _Framework.InputControlElement import MIDI_CC_TYPE, MIDI_NOTE_TYPE
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _Framework.ModesComponent import AddLayerMode, MultiEntryMode, ModesComponent, CancellableBehaviour, AlternativeBehaviour, ReenterBehaviour, DynamicBehaviourMixin, ExcludingBehaviourMixin, EnablingModesComponent, LazyComponentMode
@@ -22,10 +23,9 @@ from _Framework.ComboElement import ComboElement, DoublePressElement, MultiEleme
 from _Framework.ClipCreator import ClipCreator
 from _Framework.M4LInterfaceComponent import M4LInterfaceComponent
 from _Framework.OptionalElement import OptionalElement, ChoosingElement
-from _Framework.TransportComponent import TransportComponent
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework import Task
-from HandshakeComponent import HandshakeComponent, make_dongle_message
+from HandshakeComponent import HandshakeComponent, make_dongle_message, MinimumFirmwareVersionElement
 from ValueComponent import ValueComponent, ParameterValueComponent
 from ConfigurableButtonElement import PadButtonElement
 from SpecialSessionComponent import SpecialSessionComponent
@@ -43,28 +43,31 @@ from DeviceNavigationComponent import DeviceNavigationComponent
 from SessionRecordingComponent import FixedLengthSessionRecordingComponent
 from SelectedTrackParameterProvider import SelectedTrackParameterProvider
 from NoteRepeatComponent import NoteRepeatComponent
-from MatrixMaps import PAD_TRANSLATIONS, FEEDBACK_CHANNELS
+from MatrixMaps import FEEDBACK_CHANNELS
 from BrowserComponent import BrowserComponent
 from BrowserModes import BrowserHotswapMode
-from Actions import CreateInstrumentTrackComponent, CreateDefaultTrackComponent, CaptureAndInsertSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, SelectComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, CreateDeviceComponent, StopClipComponent, UndoRedoComponent
+from Actions import CreateInstrumentTrackComponent, CreateDefaultTrackComponent, CaptureAndInsertSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, SelectComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, CreateDeviceComponent, StopClipComponent, UndoRedoComponent, DeleteAndReturnToDefaultComponent
 from UserSettingsComponent import UserComponent
 from MessageBoxComponent import DialogComponent, NotificationComponent, InfoComponent, align_right
 from TouchEncoderElement import TouchEncoderElement
 from TouchStripElement import TouchStripElement
 from TouchStripController import TouchStripControllerComponent, TouchStripEncoderConnection
 from TrackFrozenMode import TrackFrozenModesComponent
+from TransportComponent import TransportComponent
 from Selection import PushSelection
 from AccentComponent import AccentComponent
 from AutoArmComponent import AutoArmComponent
 from QuantizationComponent import QuantizationComponent
 from WithPriority import Resetting, WithPriority
-from Settings import make_pad_parameters, SETTING_WORKFLOW, SETTING_THRESHOLD, SETTING_CURVE
+from Settings import make_pad_parameters, SETTING_WORKFLOW, SETTING_THRESHOLD, SETTING_CURVE, SETTING_AFTERTOUCH_THRESHOLD
 from PadSensitivity import PadUpdateComponent, pad_parameter_sender
+from GlobalPadParameters import GlobalPadParameters
 from PlayheadElement import PlayheadElement, NullPlayhead
 from DeviceParameterComponent import DeviceParameterComponent
 from SelectPlayingClipComponent import SelectPlayingClipComponent
 from ControlElementFactory import create_button, create_modifier_button, create_note_button
 from SkinDefault import make_default_skin
+from DrumGroupComponent import DrumGroupComponent
 import consts
 import Colors
 import Sysex
@@ -98,8 +101,10 @@ class Push(OptimizedControlSurface):
             self._create_pad_sensitivity_update()
             with inject(skin=const(self._skin)).everywhere():
                 self._create_controls()
+            self._init_handshake()
             self._init_settings()
             self._init_message_box()
+            self._init_global_pad_parameters()
             self._init_background()
             self._init_user()
             self._init_touch_strip_controller()
@@ -117,6 +122,7 @@ class Push(OptimizedControlSurface):
             self._init_session()
             self._init_grid_resolution()
             self._init_step_sequencer()
+            self._init_drum_component()
             self._init_instrument()
             self._init_scales()
             self._init_note_repeat()
@@ -126,8 +132,6 @@ class Push(OptimizedControlSurface):
             self._init_browser()
             self._init_main_modes()
             self._init_m4l_interface()
-            self._init_handshake()
-            self.set_pad_translations(PAD_TRANSLATIONS)
             self._on_selected_track_changed()
             self._on_session_record_changed.subject = self.song()
             self._on_session_record_changed()
@@ -196,6 +200,7 @@ class Push(OptimizedControlSurface):
         self._settings = Settings.create_settings(preferences=self._pref_dict)
         self._on_pad_curve.subject = self._settings[SETTING_CURVE]
         self._on_pad_threshold.subject = self._settings[SETTING_THRESHOLD]
+        self._on_aftertouch_threshold.subject = self._settings[SETTING_AFTERTOUCH_THRESHOLD]
 
     def _init_handshake(self):
         dongle_message, dongle = make_dongle_message(Sysex.DONGLE_ENQUIRY_PREFIX)
@@ -236,6 +241,12 @@ class Push(OptimizedControlSurface):
         self.log_message('Handshake succeded with firmware version %.2f!' % self._handshake.firmware_version)
         self.update()
         self._c_instance.set_firmware_version(self._handshake.firmware_version)
+        if self._handshake.has_version_requirements(1, 16):
+            self._user.settings = self._settings
+        else:
+            settings = dict(self._settings)
+            del settings[SETTING_AFTERTOUCH_THRESHOLD]
+            self._user.settings = settings
 
     @subject_slot('failure')
     def _on_handshake_failure(self, bootloader_mode):
@@ -360,10 +371,10 @@ class Push(OptimizedControlSurface):
 
             @property
             def is_deleting(_):
-                return self._delete_component.is_deleting
+                return self._delete_default_component.is_deleting
 
             def delete_clip_envelope(_, param):
-                return self._delete_component.delete_clip_envelope(param)
+                return self._delete_default_component.delete_clip_envelope(param)
 
         deleter = Deleter()
         self._tempo_control_tap = create_note_button(10, 'Tempo_Control_Tap')
@@ -375,7 +386,9 @@ class Push(OptimizedControlSurface):
         self._master_volume_control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
         self._global_param_touch_buttons_raw = [ create_note_button(index, 'Track_Control_Touch_' + str(index)) for index in range(8) ]
         self._global_param_touch_buttons = ButtonMatrixElement(name='Track_Control_Touches', rows=[self._global_param_touch_buttons_raw])
-        self._global_param_controls = ButtonMatrixElement(name='Track_Controls', rows=[[ TouchEncoderElement(MIDI_CC_TYPE, 0, 71 + index, GLOBAL_MAP_MODE, undo_step_handler=self.song(), delete_handler=deleter, encoder_sensitivity=consts.ENCODER_SENSITIVITY, name='Track_Control_' + str(index), touch_button=self._global_param_touch_buttons_raw[index]) for index in xrange(8) ]])
+        self._parameter_controls_raw = [[ TouchEncoderElement(MIDI_CC_TYPE, 0, 71 + index, GLOBAL_MAP_MODE, undo_step_handler=self.song(), delete_handler=deleter, encoder_sensitivity=consts.ENCODER_SENSITIVITY, name='Track_Control_' + str(index), touch_button=self._global_param_touch_buttons_raw[index]) for index in xrange(8) ]]
+        self._global_param_controls = ButtonMatrixElement(name='Track_Controls', rows=self._parameter_controls_raw)
+        self._fine_grain_param_controls = ButtonMatrixElement(rows=recursive_map(lambda encoder: FineGrainWithModifierEncoderElement(encoder, self._shift_button, consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY, consts.CONTINUOUS_MAPPING_SENSITIVITY), self._parameter_controls_raw))
         self._on_param_encoder_touched.replace_subjects(self._global_param_touch_buttons_raw)
         self._aftertouch_control = SysexValueControl(Sysex.SET_AFTERTOUCH_MODE, default_value=Sysex.POLY_AFTERTOUCH)
         self._any_touch_button = MultiElement(*self._global_param_touch_buttons.nested_control_elements())
@@ -384,9 +397,12 @@ class Push(OptimizedControlSurface):
     def _with_shift(self, button):
         return ComboElement(button, modifiers=[self._shift_button])
 
+    def _with_firmware_version(self, major_version, minor_version, button):
+        return MinimumFirmwareVersionElement(major_version, minor_version, button, self._handshake)
+
     def _init_background(self):
         self._background = BackgroundComponent(is_root=True)
-        self._background.layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, scales_button=self._scale_presets_button, octave_up=self._octave_up_button, octave_down=self._octave_down_button, side_buttons=self._side_buttons, repeat_button=self._repeat_button, accent_button=self._accent_button, double_button=self._double_button, in_button=self._in_button, out_button=self._out_button, param_controls=self._global_param_controls, param_touch=self._global_param_touch_buttons, tempo_control_tap=self._tempo_control_tap, master_control_tap=self._master_volume_control_tap, touch_strip=self._touch_strip_control, touch_strip_tap=self._touch_strip_tap, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button, aftertouch=self._aftertouch_control, _notification=self._notification.use_single_line(2), priority=consts.BACKGROUND_PRIORITY)
+        self._background.layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, scales_button=self._scale_presets_button, octave_up=self._octave_up_button, octave_down=self._octave_down_button, side_buttons=self._side_buttons, repeat_button=self._repeat_button, accent_button=self._accent_button, double_button=self._double_button, in_button=self._in_button, out_button=self._out_button, param_controls=self._global_param_controls, param_touch=self._global_param_touch_buttons, tempo_control_tap=self._tempo_control_tap, master_control_tap=self._master_volume_control_tap, touch_strip=self._touch_strip_control, touch_strip_tap=self._touch_strip_tap, nav_up_button=self._nav_up_button, nav_down_button=self._nav_down_button, nav_left_button=self._nav_left_button, nav_right_button=self._nav_right_button, aftertouch=self._aftertouch_control, pad_parameters=self._pad_parameter_control, _notification=self._notification.use_single_line(2), priority=consts.BACKGROUND_PRIORITY)
         self._matrix_background = BackgroundComponent()
         self._matrix_background.set_enabled(False)
         self._matrix_background.layer = Layer(matrix=self._matrix)
@@ -422,8 +438,12 @@ class Push(OptimizedControlSurface):
         self._select_playing_clip.notification_layer.priority = consts.NOTIFICATION_PRIORITY
         self._drum_group_finder = DrumGroupFinderComponent()
         self._on_drum_group_changed.subject = self._drum_group_finder
+        self._drum_modes = ModesComponent(name='Drum_Modes', is_enabled=False)
+        self._drum_modes.add_mode('sequencer', self._step_sequencer)
+        self._drum_modes.add_mode('64pads', self._drum_component)
+        self._drum_modes.selected_mode = 'sequencer'
         self._note_modes = ModesComponent(name='Note_Modes')
-        self._note_modes.add_mode('sequencer', [self._note_repeat_enabler, self._accent_component, self._step_sequencer])
+        self._note_modes.add_mode('drums', [self._note_repeat_enabler, self._accent_component, self._drum_modes])
         self._note_modes.add_mode('looper', self._audio_loop if consts.PROTO_AUDIO_NOTE_MODE else self._matrix_background)
         self._note_modes.add_mode('instrument', [self._note_repeat_enabler, self._accent_component, self._instrument])
         self._note_modes.add_mode('disabled', self._matrix_background)
@@ -433,6 +453,8 @@ class Push(OptimizedControlSurface):
         def switch_note_mode_layout():
             if self._note_modes.selected_mode == 'instrument':
                 getattr(self._instrument, 'cycle_mode', nop)()
+            elif self._note_modes.selected_mode == 'drums':
+                getattr(self._drum_modes, 'cycle_mode', nop)()
 
         self._matrix_modes = ModesComponent(name='Matrix_Modes', is_root=True)
         self._matrix_modes.add_mode('session', self._create_session_mode())
@@ -440,7 +462,8 @@ class Push(OptimizedControlSurface):
          self._view_control,
          self._note_modes,
          self._delete_clip,
-         self._select_playing_clip], behaviour=self._auto_arm.auto_arm_restore_behaviour(ReenterBehaviour, on_reenter=switch_note_mode_layout))
+         self._select_playing_clip,
+         self._global_pad_parameters], behaviour=self._auto_arm.auto_arm_restore_behaviour(ReenterBehaviour, on_reenter=switch_note_mode_layout))
         self._matrix_modes.selected_mode = 'note'
         self._matrix_modes.layer = Layer(session_button=self._session_mode_button, note_button=self._note_mode_button)
         self._on_matrix_mode_changed.subject = self._matrix_modes
@@ -459,14 +482,18 @@ class Push(OptimizedControlSurface):
         self._user.layer = Layer(action_button=self._user_button)
         self._user.settings_layer = Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, encoders=self._global_param_controls)
         self._user.settings_layer.priority = consts.DIALOG_PRIORITY
-        self._user.settings = self._settings
         self._on_hardware_mode_changed.subject = self._user
         self._on_before_hardware_mode_sent.subject = self._user
         self._on_after_hardware_mode_sent.subject = self._user
         self._update_pad_params()
 
+    def _init_global_pad_parameters(self):
+        self._pad_parameter_control = self._with_firmware_version(1, 16, SysexValueControl(Sysex.PAD_PARAMETER_PREFIX, default_value=Sysex.make_pad_parameter_message()))
+        aftertouch_threshold = self._settings[SETTING_AFTERTOUCH_THRESHOLD].value
+        self._global_pad_parameters = GlobalPadParameters(aftertouch_threshold=aftertouch_threshold, is_enabled=False, layer=Layer(pad_parameter=self._pad_parameter_control))
+
     def _create_session_layer(self):
-        return Layer(page_up_button=self._octave_up_button, page_down_button=self._octave_down_button, track_bank_left_button=self._nav_left_button, track_bank_right_button=self._nav_right_button, scene_bank_up_button=self._nav_up_button, scene_bank_down_button=self._nav_down_button, clip_launch_buttons=self._matrix, scene_launch_buttons=self._side_buttons, duplicate_button=self._duplicate_button)
+        return Layer(page_up_button=self._octave_up_button, page_down_button=self._octave_down_button, track_bank_left_button=self._nav_left_button, track_bank_right_button=self._nav_right_button, scene_bank_up_button=self._nav_up_button, scene_bank_down_button=self._nav_down_button, clip_launch_buttons=self._matrix, scene_launch_buttons=self._side_buttons, duplicate_button=self._duplicate_button, touch_strip=self._touch_strip_control)
 
     def _create_session(self):
         session = SpecialSessionComponent(num_tracks=8, num_scenes=8, enable_skinning=True, is_enabled=False, auto_name=True, layer=self._create_session_layer())
@@ -513,6 +540,12 @@ class Push(OptimizedControlSurface):
         def when_track_is_not_frozen(*modes):
             return TrackFrozenModesComponent(default_mode=[modes], frozen_mode=self._track_frozen_info, is_enabled=False)
 
+        class ExcludingBrowserBehaviourMixin(ExcludingBehaviourMixin):
+            """ ExcludingBehaviourMixin that does not indicate the selected mode """
+
+            def update_button(self, component, mode, selected_mode):
+                component.get_mode_button(mode).set_light('DefaultButton.On' if not self.is_excluded(component, selected_mode) else 'DefaultButton.Disabled')
+
         track_note_editor_mode = partial(configure_note_editor_settings, self._track_parameter_provider, 'track')
         device_note_editor_mode = partial(configure_note_editor_settings, self._device_parameter_provider, 'device')
         enable_stop_mute_solo_as_modifiers = AddLayerMode(self._mod_background, Layer(stop=self._global_track_stop_button, mute=self._global_mute_button, solo=self._global_solo_button))
@@ -526,9 +559,9 @@ class Push(OptimizedControlSurface):
         self._main_modes.add_mode('clip', [self._track_modes, (self._mixer, self._mixer_layer), when_track_is_not_frozen(partial(self._view_control.show_view, 'Detail/Clip'), LazyComponentMode(self._create_clip_control))])
         self._main_modes.add_mode('device', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, partial(self._view_control.show_view, 'Detail/DeviceChain'), self._device_parameter_component, self._device_navigation, device_note_editor_mode)], behaviour=ReenterBehaviour(self._device_navigation.back_to_top))
         self._main_modes.add_mode('browse', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, partial(self._view_control.show_view, 'Browser'), self._browser_back_to_top, self._browser_hotswap_mode, self._browser_mode, self._browser_reset_load_memory)], groups=['add_effect', 'add_track', 'browse'], behaviour=mixin(DynamicBehaviourMixin, CancellableBehaviour)(lambda : not self._browser_hotswap_mode._mode.can_hotswap() and 'add_effect_left'))
-        self._main_modes.add_mode('add_effect_right', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_right))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_effect_left', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_left))], behaviour=mixin(ExcludingBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
-        self._main_modes.add_mode('add_instrument_track', [enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_instrument_track)], behaviour=mixin(ExcludingBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
+        self._main_modes.add_mode('add_effect_right', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_right))], behaviour=mixin(ExcludingBrowserBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_effect_left', [when_track_is_not_frozen(enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_device_left))], behaviour=mixin(ExcludingBrowserBehaviourMixin, CancellableBehaviour)(['add_track', 'browse']), groups=['add_effect'])
+        self._main_modes.add_mode('add_instrument_track', [enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_instrument_track)], behaviour=mixin(ExcludingBrowserBehaviourMixin, AlternativeBehaviour)(excluded_groups=['browse', 'add_effect'], alternative_mode='add_default_track'), groups=['add_track'])
         self._main_modes.add_mode('add_default_track', [enable_stop_mute_solo_as_modifiers, self._browser_back_to_top, LazyComponentMode(self._create_create_default_track)], groups=['add_track'])
         self._main_modes.selected_mode = 'device'
         self._main_modes.layer = Layer(volumes_button=self._vol_mix_mode_button, pan_sends_button=self._pan_send_mix_mode_button, track_button=self._single_track_mix_mode_button, clip_button=self._clip_mode_button, device_button=self._device_mode_button, browse_button=self._browse_mode_button, add_effect_right_button=self._create_device_button, add_effect_left_button=self._with_shift(self._create_device_button), add_instrument_track_button=self._create_track_button)
@@ -552,8 +585,8 @@ class Push(OptimizedControlSurface):
         self._mixer.set_enabled(False)
         self._mixer.name = 'Mixer'
         self._mixer_layer = Layer(track_names_display=self._display_line4, track_select_buttons=self._select_buttons)
-        self._mixer_pan_send_layer = Layer(track_names_display=self._display_line4, track_select_buttons=self._select_buttons, pan_send_toggle=self._pan_send_mix_mode_button, pan_send_controls=self._global_param_controls, pan_send_names_display=self._display_line1, pan_send_graphics_display=self._display_line2, selected_track_name_display=self._display_line3, pan_send_values_display=ComboElement(self._display_line3, [self._any_touch_button]))
-        self._mixer_volume_layer = Layer(track_names_display=self._display_line4, track_select_buttons=self._select_buttons, volume_controls=self._global_param_controls, volume_names_display=self._display_line1, volume_graphics_display=self._display_line2, selected_track_name_display=self._display_line3, volume_values_display=ComboElement(self._display_line3, [self._any_touch_button]))
+        self._mixer_pan_send_layer = Layer(track_names_display=self._display_line4, track_select_buttons=self._select_buttons, pan_send_toggle=self._pan_send_mix_mode_button, pan_send_controls=self._fine_grain_param_controls, pan_send_names_display=self._display_line1, pan_send_graphics_display=self._display_line2, selected_track_name_display=self._display_line3, pan_send_values_display=ComboElement(self._display_line3, [self._any_touch_button]))
+        self._mixer_volume_layer = Layer(track_names_display=self._display_line4, track_select_buttons=self._select_buttons, volume_controls=self._fine_grain_param_controls, volume_names_display=self._display_line1, volume_graphics_display=self._display_line2, selected_track_name_display=self._display_line3, volume_values_display=ComboElement(self._display_line3, [self._any_touch_button]))
         self._mixer_track_layer = Layer(selected_track_name_display=self._display_line3, track_names_display=self._display_line4, track_select_buttons=self._select_buttons)
         self._mixer_solo_layer = Layer(solo_buttons=self._track_state_buttons)
         self._mixer_mute_layer = Layer(mute_buttons=self._track_state_buttons)
@@ -573,13 +606,13 @@ class Push(OptimizedControlSurface):
 
     def _init_track_mixer(self):
         self._track_parameter_provider = self.register_disconnectable(SelectedTrackParameterProvider())
-        self._track_mixer = DeviceParameterComponent(parameter_provider=self._track_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._global_param_controls, name_display_line=self._display_line1, graphic_display_line=self._display_line2, value_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
+        self._track_mixer = DeviceParameterComponent(parameter_provider=self._track_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._fine_grain_param_controls, name_display_line=self._display_line1, graphic_display_line=self._display_line2, value_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
 
     def _init_device(self):
         self._device_bank_registry = DeviceBankRegistry()
         self._device_parameter_provider = ProviderDeviceComponent(device_bank_registry=self._device_bank_registry, name='DeviceComponent', is_enabled=True, is_root=True)
         self.set_device_component(self._device_parameter_provider)
-        self._device_parameter_component = DeviceParameterComponent(parameter_provider=self._device_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._global_param_controls, name_display_line=self._display_line1, value_display_line=self._display_line2, graphic_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
+        self._device_parameter_component = DeviceParameterComponent(parameter_provider=self._device_parameter_provider, is_enabled=False, layer=Layer(parameter_controls=self._fine_grain_param_controls, name_display_line=self._display_line1, value_display_line=self._display_line2, graphic_display_line=ComboElement(self._display_line3, [self._any_touch_button])))
         self._device_navigation = DeviceNavigationComponent(device_bank_registry=self._device_bank_registry, is_enabled=False, layer=Layer(enter_button=self._in_button, exit_button=self._out_button, select_buttons=self._select_buttons, state_buttons=self._track_state_buttons, display_line=self._display_line4, _notification=self._notification.use_single_line(2)), info_layer=Layer(display_line1=self._display_line1, display_line2=self._display_line2, display_line3=self._display_line3, display_line4=self._display_line4, _notification=self._notification.use_full_display(2)), delete_handler=self._delete_component)
 
     def _init_transport_and_recording(self):
@@ -661,12 +694,12 @@ class Push(OptimizedControlSurface):
         return Layer(playhead=self._playhead_element, mute_button=self._global_mute_button, quantization_buttons=self._side_buttons, loop_selector_matrix=self._double_press_matrix.submatrix[:, 0], short_loop_selector_matrix=self._double_press_event_matrix.submatrix[:, 0], note_editor_matrices=ButtonMatrixElement([[ self._matrix.submatrix[:, 7 - row] for row in xrange(7) ]]))
 
     def _init_instrument(self):
-        instrument_basic_layer = Layer(octave_strip=self._with_shift(self._touch_strip_control), scales_toggle_button=self._scale_presets_button, presets_toggle_button=self._shift_button, octave_up_button=self._octave_up_button, octave_down_button=self._octave_down_button, scale_up_button=self._with_shift(self._octave_up_button), scale_down_button=self._with_shift(self._octave_down_button))
-        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_editor_settings=self._add_note_editor_setting(), layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix=self._matrix, touch_strip=self._touch_strip_control, aftertouch_control=self._aftertouch_control, delete_button=self._delete_button), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip=self._touch_strip_control))
+        instrument_basic_layer = Layer(octave_strip=self._with_shift(self._touch_strip_control), scales_toggle_button=self._scale_presets_button, octave_up_button=self._octave_up_button, octave_down_button=self._octave_down_button, scale_up_button=self._with_shift(self._octave_up_button), scale_down_button=self._with_shift(self._octave_down_button))
+        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_editor_settings=self._add_note_editor_setting(), layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix=self._matrix, touch_strip=self._touch_strip_control, touch_strip_indication=self._with_firmware_version(1, 16, ComboElement(self._touch_strip_control, modifiers=[self._select_button])), touch_strip_toggle=self._with_firmware_version(1, 16, ComboElement(self._touch_strip_tap, modifiers=[self._select_button])), aftertouch_control=self._aftertouch_control, delete_button=self._delete_button), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip=self._touch_strip_control))
         self._on_note_editor_layout_changed.subject = self._instrument
 
     def _init_scales(self):
-        self._instrument.scales.layer = Layer(modus_line1=self._display_line1.subdisplay[:18], modus_line2=self._display_line2.subdisplay[:18], modus_line3=self._display_line3.subdisplay[:9], modus_line4=self._display_line4.subdisplay[:9], top_display_line=self._display_line3.subdisplay[9:], bottom_display_line=self._display_line4.subdisplay[9:], top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, encoder_controls=self._global_param_controls, _blank_line1=Resetting(self._display_line1.subdisplay[18:]), _blank_line2=Resetting(self._display_line2.subdisplay[18:]), _notification=self._notification.use_single_line(0, get_slice[18:], align_right), priority=consts.MODAL_DIALOG_PRIORITY)
+        self._instrument.scales.layer = Layer(modus_line1=self._display_line1.subdisplay[:18], modus_line2=self._display_line2.subdisplay[:18], modus_line3=self._display_line3.subdisplay[:9], modus_line4=self._display_line4.subdisplay[:9], top_display_line=self._display_line3.subdisplay[9:], bottom_display_line=self._display_line4.subdisplay[9:], top_buttons=self._select_buttons, bottom_buttons=self._track_state_buttons, encoder_controls=self._global_param_controls, presets_toggle_button=self._shift_button, _blank_line1=Resetting(self._display_line1.subdisplay[18:]), _blank_line2=Resetting(self._display_line2.subdisplay[18:]), _notification=self._notification.use_single_line(0, get_slice[18:], align_right), priority=consts.MODAL_DIALOG_PRIORITY)
         self._instrument.scales.presets_layer = Layer(top_display_line=self._display_line3, bottom_display_line=self._display_line4, top_buttons=self._select_buttons, _bottom_buttons=Resetting(self._track_state_buttons), _encoders=Resetting(self._global_param_controls), _blank_line1=Resetting(self._display_line1), _blank_line2=Resetting(self._display_line2), _notification=self._notification.use_single_line(0), priority=consts.DIALOG_PRIORITY)
 
     def _create_step_sequencer_layer(self):
@@ -674,21 +707,27 @@ class Push(OptimizedControlSurface):
 
     def _init_step_sequencer(self):
         self._step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_settings=self._add_note_editor_setting())
-        self._step_sequencer._drum_group._do_select_drum_pad = self._selector.on_select_drum_pad
-        self._step_sequencer._drum_group._do_quantize_pitch = self._quantize.quantize_pitch
+        self._step_sequencer._drum_group.select_drum_pad = self._selector.on_select_drum_pad
+        self._step_sequencer._drum_group.quantize_pitch = self._quantize.quantize_pitch
         self._step_sequencer.set_enabled(False)
         self._step_sequencer.layer = self._create_step_sequencer_layer()
         self._audio_loop = LoopSelectorComponent(follow_detail_clip=True, measure_length=1.0, name='Loop_Selector')
         self._audio_loop.set_enabled(False)
         self._audio_loop.layer = Layer(loop_selector_matrix=self._matrix)
 
+    def _init_drum_component(self):
+        self._drum_component = DrumGroupComponent(name='Drum_Group', is_enabled=False)
+        self._drum_component.layer = Layer(drum_matrix=self._matrix, page_strip=self._touch_strip_control, scroll_strip=self._with_shift(self._touch_strip_control), solo_button=self._global_solo_button, select_button=self._select_button, delete_button=self._delete_button, scroll_page_up_button=self._octave_up_button, scroll_page_down_button=self._octave_down_button, quantize_button=self._quantize_button, mute_button=self._global_mute_button, scroll_up_button=self._with_shift(self._octave_up_button), scroll_down_button=self._with_shift(self._octave_down_button))
+        self._drum_component.select_drum_pad = self._selector.on_select_drum_pad
+        self._drum_component.quantize_pitch = self._quantize.quantize_pitch
+
     def _init_note_repeat(self):
         self._note_repeat = NoteRepeatComponent(name='Note_Repeat')
         self._note_repeat.set_enabled(False)
         self._note_repeat.set_note_repeat(self._c_instance.note_repeat)
-        self._note_repeat.layer = Layer(aftertouch_control=self._aftertouch_control, select_buttons=self._side_buttons)
+        self._note_repeat.layer = Layer(aftertouch_control=self._aftertouch_control, select_buttons=self._side_buttons, pad_parameters=self._pad_parameter_control)
         self._note_repeat.layer.priority = consts.DIALOG_PRIORITY
-        self._note_repeat_enabler = EnablingModesComponent(name='Note_Repeat_Enabler', component=self._note_repeat, toggle_value='DiableButton.On')
+        self._note_repeat_enabler = EnablingModesComponent(name='Note_Repeat_Enabler', component=self._note_repeat, toggle_value='DefaultButton.Alert', disabled_value='DefaultButton.On')
         self._note_repeat_enabler.set_enabled(False)
         self._note_repeat_enabler.layer = Layer(toggle_button=self._repeat_button)
 
@@ -720,7 +759,7 @@ class Push(OptimizedControlSurface):
         self._capture_and_insert_scene = CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene', is_root=True)
         self._capture_and_insert_scene.set_enabled(True)
         self._capture_and_insert_scene.layer = Layer(action_button=capture_element)
-        duplicate_element = OptionalElement(ComboElement(self._duplicate_button, negative_modifiers=[self._shift_button]), self._settings[SETTING_WORKFLOW], False)
+        duplicate_element = OptionalElement(self._duplicate_button, self._settings[SETTING_WORKFLOW], False)
         self._duplicate_detail_clip = DuplicateDetailClipComponent(name='Duplicate_Detail_Clip', is_root=True)
         self._duplicate_detail_clip.set_enabled(True)
         self._duplicate_detail_clip.layer = Layer(action_button=duplicate_element)
@@ -729,6 +768,8 @@ class Push(OptimizedControlSurface):
     def _init_delete_actions(self):
         self._delete_component = DeleteComponent(name='Deleter', is_root=True)
         self._delete_component.layer = Layer(delete_button=self._delete_button)
+        self._delete_default_component = DeleteAndReturnToDefaultComponent(name='DeleteAndDefault', is_root=True)
+        self._delete_default_component.layer = Layer(delete_button=self._delete_button)
         self._delete_clip = DeleteSelectedClipComponent(name='Selected_Clip_Deleter', is_root=True)
         self._delete_clip.layer = Layer(action_button=self._delete_button)
         self._delete_scene = DeleteSelectedSceneComponent(name='Selected_Scene_Deleter', is_root=True)
@@ -816,6 +857,10 @@ class Push(OptimizedControlSurface):
         self._update_pad_params()
 
     @subject_slot('value')
+    def _on_aftertouch_threshold(self, value):
+        self._global_pad_parameters.aftertouch_threshold = value
+
+    @subject_slot('value')
     def _on_pad_curve(self, _value):
         self._update_pad_params()
 
@@ -863,12 +908,13 @@ class Push(OptimizedControlSurface):
         track = self.song().view.selected_track
         drum_device = self._drum_group_finder.drum_group
         self._step_sequencer.set_drum_group_device(drum_device)
+        self._drum_component.set_drum_group_device(drum_device)
         if track == None or track.is_foldable or track in self.song().return_tracks or track == self.song().master_track or track.is_frozen:
             self._note_modes.selected_mode = 'disabled'
         elif track and track.has_audio_input:
             self._note_modes.selected_mode = 'looper'
         elif drum_device:
-            self._note_modes.selected_mode = 'sequencer'
+            self._note_modes.selected_mode = 'drums'
         else:
             self._note_modes.selected_mode = 'instrument'
         self.reset_controlled_track()

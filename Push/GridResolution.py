@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/GridResolution.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/GridResolution.py
 import Live
 GridQuantization = Live.Clip.GridQuantization
 from _Framework.SubjectSlot import subject_slot, SlotManager, Subject

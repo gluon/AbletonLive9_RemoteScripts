@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/SessionRecordingComponent.py
 from __future__ import absolute_import
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot
@@ -113,14 +113,14 @@ class SessionRecordingComponent(CompoundComponent):
             selected_track = song.view.selected_track
             clip_slot = song.view.highlighted_clip_slot
             can_new = clip_slot != None and clip_slot.clip or selected_track.can_be_armed and selected_track.playing_slot_index >= 0
-            new_button.set_light(new_button.is_pressed() if can_new else 'DefaultButton.Disabled')
+            new_button.set_light(can_new or 'DefaultButton.Disabled')
 
     def _update_new_scene_button(self):
         if self._new_scene_button and self.is_enabled():
             song = self.song()
             track_is_playing = find_if(lambda x: x.playing_slot_index >= 0, song.tracks)
             can_new = not song.view.selected_scene.is_empty or track_is_playing
-            self._new_scene_button.set_light(self._new_scene_button.is_pressed() if can_new else 'DefaultButton.Disabled')
+            self._new_scene_button.set_light(can_new or 'DefaultButton.Disabled')
 
     def _update_record_button(self):
         if self._record_button and self.is_enabled():

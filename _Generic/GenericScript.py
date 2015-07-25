@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Generic/GenericScript.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Generic/GenericScript.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

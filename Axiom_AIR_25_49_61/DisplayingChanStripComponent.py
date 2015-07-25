@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/DisplayingChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/DisplayingChanStripComponent.py
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from consts import *

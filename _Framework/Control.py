@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Control.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/Control.py
 from __future__ import absolute_import, with_statement
 from functools import partial
 from . import Task
 from .Defaults import MOMENTARY_DELAY
 from .SubjectSlot import SlotManager
-from .Util import clamp, lazy_attribute, mixin, nop
+from .Util import clamp, lazy_attribute, mixin, nop, first, second, is_matrix, flatten, product
 
 class ControlManager(SlotManager):
 
@@ -44,7 +44,7 @@ class Control(object):
     class State(SlotManager):
         enabled = True
 
-        def __init__(self, control = None, manager = None, *a, **k):
+        def __init__(self, control = None, manager = None, channel = None, identifier = None, *a, **k):
             super(Control.State, self).__init__(*a, **k)
             raise control is not None or AssertionError
             raise manager is not None or AssertionError
@@ -53,13 +53,19 @@ class Control(object):
             self._event_listeners = control._event_listeners
             self._control_element = None
             self._value_slot = None
+            self._channel = channel
+            self._identifier = identifier
             self._register_value_slot(manager, control)
             manager.register_slot_manager(self)
 
         def set_control_element(self, control_element):
             self._control_element = control_element
             if self._control_element:
-                self._control_element.reset()
+                self._control_element.reset_state()
+                if self._channel is not None:
+                    self._control_element.set_channel(self._channel)
+                if self._identifier is not None:
+                    self._control_element.set_identifier(self._identifier)
             if self._value_slot:
                 self._value_slot.subject = control_element
 
@@ -79,6 +85,26 @@ class Control(object):
 
         def update(self):
             pass
+
+        def _get_channel(self):
+            return self._channel
+
+        def _set_channel(self, channel):
+            self._channel = channel
+            if self._control_element:
+                self._control_element.set_channel(self._channel)
+
+        channel = property(_get_channel, _set_channel)
+
+        def _get_identifier(self):
+            return self._identifier
+
+        def _set_identifier(self, value):
+            self._identifier = value
+            if self._control_element:
+                self._control_element.set_identifier(self._identifier)
+
+        identifier = property(_get_identifier, _set_identifier)
 
     _extra_kws = {}
     _extra_args = []
@@ -110,8 +136,45 @@ class Control(object):
             del manager._control_states[self]
 
 
+class MappedControl(Control):
+
+    class State(Control.State):
+
+        def __init__(self, control = None, manager = None, *a, **k):
+            raise control is not None or AssertionError
+            raise manager is not None or AssertionError
+            super(MappedControl.State, self).__init__(control, manager, *a, **k)
+            self._direct_mapping = None
+
+        def set_control_element(self, control_element):
+            if self._control_element:
+                self._control_element.release_parameter()
+            super(MappedControl.State, self).set_control_element(control_element)
+            self._update_direct_connection()
+
+        def _get_direct_mapping(self):
+            return self._direct_mapping
+
+        def _set_direct_mapping(self, direct_mapping):
+            self._direct_mapping = direct_mapping
+            self._update_direct_connection()
+
+        mapped_parameter = property(_get_direct_mapping, _set_direct_mapping)
+
+        def _update_direct_connection(self):
+            if self._control_element:
+                self._control_element.connect_to(self._direct_mapping)
+
+        def _notifications_enabled(self):
+            return super(MappedControl.State, self)._notifications_enabled() and self._direct_mapping is None
+
+    def __init__(self, *a, **k):
+        super(MappedControl, self).__init__(extra_args=a, extra_kws=k)
+
+
 class ButtonControl(Control):
     DELAY_TIME = MOMENTARY_DELAY
+    REPEAT_RATE = 0.1
     pressed = control_event('pressed')
     released = control_event('released')
     pressed_delayed = control_event('pressed_delayed')
@@ -120,7 +183,7 @@ class ButtonControl(Control):
 
     class State(Control.State):
 
-        def __init__(self, control = None, manager = None, color = None, pressed_color = None, disabled_color = None, enabled = True, *a, **k):
+        def __init__(self, control = None, manager = None, color = None, pressed_color = None, disabled_color = None, repeat = False, enabled = True, *a, **k):
             raise control is not None or AssertionError
             raise manager is not None or AssertionError
             super(ButtonControl.State, self).__init__(control, manager, *a, **k)
@@ -129,6 +192,7 @@ class ButtonControl(Control):
             self._pressed_delayed_listener = control._event_listeners.get('pressed_delayed', None)
             self._released_delayed_listener = control._event_listeners.get('released_delayed', None)
             self._released_immediately_listener = control._event_listeners.get('released_immediately', None)
+            self._repeat = repeat
             self._is_pressed = False
             self._enabled = enabled
             self._color = color if color is not None else 'DefaultButton.On'
@@ -217,6 +281,8 @@ class ButtonControl(Control):
             self._is_pressed = True
             if self._notifications_enabled() and not is_pressed:
                 if self._pressed_listener is not None:
+                    if self._repeat:
+                        self._repeat_task.restart()
                     self._pressed_listener(self._manager, self)
                 if self._has_delayed_event():
                     self._delay_task.restart()
@@ -227,6 +293,8 @@ class ButtonControl(Control):
             if self._notifications_enabled() and is_pressed:
                 if self._released_listener is not None:
                     self._released_listener(self._manager, self)
+                if self._repeat:
+                    self._repeat_task.kill()
                 if self._has_delayed_event():
                     if self._delay_task.is_running:
                         self._released_immediately_listener(self._manager, self)
@@ -237,6 +305,11 @@ class ButtonControl(Control):
         @lazy_attribute
         def _delay_task(self):
             return self._manager._tasks.add(Task.sequence(Task.wait(ButtonControl.DELAY_TIME), Task.run(self._on_pressed_delayed)))
+
+        @lazy_attribute
+        def _repeat_task(self):
+            notify_pressed = partial(self._pressed_listener, self._manager, self)
+            return self._manager._tasks.add(Task.sequence(Task.wait(ButtonControl.DELAY_TIME), Task.loop(Task.wait(ButtonControl.REPEAT_RATE), Task.run(notify_pressed))))
 
         def _has_delayed_event(self):
             return self._pressed_delayed_listener is not None or self._released_delayed_listener is not None or self._released_immediately_listener is not None
@@ -463,6 +536,48 @@ class EncoderControl(Control):
                     self._release_encoder()
 
 
+class PlayableControl(ButtonControl):
+    """
+    Control that will make the elements MIDI go into Live, to make it playable.
+    """
+
+    class State(ButtonControl.State):
+
+        def __init__(self, *a, **k):
+            super(PlayableControl.State, self).__init__(*a, **k)
+            self._enabled = True
+            self._playable = True
+
+        def set_control_element(self, control_element):
+            super(PlayableControl.State, self).set_control_element(control_element)
+            self._update_script_forwarding()
+            self._send_current_color()
+
+        def _update_script_forwarding(self):
+            if self._control_element and self._enabled:
+                self._control_element.suppress_script_forwarding = self._playable
+
+        def _get_enabled(self):
+            return self._enabled
+
+        def _set_enabled(self, enabled):
+            super(PlayableControl.State, self)._set_enabled(enabled)
+            if not enabled and self._control_element:
+                self._control_element.reset_state()
+                self._send_current_color()
+            else:
+                self.set_control_element(self._control_element)
+
+        enabled = property(_get_enabled, _set_enabled)
+
+        def set_playable(self, value):
+            self._playable = value
+            self._update_script_forwarding()
+
+        def _notifications_enabled(self):
+            return super(PlayableControl.State, self)._notifications_enabled() and not self._playable
+
+
 _DYNAMIC_CONTROL_COUNT = None
 
 class ControlList(Control):
@@ -472,7 +587,7 @@ class ControlList(Control):
         _extra_kws = {}
         _extra_args = []
 
-        def __init__(self, control = None, manager = None, extra_args = None, extra_kws = None, *a, **k):
+        def __init__(self, control = None, manager = None, extra_args = None, extra_kws = None, unavailable_color = None, *a, **k):
             if not control is not None:
                 raise AssertionError
                 super(ControlList.State, self).__init__(manager=manager, control=control, *a, **k)
@@ -480,6 +595,7 @@ class ControlList(Control):
                 self._control_type = control.control_type
                 self._controls = []
                 self._dynamic_create = False
+                self._unavailable_color = unavailable_color if unavailable_color is not None else 'DefaultButton.Disabled'
                 if extra_args is not None:
                     self._extra_args = extra_args
                 self._extra_kws = extra_kws is not None and extra_kws
@@ -497,6 +613,18 @@ class ControlList(Control):
 
         control_count = property(_get_control_count, _set_control_count)
 
+        def _get_unavailable_color(self):
+            return self._unavailable_color
+
+        def _set_unavailable_color(self, value):
+            self._unavailable_color = value
+            control_elements = self._control_elements or []
+            for control, element in map(None, self._controls, control_elements):
+                if not control and element:
+                    self._send_unavailable_color(element)
+
+        unavailable_color = property(_get_unavailable_color, _set_unavailable_color)
+
         def _create_controls(self, count):
             self._disconnect_controls()
             self._controls = [ self._make_control(i) for i in xrange(count) ]
@@ -509,7 +637,11 @@ class ControlList(Control):
         def _make_control(self, index):
             control = self._control_type(*self._extra_args, **self._extra_kws)
             control._event_listeners = self._event_listeners
-            control._get_state(self._manager).index = index
+            control_state = control._get_state(self._manager)
+            if not hasattr(control_state, 'index'):
+                control_state.index = index
+            else:
+                raise RuntimeError("Cannot set 'index' attribute. Attribute already set.")
             return control
 
         def set_control_element(self, control_elements):
@@ -524,7 +656,12 @@ class ControlList(Control):
                 if control:
                     control._get_state(self._manager).set_control_element(element)
                 elif element:
-                    element.reset()
+                    element.reset_state()
+                    self._send_unavailable_color(element)
+
+        def _send_unavailable_color(self, element):
+            if hasattr(element, 'set_light'):
+                element.set_light(self._unavailable_color)
 
         def __getitem__(self, index):
             return self._controls[index]._get_state(self._manager)
@@ -571,7 +708,81 @@ class RadioButtonGroup(ControlList, RadioButtonControl):
         super(RadioButtonGroup, self).__init__(RadioButtonControl, *a, **k)
 
 
+_DYNAMIC_MATRIX_DIMENSIONS = (None, None)
+
+class MatrixControl(ControlList):
+    DYNAMIC_DIMENSIONS = _DYNAMIC_MATRIX_DIMENSIONS
+
+    class State(ControlList.State):
+
+        def __init__(self, control = None, manager = None, *a, **k):
+            raise control is not None or AssertionError
+            raise manager is not None or AssertionError
+            self._dimensions = (None, None)
+            super(MatrixControl.State, self).__init__(control, manager, *a, **k)
+
+        def _get_dimensions(self):
+            return self._dimensions
+
+        def _set_dimensions(self, dimensions):
+            if not first(dimensions):
+                raise AssertionError
+                raise second(dimensions) or AssertionError
+                self._dynamic_create = dimensions == MatrixControl.DYNAMIC_DIMENSIONS
+                count = self._dynamic_create and (len(self._control_elements) if self._control_elements else 0)
+            self._dimensions = dimensions
+            count = first(dimensions) * second(dimensions)
+            self._create_controls(count)
+            self._update_controls()
+
+        dimensions = property(_get_dimensions, _set_dimensions)
+
+        def _make_control(self, index):
+            control = super(MatrixControl.State, self)._make_control(index)
+            control_state = control._get_state(self._manager)
+            if not hasattr(control_state, 'coordinate'):
+                control_state.coordinate = (int(index / self.width), index % self.width)
+            else:
+                raise RuntimeError("Cannot set 'coordinate' attribute. Attribute already set.")
+            return control
+
+        def set_control_element(self, control_elements):
+            dimensions = (None, None)
+            if hasattr(control_elements, 'width') and hasattr(control_elements, 'height'):
+                dimensions = (control_elements.height(), control_elements.width())
+                if not self._dynamic_create:
+                    control_elements = [ control_elements.get_button(col, row) for row, col in product(xrange(self.height), xrange(self.width)) ]
+            elif is_matrix(control_elements):
+                dimensions = (len(control_elements), len(first(control_elements)))
+                if not self._dynamic_create:
+                    control_elements = [ row[0:self.width] for row in control_elements ]
+                control_elements = [ _ for _ in flatten(control_elements) ]
+            elif control_elements is not None:
+                raise RuntimeError('Control Elements must be a matrix')
+            if self._dynamic_create and None not in dimensions:
+                self._dimensions = dimensions
+                self._create_controls(first(dimensions) * second(dimensions))
+                self._update_controls()
+            super(MatrixControl.State, self).set_control_element(control_elements)
+
+        def get_control(self, row, column):
+            index = row * self.width + column
+            return self._controls[index]._get_state(self._manager)
+
+        @property
+        def width(self):
+            return second(self._dimensions)
+
+        @property
+        def height(self):
+            return first(self._dimensions)
+
+    def __init__(self, *a, **k):
+        super(MatrixControl, self).__init__(*a, **k)
+
+
 _control_list_classes = dict()
+_control_matrix_classes = dict()
 
 def control_list(control_type, *a, **k):
     if control_type == RadioButtonControl:
@@ -582,3 +793,12 @@ def control_list(control_type, *a, **k):
         c.State = mixin(ControlList.State, control_type.State)
         _control_list_classes[control_type] = c
     return c(control_type, *a, **k)
+
+
+def control_matrix(control_type, *a, **k):
+    m = _control_matrix_classes.get(control_type, None)
+    if not m:
+        m = mixin(MatrixControl, control_type)
+        m.State = mixin(MatrixControl.State, control_type.State)
+        _control_matrix_classes[control_type] = m
+    return m(control_type, *a, **k)

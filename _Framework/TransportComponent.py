@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/TransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/TransportComponent.py
 from __future__ import absolute_import
 from functools import partial
 import Live
@@ -178,7 +178,7 @@ class TransportComponent(CompoundComponent):
 
     def _update_tap_tempo_button(self):
         if self.is_enabled() and self._tap_tempo_button:
-            self._tap_tempo_button.set_light(self._tap_tempo_button.is_pressed())
+            self._tap_tempo_button.set_light(True)
 
     @subject_slot('value')
     def _tempo_value(self, value):

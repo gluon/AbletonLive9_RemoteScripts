@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Util.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/Util.py
 """
 Various utilities.
 """
 from __future__ import absolute_import
 from contextlib import contextmanager
 from functools import wraps, partial
-from itertools import chain
+from itertools import chain, imap
 
 def clamp(val, minv, maxv):
     return max(minv, min(val, maxv))
@@ -143,7 +143,11 @@ def monkeypatch(target, name = None, override = False, doc = None):
         if not override and hasattr(target, patchname):
             raise TypeError('Class %s already has method %s' % (target.__name__, patchname))
         setattr(target, patchname, func)
-        func.__name__ = patchname
+        try:
+            func.__name__ = patchname
+        except AttributeError:
+            pass
+
         if doc is not None:
             func.__doc__ = doc
         return func
@@ -223,6 +227,7 @@ def instance_decorator(decorator):
         def __init__(self, func = nop, *args, **kws):
             self.__name__ = func.__name__
             self.__doc__ = func.__doc__
+            self._data_name = '%s_%d_decorated_instance' % (func.__name__, id(self))
             self._func = func
             self._args = args
             self._kws = kws
@@ -230,9 +235,13 @@ def instance_decorator(decorator):
         def __get__(self, obj, cls = None):
             if obj is None:
                 return
-            decorated = decorator(obj, self._func, *self._args, **self._kws)
-            obj.__dict__[self.__name__] = decorated
-            return decorated
+            data_name = self._data_name
+            try:
+                return obj.__dict__[data_name]
+            except KeyError:
+                decorated = decorator(obj, self._func, *self._args, **self._kws)
+                obj.__dict__[data_name] = decorated
+                return decorated
 
     return Decorator
 
@@ -429,6 +438,17 @@ def chain_from_iterable(iterables):
     for it in iterables:
         for element in it:
             yield element
+
+
+def is_matrix(iterable):
+    """
+    Returns True if 'iterable' is a two dimensional iterable where each iterable is
+    not empty
+    """
+    if is_iterable(iterable) and len(iterable) > 0:
+        return all(imap(lambda x: is_iterable(x) and len(iterable[0]) == len(x) and len(x) > 0, iterable))
+    else:
+        return False
 
 
 def first(seq):
@@ -671,6 +691,42 @@ def print_message(*messages):
     print ' '.join(map(str, messages))
 
 
+class overlaymap(object):
+    """
+    A map-like object which takes a list of maps and
+    overlays them from left to right.
+    
+    Thus if a key occurs in a map with higher precedence,
+    it's value will appear to be in the overlaymap.
+    
+    The overlaymap is obviously read-only.
+    """
+
+    def __init__(self, *maps):
+        self._maps = maps
+
+    def __getitem__(self, key):
+        for m in self._maps:
+            if key in m:
+                return m[key]
+
+        raise KeyError, key
+
+    def keys(self):
+        res = set()
+        for key in chain_from_iterable(self._maps):
+            res.add(key)
+
+        return list(res)
+
+    def values(self):
+        return [ self[key] for key in self.keys() ]
+
+    def iteritems(self):
+        for key in self.keys():
+            yield (key, self[key])
+
+
 def trace_value(value, msg = 'Value: '):
     """
     Prints value and returns value. Useful when debugging the results
@@ -689,6 +745,8 @@ class Bindable(object):
 
     def __get__(self, obj, cls = None):
         import weakref
+        if obj is None:
+            return self
         if self._bound_instances is None:
             self._bound_instances = weakref.WeakKeyDictionary()
         bound_dict = self._bound_instances.setdefault(obj, weakref.WeakKeyDictionary())

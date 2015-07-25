@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ControlSurface.py
 from __future__ import absolute_import, with_statement
 from functools import partial, wraps
 from itertools import chain, imap
@@ -513,17 +513,22 @@ class ControlSurface(SlotManager):
         """
         if not self._in_component_guard:
             with self._in_component_guard():
-                with self.setting_listener_caller():
-                    with self._control_surface_injector:
-                        with self.suppressing_rebuild_requests():
-                            with self.accumulating_midi_messages():
-                                yield
+                with self._component_guard():
+                    yield
         else:
             yield
 
     @property
     def in_component_guard(self):
         return bool(self._in_component_guard)
+
+    @contextmanager
+    def _component_guard(self):
+        with self.setting_listener_caller():
+            with self._control_surface_injector:
+                with self.suppressing_rebuild_requests():
+                    with self.accumulating_midi_messages():
+                        yield
 
     @contextmanager
     def setting_listener_caller(self):
@@ -734,8 +739,13 @@ class OptimizedControlSurface(ControlSurface):
         self._ownership_handler_injector = injecting.everywhere()
 
     @contextmanager
-    def component_guard(self):
-        with super(OptimizedControlSurface, self).component_guard():
+    def _component_guard(self):
+        with super(OptimizedControlSurface, self)._component_guard():
             with self._ownership_handler_injector:
                 yield
                 self._optimized_ownership_handler.commit_ownership_changes()
+
+    def _register_control(self, control):
+        super(OptimizedControlSurface, self)._register_control(control)
+        if hasattr(control, '_is_resource_based'):
+            control._is_resource_based = True

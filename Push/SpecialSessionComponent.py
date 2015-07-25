@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/SpecialSessionComponent.py
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.SessionComponent import SessionComponent
 from _Framework.ClipSlotComponent import ClipSlotComponent
@@ -7,6 +7,7 @@ from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import forward_property
 from _Framework.ModesComponent import EnablingModesComponent
 from MessageBoxComponent import Messenger
+from TouchStripElement import TouchStripElement, TouchStripModes
 from consts import MessageBoxText
 import Live
 
@@ -106,6 +107,16 @@ class SpecialSessionComponent(SessionComponent):
         if buttons:
             buttons.reset()
         super(SpecialSessionComponent, self).set_clip_launch_buttons(buttons)
+
+    def set_touch_strip(self, touch_strip):
+        if touch_strip:
+            touch_strip.set_mode(TouchStripModes.CUSTOM_FREE)
+            touch_strip.send_state([ TouchStripElement.STATE_OFF for _ in xrange(TouchStripElement.STATE_COUNT) ])
+        self._on_touch_strip_value.subject = touch_strip
+
+    @subject_slot('value')
+    def _on_touch_strip_value(self, value):
+        pass
 
     @subject_slot('value')
     def _on_slot_launch_value(self, value):

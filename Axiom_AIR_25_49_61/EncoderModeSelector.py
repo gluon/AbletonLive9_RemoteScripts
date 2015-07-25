@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_AIR_25_49_61/EncoderModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/EncoderModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from consts import *
 
@@ -35,7 +35,7 @@ class EncoderModeSelector(ModeSelectorComponent):
             self._device.set_allow_update(False)
             self._mixer.set_allow_update(False)
             self._device.set_parameter_controls(())
-            self._mixer.selected_strip().set_send_controls(())
+            self._mixer.set_send_controls(())
             for index in range(len(self._encoders)):
                 strip = self._mixer.channel_strip(index)
                 encoder = self._encoders[index]
@@ -62,7 +62,7 @@ class EncoderModeSelector(ModeSelectorComponent):
             elif self._mode_index == 2:
                 self._modes_buttons[0].send_value(GRN_FULL, True)
                 self._modes_buttons[1].send_value(LED_OFF, True)
-                self._mixer.selected_strip().set_send_controls(self._encoders)
+                self._mixer.set_send_controls(self._encoders)
             elif self._mode_index == 3:
                 self._modes_buttons[0].send_value(LED_OFF, True)
                 self._modes_buttons[1].send_value(RED_FULL, True)

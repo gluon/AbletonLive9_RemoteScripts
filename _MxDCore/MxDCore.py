@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_MxDCore/MxDCore.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_MxDCore/MxDCore.py
 import Live.Base
 from functools import partial, wraps
 import _Framework

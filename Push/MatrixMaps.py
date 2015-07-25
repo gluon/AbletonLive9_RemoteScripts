@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/MatrixMaps.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/MatrixMaps.py
 """
 Pad Translations for Drum Rack (pad_x, pad_y, note, channel)
 """
@@ -20,4 +20,4 @@ PAD_TRANSLATIONS = ((0, 0, 60, 14),
  (3, 3, 39, 14))
 FEEDBACK_CHANNELS = range(5, 15)
 PAD_FEEDBACK_CHANNEL = FEEDBACK_CHANNELS[-1]
-NON_FEEDBACK_CHANNEL = 15
+NON_FEEDBACK_CHANNEL = 0

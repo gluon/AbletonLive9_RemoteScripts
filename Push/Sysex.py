@@ -1,4 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Sysex.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/Sysex.py
+from _Framework.Util import in_range
+from . import consts
 START = (240, 71, 127, 21)
 CLEAR_LINE1 = START + (28, 0, 0, 247)
 CLEAR_LINE2 = START + (29, 0, 0, 247)
@@ -17,6 +19,21 @@ BRIGHTNESS_PREFIX = START + (124, 0, 1)
 BRIGHTNESS_ENQUIRY = START + (124, 0, 0, 247)
 ALL_PADS_SENSITIVITY_PREFIX = START + (93, 0, 32)
 PAD_SENSITIVITY_PREFIX = START + (90, 0, 33)
+PAD_PARAMETER_PREFIX = START + (71, 0, 9)
+
+def make_pad_parameter_message(aftertouch_threshold = consts.DEFAULT_AFTERTOUCH_THRESHOLD, peak_sampling_time = consts.DEFAULT_PEAK_SAMPLING_TIME, aftertouch_gate_time = consts.DEFAULT_AFTERTOUCH_GATE_TIME):
+    raise 0 <= aftertouch_threshold < 128 or AssertionError
+    return to_bytes(peak_sampling_time, 4) + to_bytes(aftertouch_gate_time, 4) + (aftertouch_threshold,)
+
+
+def to_bytes(number, size):
+    """
+    turns the given value into tuple of 4bit bytes,
+    ordered from most significant to least significant byte
+    """
+    raise in_range(number, 0, 1 << size * 4) or AssertionError
+    return tuple([ number >> offset & 15 for offset in xrange((size - 1) * 4, -1, -4) ])
+
 
 def to_sysex_int(number, unused_parameter_name):
     return (number >> 12 & 15,
@@ -50,3 +67,4 @@ IDENTITY_ENQUIRY = (240, 126, 0, 6, 1, 247)
 IDENTITY_PREFIX = (240, 126, 0, 6, 2, 71, 21, 0, 25)
 DONGLE_ENQUIRY_PREFIX = START + (80,)
 DONGLE_PREFIX = START + (81,)
+TOUCHSTRIP_MODWHEEL_MODE = START + (99, 0, 1, 9, 247)

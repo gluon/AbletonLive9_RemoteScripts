@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC_mini/APC_mini.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC_mini/APC_mini.py
 from __future__ import with_statement
 from _Framework.Layer import Layer, SimpleLayerOwner
 from _APC.ControlElementUtils import make_slider

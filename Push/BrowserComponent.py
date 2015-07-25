@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/BrowserComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/BrowserComponent.py
 from __future__ import with_statement
 from functools import partial
 from itertools import izip, chain, imap
@@ -194,23 +194,17 @@ class FullBrowserModel(BrowserModel):
         self.update_selection()
 
     def update_selection(self):
-        target = self._browser.hotswap_target
         last_seleced_list_index = None
         if self._browser.hotswap_target != None:
-            if isinstance(target, Live.DrumPad.DrumPad) and (not target.chains or not target.chains[0].devices):
-                for content_list in self.content_lists:
-                    content_list.select_item_index_with_offset(0, 0)
-
-            else:
-                list_index = 0
-                while list_index < self._num_contents:
-                    content_list, _ = self._contents[list_index]
-                    items = content_list.items
-                    index = index_if(lambda x: x.content.is_selected, items)
-                    if in_range(index, 0, len(items)):
-                        content_list.select_item_index_with_offset(index, 2)
-                        last_seleced_list_index = list_index
-                    list_index += 1
+            list_index = 0
+            while list_index < self._num_contents:
+                content_list, _ = self._contents[list_index]
+                items = content_list.items
+                index = index_if(lambda x: x.content.is_selected, items)
+                if in_range(index, 0, len(items)):
+                    content_list.select_item_index_with_offset(index, 2)
+                    last_seleced_list_index = list_index
+                list_index += 1
 
         if last_seleced_list_index != None:
             self.notify_selection_updated(last_seleced_list_index)
@@ -773,23 +767,23 @@ class BrowserComponent(CompoundComponent):
         if self.is_enabled():
             self._do_update_browser_model()
 
+    def _create_browser_model_of_type(self, filter_type):
+        self._last_filter_type = filter_type
+        new_model = make_browser_model(self._browser, filter_type)
+        if self._browser_model and self._browser_model.can_be_exchanged(new_model) and new_model.can_be_exchanged(self._browser_model):
+            self._browser_model.exchange_model(new_model)
+            new_model.disconnect()
+        else:
+            self.disconnect_disconnectable(self._browser_model)
+            self._browser_model = self.register_slot_manager(new_model)
+            self._on_content_lists_changed.subject = self._browser_model
+            self._on_selection_updated.subject = self._browser_model
+        self._browser_model.update_content()
+
     def _do_update_browser_model(self):
         filter_type = filter_type_for_browser(self._browser)
         if filter_type != self._last_filter_type:
-            self._last_filter_type = filter_type
-            new_model = make_browser_model(self._browser, filter_type)
-            if self._browser_model and self._browser_model.can_be_exchanged(new_model) and new_model.can_be_exchanged(self._browser_model):
-                self._browser_model.exchange_model(new_model)
-                new_model.disconnect()
-            else:
-                self.disconnect_disconnectable(self._browser_model)
-                self._browser_model = self.register_slot_manager(new_model)
-                self._on_content_lists_changed.subject = self._browser_model
-                self._on_selection_updated.subject = self._browser_model
-            for contents in self._browser_model.content_lists:
-                contents.selected_item_index = 0
-
-            self._browser_model.update_content()
+            self._create_browser_model_of_type(filter_type)
         elif self._browser_model_dirty:
             self._browser_model.update_content()
         elif not self._skip_next_preselection:

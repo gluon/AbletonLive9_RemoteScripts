@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_DirectLink/BestBankDeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_DirectLink/BestBankDeviceComponent.py
 import Live
 from _Framework.DeviceComponent import DeviceComponent
 from _Framework.DisplayDataSource import DisplayDataSource

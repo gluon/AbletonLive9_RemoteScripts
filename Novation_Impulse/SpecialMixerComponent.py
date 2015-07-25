@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Novation_Impulse/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Novation_Impulse/SpecialMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ButtonElement import ButtonElement
 

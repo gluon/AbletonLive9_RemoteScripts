@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/BackgroundComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/BackgroundComponent.py
 from __future__ import absolute_import
 from functools import partial
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -31,19 +31,11 @@ class BackgroundComponent(ControlSurfaceComponent):
         if control:
             self._reset_control(control)
             self._control_map[name] = control
-            try:
-                self._control_slots[name] = self.register_slot(control, lambda *a, **k: self._on_value_listener(control, *a, **k), 'value')
-            except SubjectSlotError:
-                pass
-
-        else:
+        elif name in self._control_map:
             del self._control_map[name]
 
     def _reset_control(self, control):
         control.reset()
-
-    def _on_value_listener(self, *a, **k):
-        pass
 
     def update(self):
         super(BackgroundComponent, self).update()
@@ -64,10 +56,6 @@ class ModifierBackgroundComponent(BackgroundComponent):
 
     def _reset_control(self, control):
         if len(control.resource.owners) > 1:
-            control.set_light(control.is_pressed())
+            control.set_light(True)
         else:
             control.reset()
-
-    def _on_value_listener(self, sender, value, *a, **k):
-        if len(sender.resource.owners) > 1:
-            sender.set_light(sender.is_pressed())

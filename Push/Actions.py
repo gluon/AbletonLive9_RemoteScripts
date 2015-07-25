@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Actions.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/Actions.py
 from itertools import izip, count
 import Live
+AutomationState = Live.DeviceParameter.AutomationState
 _Q = Live.Song.Quantization
 from _Framework.Control import ButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -272,7 +273,7 @@ class DeleteComponent(ControlSurfaceComponent, Messenger):
 
     def delete_clip_envelope(self, parameter):
         playing_clip = self._get_playing_clip()
-        if playing_clip:
+        if playing_clip and parameter.automation_state != AutomationState.none:
             playing_clip.clear_envelope(parameter)
             self.show_notification(MessageBoxText.DELETE_ENVELOPE % dict(automation=parameter.name))
 
@@ -281,6 +282,15 @@ class DeleteComponent(ControlSurfaceComponent, Messenger):
         playing_slot_index = selected_track.playing_slot_index
         if playing_slot_index >= 0:
             return selected_track.clip_slots[playing_slot_index].clip
+
+
+class DeleteAndReturnToDefaultComponent(DeleteComponent):
+
+    def delete_clip_envelope(self, parameter):
+        if parameter.automation_state == AutomationState.none and not parameter.is_quantized:
+            parameter.value = parameter.default_value
+            self.show_notification(MessageBoxText.DEFAULT_PARAMETER_VALUE % dict(automation=parameter.name))
+        super(DeleteAndReturnToDefaultComponent, self).delete_clip_envelope(parameter)
 
 
 class CreateDefaultTrackComponent(CompoundComponent, Messenger):
@@ -468,9 +478,8 @@ class StopClipComponent(ControlSurfaceComponent):
 
 
 class UndoRedoComponent(ControlSurfaceComponent, Messenger):
-    undo_skin = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On')
-    undo_button = ButtonControl(**undo_skin)
-    redo_button = ButtonControl(**undo_skin)
+    undo_button = ButtonControl()
+    redo_button = ButtonControl()
 
     @undo_button.pressed
     def undo_button(self, button):

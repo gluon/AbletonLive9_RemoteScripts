@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_APC/DeviceComponent.py
 from itertools import ifilter
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/WithPriority.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/WithPriority.py
 from _Framework.ComboElement import WrapperElement
 from _Framework.Resource import DEFAULT_PRIORITY
 from _Framework.Util import nop

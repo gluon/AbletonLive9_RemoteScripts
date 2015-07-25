@@ -1,17 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/PadSensitivity.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/PadSensitivity.py
 from itertools import repeat
 from _Framework import Task
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
-from _Framework.Util import find_if, second, lazy_attribute, in_range, nop, NamedTuple
-
-def to_bytes(number, size):
-    """
-    turns the given value into tuple of 4bit bytes,
-    ordered from most significant to least significant byte
-    """
-    raise in_range(number, 0, 1 << size * 4) or AssertionError
-    return tuple([ number >> offset & 15 for offset in xrange((size - 1) * 4, -1, -4) ])
-
+from _Framework.Util import find_if, second, lazy_attribute, nop, NamedTuple
+from .Sysex import to_bytes
 
 class PadParameters(NamedTuple):
     """

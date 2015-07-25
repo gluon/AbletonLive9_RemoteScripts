@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Setting.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/Setting.py
 from math import fabs
 from _Framework.Util import sign, clamp
 from _Framework.SubjectSlot import Subject, SubjectEvent

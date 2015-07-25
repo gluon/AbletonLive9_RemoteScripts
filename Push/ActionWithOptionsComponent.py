@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ActionWithOptionsComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/ActionWithOptionsComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.Control import ButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
@@ -174,6 +174,10 @@ class ToggleWithOptionsComponent(ActionWithOptionsComponent):
     __subject_events__ = ('toggle_option',)
     _is_active = False
     _just_activated = False
+
+    def __init__(self, *a, **k):
+        super(ToggleWithOptionsComponent, self).__init__(*a, **k)
+        self.action_button.color = 'DefaultButton.Off'
 
     def _get_is_active(self):
         return self._is_active

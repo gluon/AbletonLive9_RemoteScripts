@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Photon_X25/config.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Photon_X25/config.py
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
  'PLAY': GENERIC_PLAY,

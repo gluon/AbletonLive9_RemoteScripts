@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ModesComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ModesComponent.py
 """
 Mode handling components.
 """
@@ -10,7 +10,7 @@ from . import Task
 from .CompoundComponent import CompoundComponent
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .Dependency import depends
-from .Layer import Layer
+from .Layer import LayerBase
 from .Resource import StackingResource
 from .SubjectSlot import subject_slot
 from .Util import is_iterable, is_contextmanager, lazy_attribute, infinite_context_manager, NamedTuple
@@ -23,7 +23,7 @@ def tomode(thing):
     if isinstance(thing, ControlSurfaceComponent):
         return ComponentMode(thing)
     if isinstance(thing, tuple) and len(thing) == 2:
-        if isinstance(thing[0], ControlSurfaceComponent) and isinstance(thing[1], Layer):
+        if isinstance(thing[0], ControlSurfaceComponent) and isinstance(thing[1], LayerBase):
             return LayerMode(*thing)
         elif callable(thing[0]) and callable(thing[1]):
             mode = Mode()
@@ -261,7 +261,7 @@ class DelayMode(Mode):
         super(DelayMode, self).__init__(*a, **k)
         raise mode is not None or AssertionError
         raise parent_task_group is not None or AssertionError
-        delay = delay or Defaults.MOMENTARY_DELAY
+        delay = delay if delay is not None else Defaults.MOMENTARY_DELAY
         self._mode = tomode(mode)
         self._mode_entered = False
         self._delay_task = parent_task_group.add(Task.sequence(Task.wait(delay), Task.run(self._enter_mode_delayed)))
@@ -788,9 +788,9 @@ class EnablingModesComponent(ModesComponent):
     enabled while the 'enabled' mode is active.
     """
 
-    def __init__(self, component = None, toggle_value = False, *a, **k):
+    def __init__(self, component = None, toggle_value = False, disabled_value = False, *a, **k):
         super(EnablingModesComponent, self).__init__(*a, **k)
         component.set_enabled(False)
-        self.add_mode('disabled', None)
+        self.add_mode('disabled', None, disabled_value)
         self.add_mode('enabled', component, toggle_value)
         self.selected_mode = 'disabled'

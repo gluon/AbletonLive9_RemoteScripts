@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_UserScript/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_UserScript/__init__.py
 from _Generic.GenericScript import GenericScript
 import Live
 from _Tools.ConfigParser import ConfigParser
+HIDE_SCRIPT = True
 
 def interpret_map_mode(map_mode_name):
     result = Live.MidiMap.MapMode.absolute

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/Settings.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/Settings.py
 from Setting import OnOffSetting, EnumerableSetting
 from PadSensitivity import PadParameters
 import consts
@@ -31,10 +31,12 @@ def _threshold_formatter(value):
 SETTING_THRESHOLD = 0
 SETTING_CURVE = 1
 SETTING_WORKFLOW = 2
+SETTING_AFTERTOUCH_THRESHOLD = 3
 
 def create_settings(preferences = None):
     preferences = preferences if preferences != None else {}
     pad_settings = _create_pad_settings()
     return {SETTING_WORKFLOW: OnOffSetting(name='Workflow', value_labels=['Scene', 'Clip'], default_value=True, preferences=preferences),
      SETTING_THRESHOLD: EnumerableSetting(name='Pad Threshold', values=range(consts.MIN_THRESHOLD_STEP, consts.MAX_THRESHOLD_STEP + 1), default_value=0, preferences=preferences, value_formatter=_threshold_formatter),
-     SETTING_CURVE: EnumerableSetting(name='Velocity Curve', values=pad_settings, default_value=pad_settings[1], preferences=preferences)}
+     SETTING_CURVE: EnumerableSetting(name='Velocity Curve', values=pad_settings, default_value=pad_settings[1], preferences=preferences),
+     SETTING_AFTERTOUCH_THRESHOLD: EnumerableSetting(name='Aftertouch Threshold', values=range(128), default_value=consts.INSTRUMENT_AFTERTOUCH_THRESHOLD, preferences=preferences)}

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/TouchStripElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/TouchStripElement.py
 import Live
 import Sysex
 from _Framework.Util import group, in_range, nop, NamedTuple, clamp
@@ -7,7 +7,7 @@ from _Framework.InputControlElement import InputControlElement, MIDI_PB_TYPE
 MAX_PITCHBEND = 16384.0
 
 class TouchStripModes:
-    CUSTOM_PITCHBEND, CUSTOM_VOLUME, CUSTOM_PAN, CUSTOM_DISCRETE, CUSTOM_FREE, PITCHBEND, VOLUME, PAN, DISCRETE, COUNT = range(10)
+    CUSTOM_PITCHBEND, CUSTOM_VOLUME, CUSTOM_PAN, CUSTOM_DISCRETE, CUSTOM_FREE, PITCHBEND, VOLUME, PAN, DISCRETE, MODWHEEL, COUNT = range(11)
 
 
 class TouchStripBehaviour(object):
@@ -83,6 +83,7 @@ class DraggingBehaviour(SelectingBehaviour):
 
 
 DEFAULT_BEHAVIOUR = SimpleBehaviour()
+MODWHEEL_BEHAVIOUR = SimpleBehaviour(mode=TouchStripModes.MODWHEEL)
 
 class TouchStripElement(InputControlElement, SlotManager):
     """
@@ -90,6 +91,7 @@ class TouchStripElement(InputControlElement, SlotManager):
     """
 
     class ProxiedInterface(InputControlElement.ProxiedInterface):
+        set_mode = nop
         turn_off = nop
         turn_on_index = nop
         send_state = nop
@@ -117,23 +119,26 @@ class TouchStripElement(InputControlElement, SlotManager):
     def _get_mode(self):
         return self._behaviour.mode if self._behaviour != None else None
 
-    def _set_mode(self, mode):
+    def set_mode(self, mode):
         if not in_range(mode, 0, TouchStripModes.COUNT):
             raise IndexError('Invalid Touch Strip Mode %d' % mode)
         self.behaviour = SimpleBehaviour(mode=mode)
 
-    mode = property(_get_mode, _set_mode)
+    mode = property(_get_mode, set_mode)
 
     def _set_behaviour(self, behaviour):
         if not behaviour:
             behaviour = DEFAULT_BEHAVIOUR
-            self._behaviour = behaviour != self._behaviour and behaviour
-            self._touch_slot.listener = behaviour.handle_touch
-            self._send_midi(Sysex.START + (99,
-             0,
-             1,
-             behaviour.mode,
-             247))
+            if behaviour != self._behaviour:
+                self._behaviour = behaviour
+                self._touch_slot.listener = behaviour.handle_touch
+                behaviour.mode == TouchStripModes.MODWHEEL and self._send_midi(Sysex.TOUCHSTRIP_MODWHEEL_MODE)
+            else:
+                self._send_midi(Sysex.START + (99,
+                 0,
+                 1,
+                 behaviour.mode,
+                 247))
 
     def _get_behaviour(self):
         return self._behaviour

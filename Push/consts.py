@@ -1,14 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/consts.py
 from _Framework.Resource import DEFAULT_PRIORITY
 import sys
 DISPLAY_LENGTH = 72
 DISPLAY_BLOCK_LENGTH = 18
 HANDSHAKE_TIMEOUT = 1.0
 SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
- 'Enabled': 'DefaultButton.Off',
+ 'Enabled': 'DefaultButton.On',
  True: 'DefaultButton.On',
  False: 'DefaultButton.Disabled'}
-SIDE_BUTTON_COLORS = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
+SIDE_BUTTON_COLORS = dict(color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
 MUSICAL_MODES = ['Major',
  [0,
   2,
@@ -204,6 +204,10 @@ MAX_ON_THRESHOLD = 410
 MIN_THRESHOLD_STEP = -20
 MAX_THRESHOLD_STEP = 20
 CRITICAL_THRESHOLD_LIMIT = 0
+DEFAULT_PEAK_SAMPLING_TIME = 50
+DEFAULT_AFTERTOUCH_THRESHOLD = 0
+DEFAULT_AFTERTOUCH_GATE_TIME = 500
+INSTRUMENT_AFTERTOUCH_THRESHOLD = 80
 PROTO_FAST_DEVICE_NAVIGATION = False
 PROTO_AUDIO_NOTE_MODE = False
 PROTO_SONG_IS_ROOT = False
@@ -217,6 +221,7 @@ NOTIFICATION_PRIORITY = DEFAULT_PRIORITY + 1
 BACKGROUND_PRIORITY = DEFAULT_PRIORITY - 3
 ENCODER_SENSITIVITY = 0.5
 CONTINUOUS_MAPPING_SENSITIVITY = 2.0
+FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01
 QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
 CHAR_ARROW_UP = '\x00'
 CHAR_ARROW_DOWN = '\x01'
@@ -258,6 +263,7 @@ class MessageBoxText:
     DELETE_SCENE = '                  Scene deleted:    %s'
     DUPLICATE_SCENE = '                  Scene duplicated: %s'
     DELETE_ENVELOPE = '                  Delete automation %(automation)s'
+    DEFAULT_PARAMETER_VALUE = '                  Reset to default: %(automation)s'
     EMPTY_DEVICE_CHAIN = '\n\n               No Devices.    Press [Browse] to add a device.'
     STUCK_PAD_WARNING = '         Warning: Low threshold may cause stuck pads'
     UNDO = '            Undo:     Reverted last action'
@@ -266,6 +272,8 @@ class MessageBoxText:
     SELECTED_CLIP_BLINK = ' Press            to edit playing   clip'
     PLAYING_CLIP_ABOVE_SELECTED_CLIP = ' Press Up Arrow   to edit playing   clip'
     PLAYING_CLIP_BELOW_SELECTED_CLIP = ' Press Down Arrow to edit playing   clip'
+    TOUCHSTRIP_PITCHBEND_MODE = '                  Touchstrip Mode:  Pitchbend'
+    TOUCHSTRIP_MODWHEEL_MODE = '                  Touchstrip Mode:  Modwheel'
 
 
 _test_mode = __builtins__.get('TEST_MODE', False)

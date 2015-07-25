@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/SkinDefault.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_APC/SkinDefault.py
 from _Framework.Skin import Skin
 from _Framework.ButtonElement import Color
 from Push.Colors import Rgb, Pulse, Blink
@@ -13,6 +13,7 @@ class Defaults:
     class DefaultButton:
         On = Color(127)
         Off = Color(0)
+        Disabled = Color(0)
 
 
 class BiLedColors:

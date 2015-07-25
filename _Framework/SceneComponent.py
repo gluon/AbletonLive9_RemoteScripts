@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/SceneComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/SceneComponent.py
 from __future__ import absolute_import
 from .ClipSlotComponent import ClipSlotComponent, find_nearest_color
 from .CompoundComponent import CompoundComponent
