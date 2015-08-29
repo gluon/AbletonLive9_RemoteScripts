@@ -8,26 +8,8 @@ SCROLL_SIDE_BUTTON_STATES = {'Pressed': 'DefaultButton.On',
  'Enabled': 'DefaultButton.On',
  True: 'DefaultButton.On',
  False: 'DefaultButton.Disabled'}
-<<<<<<< HEAD
 SIDE_BUTTON_COLORS = dict(color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
 MUSICAL_MODES = ['Major',
-=======
-SIDE_BUTTON_COLORS = dict(color='DefaultButton.Off', pressed_color='DefaultButton.On', disabled_color='DefaultButton.Disabled')
-MUSICAL_MODES = ['All',
- [0,
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-  11],
-  'Major',
->>>>>>> 53ecfbd32ea18f8a8f5e2f22abfaa9c36463c629
  [0,
   2,
   4,
