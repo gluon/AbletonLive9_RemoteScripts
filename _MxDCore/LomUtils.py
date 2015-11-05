@@ -2,7 +2,7 @@
 import sys
 from _Tools import types
 from MxDUtils import TupleWrapper
-from LomTypes import TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, HIDDEN_TYPES, HIDDEN_PROPERTIES, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
+from LomTypes import TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, HIDDEN_TYPES, HIDDEN_PROPERTIES, HIDDEN_PROPERTIES_FOR_TYPE, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
 
 class LomInformation(object):
     """ Class that extracts information from a given LOM object """
@@ -39,8 +39,12 @@ class LomInformation(object):
     def _generate_object_info(self, lom_object):
         if hasattr(lom_object, '__doc__') and isinstance(lom_object.__doc__, basestring) and len(lom_object.__doc__) > 0:
             self._description = 'description %s' % lom_object.__doc__.replace('\n', ' ').replace(',', '\\,')
+
+        def hidden_prop_for_type(prop_name, lom_object):
+            return prop_name in HIDDEN_PROPERTIES_FOR_TYPE.get(type(lom_object), [])
+
         for prop_name in dir(lom_object):
-            if not prop_name.startswith('_') and prop_name not in HIDDEN_PROPERTIES:
+            if not prop_name.startswith('_') and prop_name not in HIDDEN_PROPERTIES and not hidden_prop_for_type(prop_name, lom_object):
                 self._generate_property_info(prop_name, lom_object)
 
     def _generate_property_info(self, prop_name, lom_object):

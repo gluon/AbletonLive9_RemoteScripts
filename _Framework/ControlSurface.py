@@ -1,7 +1,7 @@
 #Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ControlSurface.py
 from __future__ import absolute_import, with_statement
 from functools import partial, wraps
-from itertools import chain, imap
+from itertools import chain, ifilter, imap
 from contextlib import contextmanager
 import traceback
 import Live
@@ -15,14 +15,6 @@ from .PhysicalDisplayElement import PhysicalDisplayElement
 from .Profile import profile
 from .SubjectSlot import SlotManager
 from .Util import BooleanContext, first, find_if, const, in_range
-
-class _ModuleLoadedCheck(object):
-    """
-    This class is not to be instantiated.  We just use it to check
-    whether the modules have been unloaded (showing leaking listeners).
-    """
-    pass
-
 
 def _scheduled_method(method):
     """
@@ -99,11 +91,10 @@ class ControlSurface(SlotManager):
         self._midi_message_list = []
         self._midi_message_count = 0
         self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=self.song).everywhere()
-        with self.setting_listener_caller():
-            self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
-            self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
-            self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
-            self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
+        self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
+        self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
+        self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
+        self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
 
     @property
     def components(self):
@@ -524,32 +515,16 @@ class ControlSurface(SlotManager):
 
     @contextmanager
     def _component_guard(self):
-        with self.setting_listener_caller():
-            with self._control_surface_injector:
-                with self.suppressing_rebuild_requests():
-                    with self.accumulating_midi_messages():
-                        yield
-
-    @contextmanager
-    def setting_listener_caller(self):
-        try:
-            self._c_instance.set_listener_caller(self._call_guarded_listener)
-            yield
-        finally:
-            self._c_instance.set_listener_caller(None)
+        with self._control_surface_injector:
+            with self.suppressing_rebuild_requests():
+                with self.accumulating_midi_messages():
+                    yield
 
     @profile
-    def _call_guarded_listener(self, listener):
-        if _ModuleLoadedCheck == None or self._c_instance == None:
-            self.log_message('Disconnecting leaked listener at:', listener.name)
-            listener.disconnect()
-        else:
-            try:
-                with self.component_guard():
-                    listener()
-            except:
-                self.log_message('Detected broken listener at:', listener.name)
-                raise 
+    def call_listeners(self, listeners):
+        with self.component_guard():
+            for listener in ifilter(lambda l: l != None, listeners):
+                listener()
 
     @contextmanager
     def accumulating_midi_messages(self):

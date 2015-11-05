@@ -2,7 +2,7 @@
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ScrollComponent import ScrollComponent
 from _Framework import Task
-from Push.ViewControlComponent import TrackScroller, BasicSceneScroller
+from _Framework.ViewControlComponent import TrackScroller, BasicSceneScroller
 
 def is_recording_clip(tracks, check_arrangement):
     found_recording_clip = False

@@ -13,7 +13,7 @@ from _Framework.Layer import Layer
 from _Framework.ModesComponent import ModesComponent, LayerMode
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import nop
-from Push.ViewControlComponent import ViewControlComponent
+from _Framework.ViewControlComponent import ViewControlComponent
 from ButtonSysexControl import ButtonSysexControl
 from ConfigurableButtonElement import ConfigurableButtonElement
 from DeviceNavigationComponent import DeviceNavigationComponent

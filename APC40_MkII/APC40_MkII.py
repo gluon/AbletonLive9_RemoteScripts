@@ -12,7 +12,7 @@ from _Framework.SessionRecordingComponent import SessionRecordingComponent
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ClipCreator import ClipCreator
 from _Framework.Util import recursive_map
-from Push import Colors
+from pushbase import colors
 from _APC.APC import APC
 from _APC.DeviceComponent import DeviceComponent
 from _APC.DeviceBankButtonElement import DeviceBankButtonElement
@@ -141,9 +141,9 @@ class APC40_MkII(APC, OptimizedControlSurface):
             return self._bank_toggle.create_toggle_element(off_control=button)
 
         self._session = SessionComponent(NUM_TRACKS, NUM_SCENES, auto_name=True, is_enabled=False, enable_skinning=True, layer=Layer(track_bank_left_button=when_bank_off(self._left_button), track_bank_right_button=when_bank_off(self._right_button), scene_bank_up_button=when_bank_off(self._up_button), scene_bank_down_button=when_bank_off(self._down_button), page_left_button=when_bank_on(self._left_button), page_right_button=when_bank_on(self._right_button), page_up_button=when_bank_on(self._up_button), page_down_button=when_bank_on(self._down_button), stop_track_clip_buttons=self._stop_buttons, stop_all_clips_button=self._stop_all_button, scene_launch_buttons=self._scene_launch_buttons, clip_launch_buttons=self._session_matrix))
-        clip_color_table = Colors.CLIP_COLOR_TABLE.copy()
+        clip_color_table = colors.CLIP_COLOR_TABLE.copy()
         clip_color_table[16777215] = 119
-        self._session.set_rgb_mode(clip_color_table, Colors.RGB_COLOR_TABLE)
+        self._session.set_rgb_mode(clip_color_table, colors.RGB_COLOR_TABLE)
         self._session_zoom = SessionZoomingComponent(self._session, name='Session_Overview', enable_skinning=True, is_enabled=False, layer=Layer(button_matrix=self._shifted_matrix, nav_left_button=self._with_shift(self._left_button), nav_right_button=self._with_shift(self._right_button), nav_up_button=self._with_shift(self._up_button), nav_down_button=self._with_shift(self._down_button), scene_bank_buttons=self._shifted_scene_buttons))
 
     def _create_mixer(self):

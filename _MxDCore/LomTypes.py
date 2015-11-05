@@ -5,8 +5,9 @@ from _Framework.ControlSurface import ControlSurface
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.ControlElement import ControlElement
 from _Framework.Util import is_iterable
-HIDDEN_TYPES = (Live.Browser.Browser, Live.Clip.AutomationEnvelope)
-HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture', 'automation_envelope')
+HIDDEN_TYPES = (Live.Browser.Browser, Live.Clip.AutomationEnvelope, Live.SimplerDevice.TransientLoopMode)
+HIDDEN_PROPERTIES = ('begin_undo_step', 'end_undo_step', 'begin_gesture', 'end_gesture', 'automation_envelope', 'can_be_appointed', 'copy_pad')
+HIDDEN_PROPERTIES_FOR_TYPE = {Live.SimplerDevice.SimplerDevice: ('sample_file_path', 'sample_length', 'start_marker', 'end_marker', 'slicing_sensitivity', 'slices', 'warping', 'warp_mode', 'beats_granulation_resolution', 'beats_transient_loop_mode', 'beats_transient_envelope', 'tones_grain_size', 'texture_grain_size', 'texture_flux', 'complex_pro_formants', 'complex_pro_envelope', 'gain', 'gain_display_string', 'remove_slice', 'insert_slice')}
 ENUM_TYPES = (Live.Song.Quantization,
  Live.Song.RecordingQuantization,
  Live.Song.CaptureMode,
@@ -103,7 +104,15 @@ def cs_base_classes():
     from _Framework.ControlSurface import ControlSurface
     from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
     from _Framework.ControlElement import ControlElement
-    return (ControlSurface, ControlSurfaceComponent, ControlElement)
+    from ableton.v2.control_surface import ControlElement as ControlElement2
+    from ableton.v2.control_surface import ControlSurface as ControlSurface2
+    from ableton.v2.control_surface import Component as ControlSurfaceComponent2
+    return (ControlSurface,
+     ControlSurfaceComponent,
+     ControlElement,
+     ControlSurface2,
+     ControlSurfaceComponent2,
+     ControlElement2)
 
 
 def is_lom_object(lom_object, lom_classes):

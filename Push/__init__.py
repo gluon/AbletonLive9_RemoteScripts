@@ -1,7 +1,7 @@
 #Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/__init__.py
-from Push import Push
-from FirmwareHandling import get_provided_firmware_version
-from _Framework.Capabilities import controller_id, inport, outport, CONTROLLER_ID_KEY, PORTS_KEY, HIDDEN, NOTES_CC, SCRIPT, SYNC, TYPE_KEY, FIRMWARE_KEY, AUTO_LOAD_KEY
+from ableton.v2.control_surface.capabilities import controller_id, inport, outport, AUTO_LOAD_KEY, CONTROLLER_ID_KEY, FIRMWARE_KEY, HIDDEN, NOTES_CC, PORTS_KEY, SCRIPT, SYNC, TYPE_KEY
+from .firmware_handling import get_provided_firmware_version
+from .push import Push
 
 def get_capabilities():
     return {CONTROLLER_ID_KEY: controller_id(vendor_id=2536, product_ids=[21], model_name='Ableton Push'),
@@ -19,4 +19,4 @@ def get_capabilities():
 
 def create_instance(c_instance):
     """ Creates and returns the Push script """
-    return Push(c_instance)
+    return Push(c_instance=c_instance)
