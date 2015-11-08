@@ -8,7 +8,7 @@ You can find more informations on
 
 
 
-**UPDATED on 5th November 2015 with Live 9.5 MIDI Remote Scripts**
+**UPDATED on 8th November 2015 with Live 9.5 MIDI Remote Scripts**
 
 (all files marked with older references didn't have changed since previous versions)
 
