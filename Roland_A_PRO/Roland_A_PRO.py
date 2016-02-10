@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Roland_A_PRO/Roland_A_PRO.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Roland_A_PRO/Roland_A_PRO.py
 from __future__ import with_statement
 from functools import partial
 import Live

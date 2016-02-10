@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/control_element_factory.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/control_element_factory.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import depends
 from ableton.v2.control_surface import MIDI_CC_TYPE, MIDI_NOTE_TYPE, PrioritizedResource, midi
 from ableton.v2.control_surface.elements import SysexElement

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/multi_entry_mode.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/multi_entry_mode.py
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.mode import tomode, Mode
 
 class MultiEntryMode(Mode):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_DirectLink/ShiftableTransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_DirectLink/ShiftableTransportComponent.py
 import Live
 from _Framework.ButtonElement import ButtonElement
 from _Framework.TransportComponent import TransportComponent

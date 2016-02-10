@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/OpenLabs/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/OpenLabs/__init__.py
 import Live
 from OpenLabs import OpenLabs
 

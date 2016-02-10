@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/actions.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/actions.py
+from __future__ import absolute_import, print_function
 from pushbase.actions import CaptureAndInsertSceneComponent as CaptureAndInsertSceneComponentBase
 from .clip_decoration import ClipDecoratedPropertiesCopier
 
@@ -12,7 +13,8 @@ class CaptureAndInsertSceneComponent(CaptureAndInsertSceneComponentBase):
 
         def get_playing_clip(track):
             slot_ix = track.playing_slot_index
-            return track.clip_slots[slot_ix].clip if slot_ix > -1 else None
+            if slot_ix > -1:
+                return track.clip_slots[slot_ix].clip
 
         played_clips = [ get_playing_clip(track) for track in self.song.tracks ]
         super(CaptureAndInsertSceneComponent, self).post_trigger_action()

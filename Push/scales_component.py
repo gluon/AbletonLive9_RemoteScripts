@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/scales_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/scales_component.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import forward_property, listens, listens_group, recursive_map
 from ableton.v2.control_surface import CompoundComponent

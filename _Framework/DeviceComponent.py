@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/DeviceComponent.py
 from __future__ import absolute_import
 import Live
 from _Generic.Devices import device_parameters_to_map, number_of_parameter_banks, parameter_banks, parameter_bank_names, best_of_parameter_bank
@@ -6,7 +6,34 @@ from .ButtonElement import ButtonElement
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .DeviceBankRegistry import DeviceBankRegistry
 from .DisplayDataSource import DisplayDataSource
-from .SubjectSlot import subject_slot_group, Subject
+from .SubjectSlot import subject_slot, subject_slot_group, Subject
+
+def device_to_appoint(device):
+    appointed_device = device
+    if device != None and device.can_have_drum_pads and not device.has_macro_mappings and len(device.chains) > 0 and device.view.selected_chain != None and len(device.view.selected_chain.devices) > 0:
+        appointed_device = device_to_appoint(device.view.selected_chain.devices[0])
+    return appointed_device
+
+
+def select_and_appoint_device(song, device_to_select, ignore_unmapped_macros = True):
+    """
+    Convenience function for selecting a device for a control surface to control.
+    
+    This takes care of selecting the device and appointing it for remote control, which
+    is important, because these are two concepts, that are not exactly the same.
+    
+    The device component always controls the appointed device. It's possible to select
+    another device, but not appoint it for control. The behaviour in this function
+    appoints a drum rack's selected chain's first device if none of the macros are mapped
+    for the drum rack. Though, it's still possible to select the drum rack, we just do
+    not display its controls in this scenario.
+    """
+    appointed_device = device_to_select
+    if ignore_unmapped_macros:
+        appointed_device = device_to_appoint(device_to_select)
+    song.appointed_device = appointed_device
+    song.view.select_device(device_to_select, False)
+
 
 class DeviceComponent(ControlSurfaceComponent, Subject):
     """ Class representing a device in Live """
@@ -44,7 +71,12 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
         self._bank_down_button_slot = make_button_slot('bank_down')
         self._lock_button_slot = make_button_slot('lock')
         self._on_off_button_slot = make_button_slot('on_off')
+        song = self.song()
+        view = song.view
         self._device_bank_property_slot.subject = self._device_bank_registry
+        self.__on_appointed_device_changed.subject = song
+        self.__on_selected_track_changed.subject = view
+        self.__on_selected_device_changed.subject = view.selected_track.view
 
     def disconnect(self):
         self._device_bank_registry = None
@@ -65,6 +97,10 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
     def device(self):
         return self._device
 
+    @subject_slot('appointed_device')
+    def __on_appointed_device_changed(self):
+        self.set_device(device_to_appoint(self.song().appointed_device))
+
     def set_device(self, device):
         if not self._locked_to_device and (device != self._device or type(device) != type(self._device)):
             if self._device != None:
@@ -80,6 +116,31 @@ class DeviceComponent(ControlSurfaceComponent, Subject):
             self._on_device_name_changed()
             self.update()
             self.notify_device()
+
+    @subject_slot('has_macro_mappings')
+    def __on_has_macro_mappings_changed(self):
+        self.song().appointed_device = device_to_appoint(self.__on_has_macro_mappings_changed.subject)
+
+    @subject_slot('selected_track')
+    def __on_selected_track_changed(self):
+        self.__on_selected_device_changed.subject = self.song().view.selected_track.view
+
+    @subject_slot('chains')
+    def __on_chains_changed(self):
+        self._update_appointed_device()
+
+    @subject_slot('selected_device')
+    def __on_selected_device_changed(self):
+        self._update_appointed_device()
+
+    def _update_appointed_device(self):
+        song = self.song()
+        device = song.view.selected_track.view.selected_device
+        if device != None:
+            song.appointed_device = device_to_appoint(device)
+        rack_device = device if isinstance(device, Live.RackDevice.RackDevice) else None
+        self.__on_has_macro_mappings_changed.subject = rack_device
+        self.__on_chains_changed.subject = rack_device
 
     def set_bank_prev_button(self, button):
         if button != self._bank_down_button:

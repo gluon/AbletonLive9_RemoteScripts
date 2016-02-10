@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/push_base.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/push_base.py
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
 from itertools import imap
@@ -7,11 +7,12 @@ from ableton.v2.base import inject, clamp, nop, const, NamedTuple, listens, list
 from ableton.v2.control_surface import BackgroundLayer, ClipCreator, ControlSurface, DeviceBankRegistry, Layer, midi
 from ableton.v2.control_surface.components import BackgroundComponent, M4LInterfaceComponent, ModifierBackgroundComponent, SessionNavigationComponent, SessionRingComponent, SessionOverviewComponent, ViewControlComponent
 from ableton.v2.control_surface.elements import adjust_string, ButtonElement, ButtonMatrixElement, ChoosingElement, ComboElement, DoublePressContext, MultiElement, OptionalElement, to_midi_value
-from ableton.v2.control_surface.mode import AddLayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent, EnablingModesComponent
+from ableton.v2.control_surface.mode import AddLayerMode, LayerMode, LazyComponentMode, ReenterBehaviour, ModesComponent, EnablingModesComponent
 from .accent_component import AccentComponent
 from .actions import CaptureAndInsertSceneComponent, DeleteAndReturnToDefaultComponent, DeleteComponent, DeleteSelectedClipComponent, DeleteSelectedSceneComponent, DuplicateDetailClipComponent, DuplicateLoopComponent, UndoRedoComponent
 from .auto_arm_component import AutoArmComponent
 from .automation_component import AutomationComponent
+from .banking_util import BankingInfo
 from .clip_control_component import ClipControlComponent
 from .device_parameter_component import DeviceParameterComponent
 from .grid_resolution import GridResolution
@@ -21,20 +22,18 @@ from .loop_selector_component import LoopSelectorComponent
 from .matrix_maps import FEEDBACK_CHANNELS
 from .melodic_component import MelodicComponent
 from .message_box_component import DialogComponent, InfoComponent
-from .note_editor_component import NoteEditorComponent
+from .note_editor_component import DEFAULT_VELOCITY_RANGE_THRESHOLDS
 from .note_repeat_component import NoteRepeatComponent
 from .note_settings_component import NoteEditorSettingsComponent
-from .provider_device_component import ProviderDeviceComponent
 from .selected_track_parameter_provider import SelectedTrackParameterProvider
 from .selection import PushSelection
 from .select_playing_clip_component import SelectPlayingClipComponent
 from .skin_default import make_default_skin
 from .sliced_simpler_component import SlicedSimplerComponent
-from .special_mixer_component import SpecialMixerComponent
 from .special_session_component import SpecialSessionComponent
 from .step_seq_component import StepSeqComponent
 from .percussion_instrument_finder_component import PercussionInstrumentFinderComponent
-from .touch_strip_controller import TouchStripControllerComponent, TouchStripEncoderConnection
+from .touch_strip_controller import TouchStripControllerComponent, TouchStripEncoderConnection, TouchStripPitchModComponent
 from .track_frozen_mode import TrackFrozenModesComponent
 from .transport_component import TransportComponent
 from .value_component import ValueComponent, ParameterValueComponent
@@ -42,6 +41,7 @@ from . import consts
 from . import sysex
 NUM_TRACKS = 8
 NUM_SCENES = 8
+TEMPO_SWING_TOUCH_DELAY = 0.4
 
 def tracks_to_use_from_song(song):
     return tuple(song.visible_tracks) + tuple(song.return_tracks)
@@ -51,10 +51,16 @@ class PushBase(ControlSurface):
     preferences_key = 'Push'
     session_component_type = SpecialSessionComponent
     drum_group_note_editor_skin = 'NoteEditor'
+    note_editor_velocity_range_thresholds = DEFAULT_VELOCITY_RANGE_THRESHOLDS
+    device_component_class = None
+    bank_definitions = None
+    note_editor_class = None
 
     def __init__(self, *a, **k):
         super(PushBase, self).__init__(*a, **k)
         self.register_slot(self.song.view, self._on_selected_track_changed, 'selected_track')
+        self._device_decorator_factory = self._create_device_decorator_factory()
+        self.register_disconnectable(self._device_decorator_factory)
         self._double_press_context = DoublePressContext()
         injecting = self._create_injector()
         self._push_injector = injecting.everywhere()
@@ -97,6 +103,9 @@ class PushBase(ControlSurface):
                     if song_view.selected_track != old_selected_track:
                         self._track_selection_changed_by_action()
 
+    def _create_device_decorator_factory(self):
+        raise NotImplementedError
+
     def _create_components(self):
         self._init_settings()
         self._init_notification()
@@ -115,10 +124,10 @@ class PushBase(ControlSurface):
         self._init_transport_and_recording()
         self._init_stop_clips_action()
         self._init_value_components()
+        self._init_track_list()
         self._init_mixer()
         self._init_track_mixer()
         self._init_session()
-        self._init_track_list()
         self._init_grid_resolution()
         self._init_drum_component()
         self._init_slicing_component()
@@ -207,13 +216,16 @@ class PushBase(ControlSurface):
         for encoder in self.elements.global_param_controls.nested_control_elements():
             encoder.set_observer(self._strip_connection)
 
+        self._pitch_mod_touch_strip = TouchStripPitchModComponent()
+        self._pitch_mod_touch_strip_layer = Layer(touch_strip='touch_strip_control', touch_strip_indication=self._with_firmware_version(1, 16, ComboElement('touch_strip_control', modifier='select_button')), touch_strip_toggle=self._with_firmware_version(1, 16, ComboElement('touch_strip_tap', modifier='select_button')))
+
     def _create_session_mode(self):
         raise NotImplementedError
 
     def _create_slicing_modes(self):
         slicing_modes = ModesComponent(name='Slicing_Modes', is_enabled=False)
-        slicing_modes.add_mode('64pads', [AddLayerMode(self._slicing_component, Layer(matrix='matrix'))])
-        slicing_modes.add_mode('sequencer', [self._slice_step_sequencer, self._note_editor_settings_component, AddLayerMode(self._slicing_component, Layer(matrix=self.elements.matrix.submatrix[:4, 4:8]))])
+        slicing_modes.add_mode('64pads', [AddLayerMode(self._slicing_component, Layer(matrix='matrix')), LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer)])
+        slicing_modes.add_mode('sequencer', [self._slice_step_sequencer, self._note_editor_settings_component, AddLayerMode(self._slicing_component, Layer(matrix=self.elements.matrix.submatrix[:4, 4:8], page_strip='touch_strip_control', scroll_strip=self._with_shift('touch_strip_control')))])
         slicing_modes.selected_mode = '64pads'
         return slicing_modes
 
@@ -395,50 +407,8 @@ class PushBase(ControlSurface):
     def _create_track_frozen_layer(self):
         return Layer()
 
-    def _create_mixer(self):
-        return SpecialMixerComponent(tracks_provider=self._session_ring, is_root=True)
-
-    def _create_mixer_layer(self):
-        return Layer(track_select_buttons='select_buttons')
-
-    def _create_mixer_pan_send_layer(self):
-        return Layer(track_select_buttons='select_buttons', pan_send_toggle='pan_send_mix_mode_button', pan_send_controls='fine_grain_param_controls')
-
-    def _create_mixer_volume_layer(self):
-        return Layer(track_select_buttons='select_buttons', volume_controls='fine_grain_param_controls')
-
-    def _create_mixer_track_layer(self):
-        return Layer(track_select_buttons='select_buttons')
-
-    def _create_mixer_solo_layer(self):
-        return Layer(solo_buttons='track_state_buttons')
-
-    def _create_mixer_mute_layer(self):
-        return Layer(mute_buttons='track_state_buttons')
-
     def _init_mixer(self):
-        self._mixer = self._create_mixer()
-        self._mixer.set_enabled(False)
-        self._mixer.name = 'Mixer'
-        self._mixer_layer = self._create_mixer_layer()
-        self._mixer_pan_send_layer = self._create_mixer_pan_send_layer()
-        self._mixer_volume_layer = self._create_mixer_volume_layer()
-        self._mixer_track_layer = self._create_mixer_track_layer()
-        self._mixer_solo_layer = self._create_mixer_solo_layer()
-        self._mixer_mute_layer = self._create_mixer_mute_layer()
-        for track in xrange(self.elements.matrix.width()):
-            strip = self._mixer.channel_strip(track)
-            strip.name = 'Channel_Strip_' + str(track)
-            strip.set_invert_mute_feedback(True)
-            strip.set_delete_handler(self._delete_component)
-            strip._do_select_track = self.on_select_track
-            strip.layer = Layer(shift_button='shift_button', duplicate_button='duplicate_button', selector_button='select_button')
-
-        self._mixer.selected_strip().name = 'Selected_Channel_strip'
-        self._mixer.master_strip().name = 'Master_Channel_strip'
-        self._mixer.master_strip()._do_select_track = self.on_select_track
-        self._mixer.master_strip().layer = Layer(select_button='master_select_button', selector_button='select_button')
-        self._mixer.set_enabled(True)
+        pass
 
     def _init_track_mixer(self):
         self._track_parameter_provider = self.register_disconnectable(SelectedTrackParameterProvider())
@@ -448,7 +418,7 @@ class PushBase(ControlSurface):
         return Layer(parameter_controls='fine_grain_param_controls')
 
     def _create_device_component(self):
-        return ProviderDeviceComponent(device_bank_registry=self._device_bank_registry, name='DeviceComponent', is_enabled=True, is_root=True)
+        return self.device_component_class(device_decorator_factory=self._device_decorator_factory, device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, name='DeviceComponent', is_enabled=True, is_root=True)
 
     def _create_device_parameter_component(self):
         return DeviceParameterComponent(parameter_provider=self._device_component, is_enabled=False, layer=self._create_device_parameter_layer())
@@ -461,9 +431,8 @@ class PushBase(ControlSurface):
 
     def _init_device(self):
         self._device_bank_registry = DeviceBankRegistry()
+        self._banking_info = BankingInfo(self.bank_definitions)
         self._device_component = self._create_device_component()
-        self._device_component.device_selection_follows_track_selection = True
-        self.set_device_component(self._device_component)
         self._device_parameter_component = self._create_device_parameter_component()
         self._device_navigation = self._create_device_navigation()
 
@@ -489,7 +458,7 @@ class PushBase(ControlSurface):
         self._view_control.layer = Layer(prev_track_button='nav_left_button', next_track_button='nav_right_button', prev_scene_button=OptionalElement('nav_up_button', self._settings['workflow'], False), next_scene_button=OptionalElement('nav_down_button', self._settings['workflow'], False), prev_scene_list_button=OptionalElement('nav_up_button', self._settings['workflow'], True), next_scene_list_button=OptionalElement('nav_down_button', self._settings['workflow'], True))
         self._session_recording = self._create_session_recording()
         new_button = MultiElement(self.elements.new_button, self.elements.foot_pedal_button.double_press)
-        self._session_recording.layer = Layer(new_button=OptionalElement(new_button, self._settings['workflow'], False), scene_list_new_button=OptionalElement(new_button, self._settings['workflow'], True), record_button='record_button', automation_button='automation_button', new_scene_button=self._with_shift('new_button'), re_enable_automation_button=self._with_shift('automation_button'), delete_automation_button=ComboElement('automation_button', 'delete_button'), foot_switch_button=self.elements.foot_pedal_button.single_press, _uses_foot_pedal='foot_pedal_button')
+        self._session_recording.layer = Layer(new_button=OptionalElement(new_button, self._settings['workflow'], False), scene_list_new_button=OptionalElement(new_button, self._settings['workflow'], True), record_button='record_button', arrangement_record_button=self._with_shift('record_button'), automation_button='automation_button', new_scene_button=self._with_shift('new_button'), re_enable_automation_button=self._with_shift('automation_button'), delete_automation_button=ComboElement('automation_button', 'delete_button'), foot_switch_button=self.elements.foot_pedal_button.single_press, _uses_foot_pedal='foot_pedal_button')
         self._transport = TransportComponent(name='Transport', is_root=True)
         self._transport.layer = Layer(play_button='play_button', stop_button=self._with_shift('play_button'), tap_tempo_button='tap_tempo_button', metronome_button='metronome_button')
 
@@ -534,7 +503,7 @@ class PushBase(ControlSurface):
     def _init_instrument(self):
         self._note_layout = NoteLayout(song=self.song, preferences=self.preferences)
         instrument_basic_layer = Layer(octave_strip=self._with_shift('touch_strip_control'), octave_up_button='octave_up_button', octave_down_button='octave_down_button', scale_up_button=self._with_shift('octave_up_button'), scale_down_button=self._with_shift('octave_down_button'))
-        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix='matrix', touch_strip='touch_strip_control', touch_strip_indication=self._with_firmware_version(1, 16, ComboElement('touch_strip_control', modifier='select_button')), touch_strip_toggle=self._with_firmware_version(1, 16, ComboElement('touch_strip_tap', modifier='select_button')), aftertouch_control='aftertouch_control', delete_button='delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip='touch_strip_control'))
+        self._instrument = MelodicComponent(skin=self._skin, is_enabled=False, clip_creator=self._clip_creator, name='Melodic_Component', grid_resolution=self._grid_resolution, note_layout=self._note_layout, note_editor_settings=self._note_editor_settings_component, note_editor_class=self.note_editor_class, velocity_range_thresholds=self.note_editor_velocity_range_thresholds, layer=self._create_instrument_layer(), instrument_play_layer=instrument_basic_layer + Layer(matrix='matrix', aftertouch_control='aftertouch_control', delete_button='delete_button'), instrument_sequence_layer=instrument_basic_layer + Layer(note_strip='touch_strip_control'), pitch_mod_touch_strip_mode=LayerMode(self._pitch_mod_touch_strip, self._pitch_mod_touch_strip_layer))
         self.__on_note_editor_layout_changed.subject = self._instrument
 
     def _create_scales_enabler(self):
@@ -547,7 +516,7 @@ class PushBase(ControlSurface):
         return Layer(playhead='playhead_element', button_matrix=self.elements.matrix.submatrix[:8, :4], loop_selector_matrix=self.elements.double_press_matrix.submatrix[4:8, 4:8], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[4:8, 4:8], quantization_buttons='side_buttons', solo_button='global_solo_button', select_button='select_button', delete_button='delete_button', shift_button='shift_button', mute_button='global_mute_button')
 
     def _init_step_sequencer(self):
-        drum_note_editor = NoteEditorComponent(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin)
+        drum_note_editor = self.note_editor_class(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
         self._note_editor_settings_component.add_editor(drum_note_editor)
         self._drum_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Drum_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=drum_note_editor, instrument_component=self._drum_component)
         self._drum_step_sequencer.set_enabled(False)
@@ -555,7 +524,7 @@ class PushBase(ControlSurface):
         self._audio_loop = LoopSelectorComponent(follow_detail_clip=True, measure_length=1.0, name='Loop_Selector')
         self._audio_loop.set_enabled(False)
         self._audio_loop.layer = Layer(loop_selector_matrix='matrix')
-        slice_note_editor = NoteEditorComponent(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin)
+        slice_note_editor = self.note_editor_class(clip_creator=self._clip_creator, grid_resolution=self._grid_resolution, skin_base_key=self.drum_group_note_editor_skin, velocity_range_thresholds=self.note_editor_velocity_range_thresholds)
         self._note_editor_settings_component.add_editor(slice_note_editor)
         self._slice_step_sequencer = StepSeqComponent(self._clip_creator, self._skin, name='Slice_Step_Sequencer', grid_resolution=self._grid_resolution, note_editor_component=slice_note_editor, instrument_component=self._slicing_component, is_enabled=False)
         self._slice_step_sequencer.layer = Layer(playhead='playhead_element', button_matrix=self.elements.matrix.submatrix[:8, :4], loop_selector_matrix=self.elements.double_press_matrix.submatrix[4:8, 4:8], short_loop_selector_matrix=self.elements.double_press_event_matrix.submatrix[4:8, 4:8], quantization_buttons='side_buttons', select_button='select_button')
@@ -572,7 +541,7 @@ class PushBase(ControlSurface):
 
     def _init_slicing_component(self):
         self._slicing_component = SlicedSimplerComponent(is_enabled=False)
-        self._slicing_component.layer = Layer(page_strip='touch_strip_control', scroll_strip=self._with_shift('touch_strip_control'), scroll_page_up_button='octave_up_button', scroll_page_down_button='octave_down_button', scroll_up_button=self._with_shift('octave_up_button'), scroll_down_button=self._with_shift('octave_down_button'), delete_button='delete_button', select_button='select_button')
+        self._slicing_component.layer = Layer(scroll_page_up_button='octave_up_button', scroll_page_down_button='octave_down_button', scroll_up_button=self._with_shift('octave_up_button'), scroll_down_button=self._with_shift('octave_down_button'), delete_button='delete_button', select_button='select_button')
 
     def _init_note_repeat(self):
         self._note_repeat = NoteRepeatComponent(name='Note_Repeat')
@@ -613,7 +582,7 @@ class PushBase(ControlSurface):
         self._undo_redo.layer = Layer(undo_button='undo_button', redo_button=self._with_shift('undo_button'))
 
     def _init_stop_clips_action(self):
-        raise NotImplementedError
+        pass
 
     def _create_capture_and_insert_scene_component(self):
         return CaptureAndInsertSceneComponent(name='Capture_And_Insert_Scene', is_root=True)
@@ -643,9 +612,9 @@ class PushBase(ControlSurface):
         raise NotImplementedError
 
     def _init_value_components(self):
-        self._swing_amount = ValueComponent('swing_amount', self.song, display_label='Swing Amount:', display_format='%d%%', model_transform=lambda x: clamp(x / 200.0, 0.0, 0.5), view_transform=lambda x: x * 200.0, encoder_factor=100.0, is_root=True)
+        self._swing_amount = ValueComponent('swing_amount', self.song, display_label='Swing Amount:', display_format='%d%%', model_transform=lambda x: clamp(x / 200.0, 0.0, 0.5), view_transform=lambda x: x * 200.0, encoder_factor=100.0, encoder_touch_delay=TEMPO_SWING_TOUCH_DELAY, is_root=True)
         self._swing_amount.layer = Layer(encoder='swing_control')
-        self._tempo = ValueComponent('tempo', self.song, display_label='Tempo:', display_format='%0.2f BPM', encoder_factor=128.0, is_root=True)
+        self._tempo = ValueComponent('tempo', self.song, display_label='Tempo:', display_format='%0.2f BPM', encoder_factor=128.0, encoder_touch_delay=TEMPO_SWING_TOUCH_DELAY, is_root=True)
         self._tempo.layer = Layer(encoder='tempo_control', shift_button='shift_button')
         self._master_vol = ParameterValueComponent(self.song.master_track.mixer_device.volume, display_label='Master Volume:', display_seg_start=3, name='Master_Volume_Display', is_root=True)
         self._master_vol.layer = Layer(encoder='master_volume_control')
@@ -732,7 +701,7 @@ class PushBase(ControlSurface):
         self._update_auto_arm(selected_mode=mode)
 
     def _update_auto_arm(self, selected_mode = None):
-        self._auto_arm.set_enabled(self._user.mode == sysex.LIVE_MODE and (selected_mode or self._matrix_modes.selected_mode == 'note'))
+        self._auto_arm.set_enabled(self._user.mode == sysex.LIVE_MODE and (selected_mode or self._matrix_modes.selected_mode) == 'note')
 
     @listens('instrument')
     def __on_percussion_instrument_changed(self):

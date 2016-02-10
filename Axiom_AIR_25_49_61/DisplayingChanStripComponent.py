@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/DisplayingChanStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_AIR_25_49_61/DisplayingChanStripComponent.py
 from _Framework.ButtonElement import ButtonElement
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from consts import *
@@ -60,21 +60,21 @@ class DisplayingChanStripComponent(ChannelStripComponent):
 
     def _mute_value(self, value):
         ChannelStripComponent._mute_value(self, value)
-        if self._track != None and self._track != self.song().master_track:
-            if self._name_display != None and self._value_display != None:
-                value != 0 and self._name_display.display_message('Mute :')
+        if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None:
+            if value != 0:
+                self._name_display.display_message('Mute :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.mute else self._value_display.send_midi(DISPLAY_WORD_OFF)
 
     def _solo_value(self, value):
         ChannelStripComponent._solo_value(self, value)
-        if self._track != None and self._track != self.song().master_track:
-            if self._name_display != None and self._value_display != None:
-                value != 0 and self._name_display.display_message('Solo :')
+        if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None:
+            if value != 0:
+                self._name_display.display_message('Solo :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.solo else self._value_display.send_midi(DISPLAY_WORD_OFF)
 
     def _arm_value(self, value):
         ChannelStripComponent._arm_value(self, value)
-        if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None:
-            if self._track not in self.song().return_tracks:
-                value != 0 and self._name_display.display_message('Arm :')
+        if self._track != None and self._track != self.song().master_track and self._name_display != None and self._value_display != None and self._track not in self.song().return_tracks:
+            if value != 0:
+                self._name_display.display_message('Arm :')
                 self._value_display.send_midi(DISPLAY_WORD_ON) if self._track.arm else self._value_display.send_midi(DISPLAY_WORD_OFF)

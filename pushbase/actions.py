@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/actions.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/actions.py
+from __future__ import absolute_import, print_function
 from itertools import izip, count
 import Live
 from ableton.v2.base import forward_property, listens, listens_group, liveobj_valid
@@ -322,7 +323,10 @@ class StopClipComponent(Component):
 
     @stop_track_clips_buttons.pressed
     def stop_track_clips_buttons(self, button):
-        button.track.stop_all_clips()
+        self._stop_clips_in_track(button.track)
+
+    def _stop_clips_in_track(self, track):
+        track.stop_all_clips()
 
     @listens('tracks')
     def _on_tracks_changed(self):
@@ -365,9 +369,9 @@ class StopClipComponent(Component):
         return color
 
     def _update_stop_button(self, track, button):
-        if isinstance(track, Live.Track.Track):
-            has_clip_slots = bool(track.clip_slots)
-            button.color = has_clip_slots and self._color_for_button(track)
+        has_clip_slots = isinstance(track, Live.Track.Track) and bool(track.clip_slots)
+        if has_clip_slots:
+            button.color = self._color_for_button(track)
         button.enabled = bool(has_clip_slots)
         button.track = track
 

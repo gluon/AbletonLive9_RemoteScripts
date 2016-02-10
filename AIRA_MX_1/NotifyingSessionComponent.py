@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/AIRA_MX_1/NotifyingSessionComponent.py
-from itertools import count
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AIRA_MX_1/NotifyingSessionComponent.py
+from itertools import count, izip_longest
 from _Framework.SubjectSlot import subject_slot, subject_slot_group
 from _Framework.SessionComponent import SessionComponent, SceneComponent
 
@@ -77,7 +77,7 @@ class NotifyingSessionComponent(SessionComponent):
 
     def set_clip_launch_buttons(self, buttons):
         first_scene = self.scene(0)
-        for track_index, button in map(None, xrange(self._num_tracks), buttons or []):
+        for track_index, button in izip_longest(xrange(self._num_tracks), buttons or []):
             slot = first_scene.clip_slot(track_index)
             slot.set_launch_button(button)
 

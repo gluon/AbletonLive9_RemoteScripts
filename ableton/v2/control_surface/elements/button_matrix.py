@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/button_matrix.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/button_matrix.py
+from __future__ import absolute_import, print_function
 from ...base import in_range, product, const, slicer, to_slice
 from ..compound_element import CompoundElement
 
@@ -88,7 +88,7 @@ class ButtonMatrixElement(CompoundElement):
             return self._do_get_item(index)
 
     def _do_get_item(self, index):
-        raise in_range(index, 0, len(self)) or AssertionError, 'Index out of range'
+        raise in_range(index, 0, len(self)) or AssertionError('Index out of range')
         row, col = divmod(index, self.width())
         return self.get_button(col, row)
 

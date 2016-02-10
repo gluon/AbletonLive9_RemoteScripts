@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC20/BackgroundComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC20/BackgroundComponent.py
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 from _Framework.Util import nop
 

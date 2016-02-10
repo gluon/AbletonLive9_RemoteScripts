@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/SessionRecordingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/SessionRecordingComponent.py
 from __future__ import absolute_import
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot
@@ -143,9 +143,9 @@ class SessionRecordingComponent(CompoundComponent):
         if self.is_enabled() and value:
             clip = self._get_playing_clip()
             selected_track = self.song().view.selected_track
-            if selected_track:
-                track_frozen = selected_track.is_frozen
-                clip and not track_frozen and clip.clear_all_envelopes()
+            track_frozen = selected_track and selected_track.is_frozen
+            if clip and not track_frozen:
+                clip.clear_all_envelopes()
 
     def _get_playing_clip(self):
         playing_clip = None
@@ -245,9 +245,9 @@ class SessionRecordingComponent(CompoundComponent):
         was any recording at all """
         song = self.song()
         status = song.session_record_status
-        if not status != Live.Song.SessionRecordStatus.off:
-            was_recording = song.session_record
-            song.session_record = was_recording and False
+        was_recording = status != Live.Song.SessionRecordStatus.off or song.session_record
+        if was_recording:
+            song.session_record = False
         return was_recording
 
     def _start_recording(self):

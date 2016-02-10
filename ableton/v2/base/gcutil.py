@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/gcutil.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/gcutil.py
+from __future__ import absolute_import, print_function
 from collections import defaultdict
 import gc
 
@@ -8,7 +9,7 @@ def typename(obj):
     """
     if hasattr(obj, '__class__'):
         return obj.__class__.__name__
-    elif hasattr(obj, '__name__'):
+    if hasattr(obj, '__name__'):
         return obj.__name__
     return '<unknown>'
 

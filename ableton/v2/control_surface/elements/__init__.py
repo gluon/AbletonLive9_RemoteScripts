@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/__init__.py
+from __future__ import absolute_import, print_function
 from .button import ButtonElement, ButtonElementMixin, ButtonValue, DummyUndoStepHandler, ON_VALUE, OFF_VALUE
 from .button_matrix import ButtonMatrixElement
 from .button_slider import ButtonSliderElement

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/color.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/color.py
+from __future__ import absolute_import, print_function
 from ...base import listenable_property, listens, liveobj_valid, nop, Subject, SlotManager
 
 def to_midi_value(int_or_color):

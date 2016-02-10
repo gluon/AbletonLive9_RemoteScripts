@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/task.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/task.py
 """
 Task management.
 """
+from __future__ import absolute_import, print_function
 import functools
 import logging
 import traceback
@@ -130,11 +131,13 @@ class FuncTask(Task):
         self._func = func
         self._equivalent = equivalent
 
-    def _set_func(self, func):
-        self._func = func
-
-    def _get_func(self):
+    @property
+    def func(self):
         return self._orig
+
+    @func.setter
+    def func(self, func):
+        self._func = func
 
     def do_update(self, timer):
         super(FuncTask, self).do_update(timer)
@@ -147,8 +150,6 @@ class FuncTask(Task):
     def _task_equivalent(self, other):
         return self == other or self._func == other or self._equivalent == other
 
-    func = property(_get_func, _set_func)
-
 
 class GeneratorTask(Task):
 
@@ -159,15 +160,17 @@ class GeneratorTask(Task):
         raise generator is not None and callable(generator) or AssertionError
         super(GeneratorTask, self).__init__(*a, **k)
         self._param = GeneratorTask.Param()
-        self._set_generator(generator)
+        self.generator = generator
         self._equivalent = equivalent
 
-    def _set_generator(self, generator):
+    @property
+    def generator(self):
+        return self._orig
+
+    @generator.setter
+    def generator(self, generator):
         self._orig = generator
         self._iter = generator(self._param)
-
-    def _get_generator(self):
-        return self._orig
 
     def do_update(self, delta):
         super(GeneratorTask, self).do_update(delta)
@@ -184,8 +187,6 @@ class GeneratorTask(Task):
 
     def _task_equivalent(self, other):
         return self == other or self._orig == other or self._equivalent == other
-
-    generator = property(_get_generator, _set_generator)
 
 
 class TaskGroup(Task):
@@ -425,7 +426,7 @@ except ImportError as err:
     pass
 
 def run(func, *a, **k):
-    return FuncTask(lambda t: None if func(*a, **k) else None)
+    return FuncTask(lambda t: (None if func(*a, **k) else None))
 
 
 def repeat(task):

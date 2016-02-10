@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/scrollable_list_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/scrollable_list_component.py
 """
 Scrollable list component.
 """
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import in_range, Event
 from ableton.v2.base.signal import short_circuit_signal

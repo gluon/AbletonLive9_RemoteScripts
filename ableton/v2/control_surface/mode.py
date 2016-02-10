@@ -1,8 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/mode.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/mode.py
 """
 Mode handling components.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from ..base import depends, infinite_context_manager, listens, is_contextmanager, is_iterable, lazy_attribute, listenable_property, NamedTuple, task
 from . import defaults
 from .layer import Layer, CompoundLayer
@@ -21,7 +21,7 @@ def tomode(thing):
     if isinstance(thing, tuple) and len(thing) == 2:
         if isinstance(thing[0], Component) and isinstance(thing[1], (Layer, CompoundLayer)):
             return LayerMode(*thing)
-        elif callable(thing[0]) and callable(thing[1]):
+        if callable(thing[0]) and callable(thing[1]):
             mode = Mode()
             mode.enter_mode, mode.leave_mode = thing
             return mode
@@ -126,7 +126,9 @@ class LayerModeBase(Mode):
         self._layer = layer
 
     def _get_component(self):
-        return self._component() if callable(self._component) else self._component
+        if callable(self._component):
+            return self._component()
+        return self._component
 
 
 class LayerMode(LayerModeBase):
@@ -189,7 +191,9 @@ class SetAttributeMode(Mode):
         self._value = value
 
     def _get_object(self):
-        return self._obj() if callable(self._obj) else self._obj
+        if callable(self._obj):
+            return self._obj()
+        return self._obj
 
     def enter_mode(self):
         self._old_value = getattr(self._get_object(), self._attribute, None)
@@ -442,7 +446,9 @@ class ModesComponent(CompoundComponent):
     @property
     def selected_groups(self):
         entry = self._mode_map.get(self.selected_mode, None)
-        return entry.groups if entry else set()
+        if entry:
+            return entry.groups
+        return set()
 
     @property
     def active_modes(self):
@@ -505,7 +511,9 @@ class ModesComponent(CompoundComponent):
 
     def get_mode_groups(self, name):
         entry = self._mode_map.get(name, None)
-        return entry.groups if entry else set()
+        if entry:
+            return entry.groups
+        return set()
 
     def add_mode_button_control(self, mode_name, behaviour):
         button_control = make_mode_button_control(self, mode_name, behaviour)
@@ -514,7 +522,9 @@ class ModesComponent(CompoundComponent):
 
     def _get_mode_behaviour(self, name):
         entry = self._mode_map.get(name, None)
-        return entry.behaviour if entry is not None else self.default_behaviour
+        if entry is not None:
+            return entry.behaviour
+        return self.default_behaviour
 
     def get_mode(self, name):
         entry = self._mode_map.get(name, None)

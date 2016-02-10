@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/KeyPad/CombinedButtonsElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/KeyPad/CombinedButtonsElement.py
 from __future__ import with_statement
 from itertools import imap
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
@@ -15,7 +15,7 @@ class CombinedButtonsElement(ButtonMatrixElement):
         return True
 
     def is_pressed(self):
-        return any(imap(lambda (b, _): b.is_pressed() if b is not None else False, self.iterbuttons())) or bool(self._is_pressed)
+        return any(imap(lambda (b, _): (b.is_pressed() if b is not None else False), self.iterbuttons())) or bool(self._is_pressed)
 
     def on_nested_control_element_value(self, value, sender):
         with self._is_pressed():

@@ -1,9 +1,13 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/model/generation.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/generation.py
+from __future__ import absolute_import, print_function
+from hashlib import md5
+from contextlib import contextmanager
+from collections import namedtuple
 from operator import attrgetter
 from functools import partial
-from ableton.v2.base import Disconnectable, memoize, SlotManager, Slot, has_event
+from ableton.v2.base import Disconnectable, SlotManager, Slot, has_event
 from .repr import ModelAdapter
-from .declaration import custom_property, id_property, is_binding_property_decl, is_list_property_decl, is_list_model_property_decl, is_reference_property_decl, is_view_model_property_decl, view_property, WrongIdPropertyDeclaration, ViewModelsCantContainRefs, UndeclaredReferenceClass
+from .declaration import ViewModelsCantContainRefs, ViewModelCantContainListModels, UndeclaredReferenceClass, ModelVisitor
 
 class AdapterAwareSlot(Slot):
     """
@@ -19,7 +23,7 @@ class AdapterAwareSlot(Slot):
 class ModelUpdateNotifier(object):
 
     def __init__(self, step = None, parent = None, delegate = None):
-        raise parent is not None or step is None or AssertionError, (parent, step)
+        raise parent is not None or step is None or AssertionError((parent, step))
         self._step = step
         self._delegate = delegate
         self.path = [] if self._step is None else parent.path + [self._step]
@@ -97,8 +101,8 @@ class BoundListWrapper(SlotManager, SimpleWrapper):
         for value in self._value:
             self.register_disconnectable(value)
 
-        if not (self._verify_unique_ids and len(self._value) == len(set((item.values['id'].get() for item in self._value)))):
-            raise AssertionError, 'BoundListWrapper requires unique ids for items'
+        if self._verify_unique_ids:
+            raise len(self._value) == len(set((item.values['id'].get() for item in self._value))) or AssertionError('BoundListWrapper requires unique ids for items')
 
     def to_json(self):
         return [ v.to_json() for v in self._value ]
@@ -290,86 +294,221 @@ def make_bound_child_wrapper(name = None, wrapper = None):
     return partial(apply_wrapper, name=name, wrapper=wrapper)
 
 
+ClassInfo = namedtuple('ClassInfo', ['class_',
+ 'd',
+ 'default_data',
+ 'wrappers',
+ 'children'])
+
+@contextmanager
+def pushpop(collection, item):
+    collection.append(item)
+    yield item
+    collection.pop()
+
+
+class BindingModelVisitor(ModelVisitor):
+
+    def __init__(self, decl2class, references, name2class):
+        self._class_stack = []
+        self._decl2class = decl2class
+        self._references = references
+        self._name2class = name2class
+
+    @property
+    def current_class_info(self):
+        return self._class_stack[-1]
+
+    @contextmanager
+    def __call__(self, class_info):
+        self._class_stack.append(class_info)
+        yield class_info
+        self._class_stack.pop()
+
+    def visit_binding_class(self, class_):
+        if class_ not in self._decl2class:
+            with self(ClassInfo(class_=class_, d=None, default_data=None, wrappers={}, children=None)) as ci:
+                super(BindingModelVisitor, self).visit_binding_class(class_)
+                self._decl2class[class_] = partial(BoundObjectWrapper, wrappers=ci.wrappers, adapter=class_.__dict__.get('ADAPTER', ModelAdapter))
+                self._name2class[class_.__name__] = self._decl2class[class_]
+        return self._decl2class[class_]
+
+    def visit_value_property(self, name, decl):
+        super(BindingModelVisitor, self).visit_value_property(name, decl)
+        self.current_class_info.wrappers[name] = partial(BoundAttributeWrapper, attr_getter=attrgetter(name))
+
+    def visit_id_property(self, name, decl):
+        super(BindingModelVisitor, self).visit_id_property(name, decl)
+        self.current_class_info.wrappers[name] = partial(BoundAttributeWrapper, attr_getter=decl.id_attribute_getter)
+
+    def visit_binding_property(self, name, decl):
+        super(BindingModelVisitor, self).visit_binding_property(name, decl)
+        self.current_class_info.wrappers[name] = make_bound_child_wrapper(name=name, wrapper=self._decl2class[decl.property_type])
+
+    def visit_value_list_property(self, name, decl, value_type):
+        super(BindingModelVisitor, self).visit_value_list_property(name, decl, value_type)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=SimpleWrapper, verify_unique_ids=False)
+
+    def visit_complex_list_property(self, name, decl, value_type):
+        super(BindingModelVisitor, self).visit_complex_list_property(name, decl, value_type)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type], verify_unique_ids=False)
+
+    def visit_custom_property(self, name, decl):
+        super(BindingModelVisitor, self).visit_custom_property(name, decl)
+        self.current_class_info.wrappers[name] = decl.wrapper_class
+
+    def visit_list_model_property(self, name, decl, value_type):
+        super(BindingModelVisitor, self).visit_list_model_property(name, decl, value_type)
+        self.current_class_info.wrappers[name] = partial(BoundListWrapper, name=name, wrapper=self._decl2class[value_type], verify_unique_ids=True)
+
+    def visit_reference_property(self, name, decl):
+        super(BindingModelVisitor, self).visit_reference_property(name, decl)
+        self._references.append(partial(self._resolve_reference, decl.property_type.class_name, self.current_class_info.wrappers, name, self._name2class))
+
+    def visit_reference_list_property(self, name, decl, reference_name):
+        self._references.append(partial(self._resolve_reference_list, decl.property_type.property_type.class_name, self.current_class_info.wrappers, name, self._name2class))
+
+    @staticmethod
+    def _resolve_reference(class_name, wrappers, name, decl2class):
+        generated_class = decl2class[class_name]
+        wrappers[name] = partial(DeferredWrapper, name=name, bound_object_wrapper=generated_class)
+
+    @staticmethod
+    def _resolve_reference_list(class_name, wrappers, name, decl2class):
+        generated_class = decl2class[class_name]
+        wrappers[name] = partial(BoundListWrapper, name=name, wrapper=generated_class, verify_unique_ids=False)
+
+
+class ViewModelVisitor(ModelVisitor):
+
+    def __init__(self, *a, **k):
+        super(ViewModelVisitor, self).__init__(*a, **k)
+        self._class_stack = []
+        self._decl2class = {}
+        self._name2class = {}
+        self._references = []
+
+    def resolve_references(self):
+        for r in self._references:
+            try:
+                r()
+            except KeyError:
+                raise UndeclaredReferenceClass
+
+    @property
+    def current_class_info(self):
+        return self._class_stack[-1]
+
+    @contextmanager
+    def __call__(self, class_info):
+        self._class_stack.append(class_info)
+        yield class_info
+        self._class_stack.pop()
+
+    def visit_viewmodel_class(self, class_):
+        with self(ClassInfo(class_=class_, d={}, default_data={}, wrappers={}, children={})) as ci:
+            super(ViewModelVisitor, self).visit_viewmodel_class(class_)
+            ci.d['default_data'] = ci.default_data
+            ci.d['wrappers'] = ci.wrappers
+            ci.d['children'] = ci.children
+            generated_class = type('P2' + class_.__name__, (ModelMixin,), ci.d)
+            self._decl2class[class_] = generated_class
+            return generated_class
+
+    def visit_binding_class(self, class_):
+        BindingModelVisitor(self._decl2class, self._references, self._name2class).visit_class(class_)
+
+    def visit_value_property(self, name, decl):
+        super(ViewModelVisitor, self).visit_value_property(name, decl)
+        ci = self.current_class_info
+        ci.d[name] = _generate_model_mixin_property(name)
+        ci.default_data[name] = decl.default_value
+        ci.wrappers[name] = SimpleWrapper
+
+    def visit_view_model_property(self, name, decl):
+        super(ViewModelVisitor, self).visit_view_model_property(name, decl)
+        ci = self.current_class_info
+        ci.d[name] = _generate_model_mixin_property(name)
+        ci.children[name] = self._decl2class[decl.property_type]
+
+    def visit_value_list_property(self, name, decl, value_type):
+        super(ViewModelVisitor, self).visit_value_list_property(name, decl, value_type)
+        ci = self.current_class_info
+        ci.d[name] = _generate_model_mixin_property(name)
+        ci.default_data[name] = []
+        ci.wrappers[name] = partial(NotifyingList, wrapper=SimpleWrapper)
+
+    def visit_binding_property(self, name, decl):
+        super(ViewModelVisitor, self).visit_binding_property(name, decl)
+        ci = self.current_class_info
+        ci.d[name] = _generate_model_mixin_property(name)
+        ci.default_data[name] = None
+        ci.wrappers[name] = self._decl2class[decl.property_type]
+
+    def visit_complex_list_property(self, name, decl, value_type):
+        super(ViewModelVisitor, self).visit_complex_list_property(name, decl, value_type)
+        ci = self.current_class_info
+        ci.d[name] = _generate_model_mixin_property(name)
+        ci.default_data[name] = []
+        ci.wrappers[name] = partial(NotifyingList, wrapper=self._decl2class[value_type])
+
+    def visit_reference_property(self, name, decl):
+        raise ViewModelsCantContainRefs
+
+    def visit_list_model_property(self, name, decl, value_type):
+        raise ViewModelCantContainListModels
+
+
+class ModelFingerprintVisitor(ModelVisitor):
+
+    def __init__(self, class_):
+        self._fingerprint = None
+        self._class2proplist = {}
+        self._property_prints = []
+        self.visit_class(class_)
+
+    @property
+    def property_prints(self):
+        return self._property_prints[-1]
+
+    @property
+    def fingerprint(self):
+        if self._fingerprint is None:
+            self._fingerprint = ';'.join(('%s(%s)' % (classname, ','.join(property_prints)) for classname, property_prints in sorted(self._class2proplist.iteritems(), key=lambda item: item[0])))
+        return self._fingerprint
+
+    def visit_class(self, class_):
+        with pushpop(self._property_prints, []) as property_prints:
+            super(ModelFingerprintVisitor, self).visit_class(class_)
+            self._class2proplist[class_.__name__] = property_prints
+
+    def visit_id_property(self, *_a):
+        self.property_prints.append('id')
+
+    def visit_value_property(self, name, decl):
+        super(ModelFingerprintVisitor, self).visit_value_property(name, decl)
+        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
+
+    def visit_view_model_property(self, name, decl):
+        super(ModelFingerprintVisitor, self).visit_view_model_property(name, decl)
+        self.property_prints.append('%s:%s' % (name, decl.property_type.__name__))
+
+    def visit_value_list_property(self, name, decl, property_type):
+        super(ModelFingerprintVisitor, self).visit_value_list_property(name, decl, property_type)
+        self.property_prints.append('%s:listof(%s)' % (name, property_type.__name__))
+
+    def visit_list_model_property(self, name, decl, property_type):
+        super(ModelFingerprintVisitor, self).visit_list_model_property(name, decl, property_type)
+        self.property_prints.append('%s:listmodel(%s)' % (name, property_type.__name__))
+
+
+def generate_model_fingerprint(cls):
+    return md5(ModelFingerprintVisitor(cls).fingerprint).hexdigest()
+
+
 def generate_mrs_model(cls):
-    name2bound_class = {}
-    references = []
-
-    def lookp_class_by_name(name):
-        try:
-            return name2bound_class[name]
-        except KeyError as e:
-            raise UndeclaredReferenceClass(e)
-
-    @memoize
-    def _generate_mrs_model(cls):
-        d = {}
-        default_data = {}
-        wrappers = {}
-        children = {}
-
-        @memoize
-        def binding_wrapper(cls):
-            raise cls.__name__ not in name2bound_class or AssertionError
-            name2bound_class[cls.__name__] = cls
-            wrappers = {}
-            adapter = cls.__dict__.get('ADAPTER', ModelAdapter)
-            for name, decl in cls.__dict__.iteritems():
-                if name == 'id' and not isinstance(decl, id_property):
-                    raise WrongIdPropertyDeclaration(cls)
-                if isinstance(decl, custom_property):
-                    wrappers[name] = decl.wrapper_class
-                elif isinstance(decl, view_property):
-                    if is_reference_property_decl(decl):
-
-                        def resolve_reference(decl, wrappers, name):
-                            wrappers[name] = partial(DeferredWrapper, name=name, bound_object_wrapper=binding_wrapper(lookp_class_by_name(decl.property_type.class_name)))
-
-                        references.append(partial(resolve_reference, decl, wrappers, name))
-                    elif is_list_property_decl(decl):
-                        is_list_model = is_list_model_property_decl(decl)
-                        if is_reference_property_decl(decl.property_type):
-
-                            def resolve_reference(decl, wrappers, name):
-                                wrappers[name] = partial(BoundListWrapper, name=name, wrapper=binding_wrapper(lookp_class_by_name(decl.property_type.class_name)), verify_unique_ids=is_list_model)
-
-                            references.append(partial(resolve_reference, decl.property_type, wrappers, name))
-                        else:
-                            wrapper = binding_wrapper(decl.property_type.property_type) if is_binding_property_decl(decl.property_type) else SimpleWrapper
-                            wrappers[name] = partial(BoundListWrapper, name=name, wrapper=wrapper, verify_unique_ids=is_list_model)
-                    elif is_binding_property_decl(decl):
-                        wrappers[name] = make_bound_child_wrapper(name=name, wrapper=binding_wrapper(decl.property_type))
-                    else:
-                        wrappers[name] = partial(BoundAttributeWrapper, attr_getter=attrgetter(name))
-                elif isinstance(decl, id_property):
-                    wrappers[name] = partial(BoundAttributeWrapper, attr_getter=decl.id_attribute_getter)
-
-            return partial(BoundObjectWrapper, wrappers=wrappers, adapter=adapter)
-
-        for name, decl in cls.__dict__.iteritems():
-            if isinstance(decl, view_property):
-                d[name] = _generate_model_mixin_property(name)
-                if is_reference_property_decl(decl):
-                    raise ViewModelsCantContainRefs
-                elif is_binding_property_decl(decl):
-                    default_data[name] = None
-                    wrappers[name] = binding_wrapper(decl.property_type)
-                elif is_view_model_property_decl(decl):
-                    children[name] = generate_mrs_model(decl.property_type)
-                elif is_list_property_decl(decl):
-                    default_data[name] = []
-                    wrapper = binding_wrapper(decl.property_type.property_type) if is_binding_property_decl(decl.property_type) else SimpleWrapper
-                    wrappers[name] = partial(NotifyingList, wrapper=wrapper)
-                else:
-                    default_data[name] = decl.default_value
-                    wrappers[name] = SimpleWrapper
-
-        d['default_data'] = default_data
-        d['wrappers'] = wrappers
-        d['children'] = children
-        return type('P2' + cls.__name__, (ModelMixin,), d)
-
-    model_class = _generate_mrs_model(cls)
-    for refdecl in references:
-        refdecl()
-
-    return model_class
+    visitor = ViewModelVisitor()
+    root_class = visitor.visit_viewmodel_class(cls)
+    visitor.resolve_references()
+    root_class.__fingerprint__ = generate_model_fingerprint(cls)
+    return root_class

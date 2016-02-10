@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/push.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/push.py
+from __future__ import absolute_import, print_function
 from functools import partial
 import logging
 from copy import copy
@@ -13,15 +13,20 @@ from pushbase.actions import SelectComponent, StopClipComponent
 from pushbase.colors import CLIP_COLOR_TABLE, RGB_COLOR_TABLE
 from pushbase.browser_modes import BrowserHotswapMode
 from pushbase.control_element_factory import create_sysex_element
+from pushbase.device_component import DeviceComponent
+from pushbase.note_editor_component import NoteEditorComponent
 from pushbase.note_settings_component import NoteSettingsComponent
 from pushbase.playhead_element import NullPlayhead
 from pushbase.push_base import PushBase
 from pushbase.quantization_component import QuantizationComponent
 from pushbase.sysex import LIVE_MODE
 from pushbase.session_recording_component import FixedLengthSessionRecordingComponent
+from pushbase.special_mixer_component import SpecialMixerComponent
+from pushbase.simpler_decoration import SimplerDecoratorFactory
 from .actions import CreateDeviceComponent, CreateDefaultTrackComponent, CreateInstrumentTrackComponent
 from .browser_component import BrowserComponent
 from .browser_model_factory import make_browser_model
+from .custom_bank_definitions import BANK_DEFINITIONS
 from .device_navigation_component import DeviceNavigationComponent
 from .drum_group_component import DrumGroupComponent
 from .elements import Elements
@@ -53,6 +58,9 @@ class Push(PushBase):
     applicable to your use.
     """
     input_target_name_for_auto_arm = 'Push Input'
+    device_component_class = DeviceComponent
+    bank_definitions = BANK_DEFINITIONS
+    note_editor_class = NoteEditorComponent
 
     def __init__(self, *a, **k):
         super(Push, self).__init__(*a, **k)
@@ -92,6 +100,9 @@ class Push(PushBase):
         self.__on_pad_threshold.subject = settings['threshold']
         self.__on_aftertouch_threshold.subject = settings['aftertouch_threshold']
         return settings
+
+    def _create_device_decorator_factory(self):
+        return SimplerDecoratorFactory()
 
     def _init_settings(self):
         super(Push, self)._init_settings()
@@ -363,16 +374,46 @@ class Push(PushBase):
          self.elements.browse_mode_button])
 
     def _create_mixer_layer(self):
-        return super(Push, self)._create_mixer_layer() + Layer(track_names_display='display_line4')
+        return Layer(track_select_buttons='select_buttons', track_names_display='display_line4')
+
+    def _create_mixer_solo_layer(self):
+        return Layer(solo_buttons='track_state_buttons')
+
+    def _create_mixer_mute_layer(self):
+        return Layer(mute_buttons='track_state_buttons')
 
     def _create_mixer_pan_send_layer(self):
-        return super(Push, self)._create_mixer_pan_send_layer() + Layer(track_names_display='display_line4', pan_send_names_display='display_line1', pan_send_graphics_display='display_line2', selected_track_name_display='display_line3', pan_send_values_display=ComboElement('display_line3', 'any_touch_button'))
+        return Layer(track_select_buttons='select_buttons', pan_send_toggle='pan_send_mix_mode_button', pan_send_controls='fine_grain_param_controls', track_names_display='display_line4', pan_send_names_display='display_line1', pan_send_graphics_display='display_line2', selected_track_name_display='display_line3', pan_send_values_display=ComboElement('display_line3', 'any_touch_button'))
 
     def _create_mixer_volume_layer(self):
-        return super(Push, self)._create_mixer_volume_layer() + Layer(track_names_display='display_line4', volume_names_display='display_line1', volume_graphics_display='display_line2', selected_track_name_display='display_line3', volume_values_display=ComboElement('display_line3', 'any_touch_button'))
+        return Layer(track_select_buttons='select_buttons', volume_controls='fine_grain_param_controls', track_names_display='display_line4', volume_names_display='display_line1', volume_graphics_display='display_line2', selected_track_name_display='display_line3', volume_values_display=ComboElement('display_line3', 'any_touch_button'))
 
     def _create_mixer_track_layer(self):
-        return super(Push, self)._create_mixer_track_layer() + Layer(selected_track_name_display='display_line3', track_names_display='display_line4')
+        return Layer(track_select_buttons='select_buttons', selected_track_name_display='display_line3', track_names_display='display_line4')
+
+    def _init_mixer(self):
+        self._mixer = SpecialMixerComponent(tracks_provider=self._session_ring, is_root=True)
+        self._mixer.set_enabled(False)
+        self._mixer.name = 'Mixer'
+        self._mixer_layer = self._create_mixer_layer()
+        self._mixer_pan_send_layer = self._create_mixer_pan_send_layer()
+        self._mixer_volume_layer = self._create_mixer_volume_layer()
+        self._mixer_track_layer = self._create_mixer_track_layer()
+        self._mixer_solo_layer = self._create_mixer_solo_layer()
+        self._mixer_mute_layer = self._create_mixer_mute_layer()
+        for track in xrange(self.elements.matrix.width()):
+            strip = self._mixer.channel_strip(track)
+            strip.name = 'Channel_Strip_' + str(track)
+            strip.set_invert_mute_feedback(True)
+            strip.set_delete_handler(self._delete_component)
+            strip._do_select_track = self.on_select_track
+            strip.layer = Layer(shift_button='shift_button', duplicate_button='duplicate_button', selector_button='select_button')
+
+        self._mixer.selected_strip().name = 'Selected_Channel_strip'
+        self._mixer.master_strip().name = 'Master_Channel_strip'
+        self._mixer.master_strip()._do_select_track = self.on_select_track
+        self._mixer.master_strip().layer = Layer(select_button='master_select_button', selector_button='select_button')
+        self._mixer.set_enabled(True)
 
     def _create_track_mixer_layer(self):
         return super(Push, self)._create_track_mixer_layer() + Layer(name_display_line='display_line1', graphic_display_line='display_line2', value_display_line=ComboElement('display_line3', 'any_touch_button'))
@@ -381,7 +422,7 @@ class Push(PushBase):
         return super(Push, self)._create_device_parameter_layer() + Layer(name_display_line='display_line1', value_display_line='display_line2', graphic_display_line=ComboElement('display_line3', 'any_touch_button'))
 
     def _create_device_navigation(self):
-        return DeviceNavigationComponent(device_bank_registry=self._device_bank_registry, is_enabled=False, session_ring=self._session_ring, layer=Layer(enter_button='in_button', exit_button='out_button', select_buttons='select_buttons', state_buttons='track_state_buttons', display_line='display_line4', _notification=self._notification.use_single_line(2)), info_layer=Layer(display_line1='display_line1', display_line2='display_line2', display_line3='display_line3', display_line4='display_line4', _notification=self._notification.use_full_display(2)), delete_handler=self._delete_component)
+        return DeviceNavigationComponent(device_bank_registry=self._device_bank_registry, banking_info=self._banking_info, is_enabled=False, session_ring=self._session_ring, layer=Layer(enter_button='in_button', exit_button='out_button', select_buttons='select_buttons', state_buttons='track_state_buttons', display_line='display_line4', _notification=self._notification.use_single_line(2)), info_layer=Layer(display_line1='display_line1', display_line2='display_line2', display_line3='display_line3', display_line4='display_line4', _notification=self._notification.use_full_display(2)), delete_handler=self._delete_component)
 
     @listens_group('value')
     def __on_main_mode_button_value(self, value, sender):

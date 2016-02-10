@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/Control.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/Control.py
 from __future__ import absolute_import, with_statement
 from functools import partial
+from itertools import izip_longest
 from . import Task
 from .Defaults import MOMENTARY_DELAY
 from .SubjectSlot import SlotManager
@@ -449,9 +450,9 @@ class RadioButtonControl(Control):
 
         def _on_value(self, value, *a, **k):
             if self._notifications_enabled():
-                if not value:
-                    checked = self._is_momentary()
-                    self.is_checked = checked and not self._checked and True
+                checked = value or self._is_momentary()
+                if checked and not self._checked:
+                    self.is_checked = True
                 super(RadioButtonControl.State, self)._on_value(value, *a, **k)
 
         def _notify_checked(self):
@@ -619,7 +620,7 @@ class ControlList(Control):
         def _set_unavailable_color(self, value):
             self._unavailable_color = value
             control_elements = self._control_elements or []
-            for control, element in map(None, self._controls, control_elements):
+            for control, element in izip_longest(self._controls, control_elements):
                 if not control and element:
                     self._send_unavailable_color(element)
 
@@ -652,7 +653,7 @@ class ControlList(Control):
 
         def _update_controls(self):
             control_elements = self._control_elements or []
-            for control, element in map(None, self._controls, control_elements):
+            for control, element in izip_longest(self._controls, control_elements):
                 if control:
                     control._get_state(self._manager).set_control_element(element)
                 elif element:

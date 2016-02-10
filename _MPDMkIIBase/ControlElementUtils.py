@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_MPDMkIIBase/ControlElementUtils.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_MPDMkIIBase/ControlElementUtils.py
 import Live
 from _Framework.InputControlElement import MIDI_CC_TYPE
 from _Framework.EncoderElement import EncoderElement

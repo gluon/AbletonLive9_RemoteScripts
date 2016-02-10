@@ -1,8 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/slot.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/slot.py
 """
 Family of classes for maintaining connections with optional subjects.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import izip, repeat, chain
 from functools import partial, wraps
 from .disconnectable import Disconnectable, CompoundDisconnectable
@@ -49,7 +49,7 @@ class _managed_listenable_property(listenable_property_base):
         self._member_name = '__listenable_property_%s' % property_name
 
     def _get_value(self, obj):
-        raise self._member_name is not None or AssertionError, 'Cannot get member for managed listenable property. Listenable property might be used without inheriting from Subject.'
+        raise self._member_name is not None or AssertionError('Cannot get member for managed listenable property. Listenable property might be used without inheriting from Subject.')
         return getattr(obj, self._member_name, self._default_value)
 
     def __get__(self, obj, owner):
@@ -136,9 +136,9 @@ class SubjectMeta(type):
 
         events = dct.get('__events__', [])
         property_events = [ event_name for event_name, obj in listenable_properties ]
-        if not events:
-            has_events = property_events
-            dct['disconnect'] = has_events and 'disconnect' not in dct and (lambda self: super(cls, self).disconnect())
+        has_events = events or property_events
+        if has_events and 'disconnect' not in dct:
+            dct['disconnect'] = lambda self: super(cls, self).disconnect()
         cls = super(SubjectMeta, cls).__new__(cls, name, bases, dct)
         raise not has_events or hasattr(cls, 'disconnect') or AssertionError
         for lst in chain(events, property_events):
@@ -289,18 +289,18 @@ class Slot(Disconnectable):
 
         return connected
 
-    def _get_subject(self):
+    @property
+    def subject(self):
         return self._subject
 
-    def _set_subject(self, subject):
+    @subject.setter
+    def subject(self, subject):
         if subject != self._subject:
             if self.subject_valid(subject):
                 validate_subject_interface(subject, self._event)
             self.soft_disconnect()
             self._subject = subject
             self.connect()
-
-    subject = property(_get_subject, _set_subject)
 
     def _get_listener(self):
         return self._listener
@@ -383,23 +383,23 @@ class MultiSlot(SlotManager, Slot, CallableSlotMixin):
         self._nested_slot = None
         super(MultiSlot, self).__init__(event=event[0], listener=self._event_fired, subject=subject, function=function, extra_kws=extra_kws, extra_args=extra_args)
         if len(event) > 1:
-            self._nested_slot = self.register_disconnectable(MultiSlot(event=event[1:], listener=listener, subject=subject, function=function, extra_kws=extra_kws, extra_args=extra_args))
+            self._nested_slot = self.register_disconnectable(MultiSlot(event=event[1:], listener=listener, function=function, extra_kws=extra_kws, extra_args=extra_args))
             self._update_nested_subject()
 
-    def _get_subject(self):
-        return super(MultiSlot, self)._get_subject()
+    @property
+    def subject(self):
+        return super(MultiSlot, self).subject
 
-    def _set_subject(self, subject):
+    @subject.setter
+    def subject(self, subject):
         try:
-            super(MultiSlot, self)._set_subject(subject)
+            super(MultiSlot, MultiSlot).subject.fset(self, subject)
         except SlotError:
             if self._nested_slot == None:
                 raise 
         finally:
             self._slot_subject = subject
             self._update_nested_subject()
-
-    subject = property(_get_subject, _set_subject)
 
     def _event_fired(self, *a, **k):
         self._update_nested_subject()

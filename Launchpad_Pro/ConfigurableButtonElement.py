@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_Pro/ConfigurableButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_Pro/ConfigurableButtonElement.py
 from _Framework.Skin import SkinColorMissingError
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 

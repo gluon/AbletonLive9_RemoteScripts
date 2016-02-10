@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/selection.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/selection.py
 """
 Object that encapsulates selection in the Push controller.
 """
+from __future__ import absolute_import, print_function
 import Live
 
 class Selection(object):
@@ -79,7 +80,7 @@ class PushSelection(Selection):
         if isinstance(lom_object, Live.Chain.Chain):
             lom_object.canonical_parent.view.selected_chain = lom_object
         else:
-            self._application.get_document().view.select_device(lom_object)
+            self._application.get_document().view.select_device(lom_object, False)
 
     selected_object = property(_get_selected_object, _set_selected_object)
 

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/special_chan_strip_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/special_chan_strip_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import flatten, listens, listens_group, liveobj_valid, task
 from ableton.v2.control_surface import components, ParameterSlot
@@ -53,27 +54,30 @@ class SpecialChanStripComponent(components.ChannelStripComponent, Messenger):
     def set_delete_handler(self, delete_handler):
         self._delete_handler = delete_handler
 
-    def set_volume_control(self, control):
+    def _update_control_sensitivities(self, control):
         if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+            if hasattr(control, 'set_sensitivities'):
+                control.set_sensitivities(consts.CONTINUOUS_MAPPING_SENSITIVITY, consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY)
+            else:
+                control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+
+    def set_volume_control(self, control):
+        self._update_control_sensitivities(control)
         super(SpecialChanStripComponent, self).set_volume_control(control)
 
     def set_pan_control(self, control):
-        if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+        self._update_control_sensitivities(control)
         super(SpecialChanStripComponent, self).set_pan_control(control)
 
     def set_send_controls(self, controls):
         if controls != None:
             for control in controls:
-                if control:
-                    control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+                self._update_control_sensitivities(control)
 
         super(SpecialChanStripComponent, self).set_send_controls(controls)
 
     def set_cue_volume_control(self, control):
-        if control:
-            control.mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY
+        self._update_control_sensitivities(control)
         self._cue_volume_slot.control = control
 
     def set_duplicate_button(self, duplicate_button):

@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/clip_control_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/clip_control_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, liveobj_valid, nop, Subject, SlotManager, forward_property
 from ableton.v2.control_surface import Component
@@ -69,6 +69,7 @@ class LoopSettingsModel(Subject, SlotManager):
 
     def _set_clip(self, clip):
         self._clip = clip
+        self._loop_length = self._get_loop_length()
         self._on_looping_changed.subject = clip
         self._on_start_marker_changed.subject = clip
         self._on_loop_start_changed.subject = clip
@@ -92,13 +93,13 @@ class LoopSettingsModel(Subject, SlotManager):
 
     @listens('loop_start')
     def _on_loop_start_changed(self):
+        self._update_loop_length()
         self.notify_loop_start()
-        self.notify_loop_length()
 
     @listens('loop_end')
     def _on_loop_end_changed(self):
+        self._update_loop_length()
         self.notify_loop_end()
-        self.notify_loop_length()
 
     @listens('position')
     def _on_position_changed(self):
@@ -106,7 +107,18 @@ class LoopSettingsModel(Subject, SlotManager):
 
     @property
     def loop_length(self):
-        return self.loop_end - self.loop_start
+        return self._loop_length
+
+    def _get_loop_length(self):
+        if liveobj_valid(self._clip):
+            return self.loop_end - self.loop_start
+        return 0
+
+    def _update_loop_length(self):
+        loop_length = self._get_loop_length()
+        if self._loop_length != loop_length:
+            self._loop_length = loop_length
+            self.notify_loop_length()
 
     @property
     def can_loop(self):
@@ -141,7 +153,9 @@ class LoopSettingsModel(Subject, SlotManager):
         return value * self._encoder_factor(fine_grained) * one_measure_in_note_values(self.clip)
 
     def _encoder_factor(self, fine_grained):
-        return 1.0 / one_measure_in_note_values(self.clip, 16.0) if fine_grained else 1.0
+        if fine_grained:
+            return 1.0 / one_measure_in_note_values(self.clip, 16.0)
+        return 1.0
 
 
 class LoopSettingsControllerComponent(Component):
@@ -158,6 +172,22 @@ class LoopSettingsControllerComponent(Component):
          self._on_clip_end_value,
          nop,
          self._on_clip_looping_value]
+        self._touched_encoder_callbacks_looped = [self._on_clip_position_touched,
+         self._on_clip_end_touched,
+         self._on_clip_start_marker_touched,
+         self._on_clip_looping_touched]
+        self._touched_encoder_callbacks_unlooped = [self._on_clip_start_marker_touched,
+         self._on_clip_end_touched,
+         nop,
+         self._on_clip_looping_touched]
+        self._released_encoder_callbacks_looped = [self._on_clip_position_released,
+         self._on_clip_end_released,
+         self._on_clip_start_marker_released,
+         self._on_clip_looping_released]
+        self._released_encoder_callbacks_unlooped = [self._on_clip_start_marker_released,
+         self._on_clip_end_released,
+         nop,
+         self._on_clip_looping_released]
         self._loop_model = self.register_disconnectable(LoopSettingsModel(self.song))
         self._update_encoder_state()
 
@@ -180,6 +210,16 @@ class LoopSettingsControllerComponent(Component):
         callback_set = self._encoder_callbacks_looped if self._loop_model.looping else self._encoder_callbacks_unlooped
         callback_set[encoder.index](value)
 
+    @encoders.touched
+    def encoders(self, encoder):
+        callback_set = self._touched_encoder_callbacks_looped if self._loop_model.looping else self._touched_encoder_callbacks_unlooped
+        callback_set[encoder.index]()
+
+    @encoders.released
+    def encoders(self, encoder):
+        callback_set = self._released_encoder_callbacks_looped if self._loop_model.looping else self._released_encoder_callbacks_unlooped
+        callback_set[encoder.index]()
+
     def _update_encoder_state(self):
         enable_encoders = liveobj_valid(self.clip)
         for encoder in self.encoders:
@@ -199,6 +239,30 @@ class LoopSettingsControllerComponent(Component):
             currently_looping = self._loop_model.looping
             if value >= 0 and not currently_looping or value < 0 and currently_looping:
                 self._loop_model.looping = not currently_looping
+
+    def _on_clip_start_marker_touched(self):
+        pass
+
+    def _on_clip_end_touched(self):
+        pass
+
+    def _on_clip_position_touched(self):
+        pass
+
+    def _on_clip_looping_touched(self):
+        pass
+
+    def _on_clip_start_marker_released(self):
+        pass
+
+    def _on_clip_end_released(self):
+        pass
+
+    def _on_clip_position_released(self):
+        pass
+
+    def _on_clip_looping_released(self):
+        pass
 
 
 class LoopSettingsComponent(LoopSettingsControllerComponent):
@@ -331,7 +395,9 @@ class AudioClipSettingsModel(Subject, SlotManager):
         self.clip.pitch_fine = int(self.clip.pitch_fine + value * 100.0 * self._encoder_factor(fine_grained))
 
     def _encoder_factor(self, fine_grained):
-        return 0.1 if fine_grained else 1.0
+        if fine_grained:
+            return 0.1
+        return 1.0
 
     @listens('pitch_fine')
     def __on_pitch_fine_changed(self):
@@ -355,7 +421,9 @@ class AudioClipSettingsModel(Subject, SlotManager):
 
     @property
     def available_warp_modes(self):
-        return list(self.clip.available_warp_modes) if liveobj_valid(self.clip) else []
+        if liveobj_valid(self.clip):
+            return list(self.clip.available_warp_modes)
+        return []
 
 
 class AudioClipSettingsControllerComponent(Component):
@@ -529,7 +597,9 @@ class ClipNameComponent(Component):
 
     def _name_for_clip(self, clip):
         if clip:
-            return clip.name if clip.name else '[unnamed]'
+            if clip.name:
+                return clip.name
+            return '[unnamed]'
         else:
             return '[none]'
 

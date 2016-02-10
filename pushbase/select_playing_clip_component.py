@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/select_playing_clip_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/select_playing_clip_component.py
 """
 Component that automatically selects the playing clip in the selected track.
 """
+from __future__ import absolute_import, print_function
 from ableton.v2.base import index_if, partial, nop, listens, task
 from ableton.v2.control_surface.control import ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent, AddLayerMode
@@ -52,7 +53,7 @@ class SelectPlayingClipComponent(ModesComponent, Messenger):
 
     def _selected_track_clip_is_playing(self):
         playing_clip_slot = self._playing_clip_slot()
-        return playing_clip_slot and not playing_clip_slot.clip != self.song.view.detail_clip
+        return not (playing_clip_slot and playing_clip_slot.clip != self.song.view.detail_clip)
 
     def _playing_clip_slot(self):
         track = self.song.view.selected_track

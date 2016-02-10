@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad/DefChannelStripComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad/DefChannelStripComponent.py
 import Live
 from _Framework.ChannelStripComponent import ChannelStripComponent
 from ConfigurableButtonElement import ConfigurableButtonElement
@@ -177,8 +177,8 @@ class DefChannelStripComponent(ChannelStripComponent):
             raise AssertionError
             if not value in range(128):
                 raise AssertionError
-                if self.is_enabled() and self._track != None:
-                    send1 = len(self._track.mixer_device.sends) > 0 and (value != 0 or not self._default_send1_button.is_momentary()) and self._track.mixer_device.sends[0]
+                if self.is_enabled() and self._track != None and len(self._track.mixer_device.sends) > 0:
+                    send1 = (value != 0 or not self._default_send1_button.is_momentary()) and self._track.mixer_device.sends[0]
                     send1.value = send1.is_enabled and send1.default_value
 
     def _default_send2_value(self, value):
@@ -186,8 +186,8 @@ class DefChannelStripComponent(ChannelStripComponent):
             raise AssertionError
             if not value in range(128):
                 raise AssertionError
-                if self.is_enabled() and self._track != None:
-                    send2 = len(self._track.mixer_device.sends) > 1 and (value != 0 or not self._default_send2_button.is_momentary()) and self._track.mixer_device.sends[1]
+                if self.is_enabled() and self._track != None and len(self._track.mixer_device.sends) > 1:
+                    send2 = (value != 0 or not self._default_send2_button.is_momentary()) and self._track.mixer_device.sends[1]
                     send2.value = send2.is_enabled and send2.default_value
 
     def _on_mute_changed(self):

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/convert.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/convert.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import izip
 import Live
@@ -60,7 +61,8 @@ class TrackBasedConvertAction(ConvertAction):
 
 
 class MoveDeviceChain(TrackBasedConvertAction):
-    name = 'Drum Pad'
+    label = 'Drum Pad'
+    internal_name = 'midi_track_to_drum_pad'
 
     def __init__(self, device = None, decorator_factory = None, *a, **k):
         super(MoveDeviceChain, self).__init__(*a, **k)
@@ -90,13 +92,15 @@ class MoveDeviceChain(TrackBasedConvertAction):
 
         def create_copier_if_decorated(simpler):
             decorated = find_decorated_object(simpler, self._decorator_factory)
-            return SimplerDecoratedPropertiesCopier(decorated, self._decorator_factory) if decorated else None
+            if decorated:
+                return SimplerDecoratedPropertiesCopier(decorated, self._decorator_factory)
 
         return map(create_copier_if_decorated, find_simplers(self._track))
 
 
 class CreateTrackWithSimpler(ConvertAction):
-    name = 'Simpler'
+    label = 'Simpler'
+    internal_name = 'audio_clip_to_simpler'
 
     def __init__(self, clip_slot = None, track = None, *a, **k):
         raise liveobj_valid(clip_slot) or AssertionError
@@ -117,14 +121,15 @@ class CreateTrackWithSimpler(ConvertAction):
 
 class SlicesToDrumRack(TrackBasedConvertAction):
     needs_deferred_invocation = True
-    name = 'Drum Rack'
+    label = 'Drum Rack'
+    internal_name = 'sliced_simpler_to_drum_rack'
 
     def __init__(self, device = None, *a, **k):
         raise isinstance(device, Live.SimplerDevice.SimplerDevice) or AssertionError
         super(SlicesToDrumRack, self).__init__(*a, **k)
         self._device = device
         self.__on_playback_mode_changed.subject = self._device
-        self.__on_sample_file_path_changed.subject = self._device
+        self.__on_sample_changed.subject = self._device
 
     def convert(self, song):
         Live.Conversions.sliced_simpler_to_drum_rack(song, self._device)
@@ -133,13 +138,14 @@ class SlicesToDrumRack(TrackBasedConvertAction):
     def __on_playback_mode_changed(self):
         self.notify_action_invalidated()
 
-    @listens('sample_file_path')
-    def __on_sample_file_path_changed(self):
+    @listens('sample')
+    def __on_sample_changed(self):
         self.notify_action_invalidated()
 
 
 class DrumPadToMidiTrack(ConvertAction):
-    name = 'MIDI track'
+    label = 'MIDI track'
+    internal_name = 'drum_pad_to_midi_track'
 
     def __init__(self, drum_pad = None, track = None, *a, **k):
         raise liveobj_valid(drum_pad) or AssertionError
@@ -161,7 +167,7 @@ class DrumPadToMidiTrack(ConvertAction):
 
 
 class ConvertComponent(Component):
-    __events__ = ('cancel',)
+    __events__ = ('cancel', 'success')
     action_buttons = control_list(ButtonControl, color='Option.Unselected', pressed_color='Option.Selected')
     cancel_button = ButtonControl(color='Option.Unselected', pressed_color='Option.Selected')
     source_color_index = listenable_property.managed(UNCOLORED_INDEX)
@@ -179,7 +185,7 @@ class ConvertComponent(Component):
 
     @listenable_property
     def available_conversions(self):
-        return map(lambda x: x.name, self._available_conversions)
+        return map(lambda x: x.label, self._available_conversions)
 
     def on_enabled_changed(self):
         super(ConvertComponent, self).on_enabled_changed()
@@ -223,8 +229,7 @@ class ConvertComponent(Component):
             if action.needs_deferred_invocation:
                 self._tasks.add(task.sequence(task.delay(1), task.run(lambda : self._do_conversion_deferred(action))))
                 return False
-            else:
-                self._invoke_conversion(action)
+            self._invoke_conversion(action)
         return True
 
     def _do_conversion_deferred(self, action):
@@ -233,6 +238,7 @@ class ConvertComponent(Component):
 
     def _invoke_conversion(self, action):
         action.convert(self.song)
+        self.notify_success(action.internal_name)
 
     @cancel_button.released
     def cancel_button(self, button):

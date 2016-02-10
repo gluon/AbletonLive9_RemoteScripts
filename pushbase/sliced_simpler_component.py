@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/sliced_simpler_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/sliced_simpler_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.components import PlayableComponent
 from ableton.v2.control_surface.components import Slideable, SlideComponent
 from ableton.v2.control_surface.control import ButtonControl
@@ -33,9 +33,9 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
 
     def set_simpler(self, simpler):
         self._simpler = simpler
-        self.__on_slices_changed.subject = simpler
         self.__on_selected_slice_changed.subject = simpler
         self.__on_file_changed.subject = simpler
+        self.__on_slices_changed.subject = simpler.sample if liveobj_valid(simpler) else None
         self._update_led_feedback()
         self.update()
 
@@ -49,7 +49,9 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         self.notify_selected_note()
 
     def _slices(self):
-        return self._simpler.slices if liveobj_valid(self._simpler) and self._simpler.sample_file_path else []
+        if liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample):
+            return self._simpler.sample.slices
+        return []
 
     @listenable_property
     def selected_note(self):
@@ -59,12 +61,13 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         return BASE_SLICING_NOTE + index
 
     def _selected_slice(self):
-        return self._simpler.view.selected_slice if liveobj_valid(self._simpler) else -1
+        if liveobj_valid(self._simpler):
+            return self._simpler.view.selected_slice
+        return -1
 
-    @listens('sample_file_path')
+    @listens('sample')
     def __on_file_changed(self):
-        self.__on_slices_changed.subject = None
-        self.__on_slices_changed.subject = self._simpler
+        self.__on_slices_changed.subject = self._simpler.sample if liveobj_valid(self._simpler) else None
         self._update_led_feedback()
 
     def _button_coordinate_to_slice_index(self, button):
@@ -91,19 +94,18 @@ class SlicedSimplerComponent(PlayableComponent, SlideableTouchStripComponent, Sl
         self._set_control_pads_from_script(bool(value))
 
     def _try_delete_slice_at_index(self, index):
-        if liveobj_valid(self._simpler):
+        if liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample):
             slices = self._slices()
             if len(slices) > index:
-                self._simpler.remove_slice(slices[index])
+                self._simpler.sample.remove_slice(slices[index])
 
     def set_select_button(self, button):
         self.select_button.set_control_element(button)
 
     def _try_select_slice_at_index(self, index):
-        if liveobj_valid(self._simpler):
-            slices = self._simpler.slices
-            if len(slices) > index:
-                self._simpler.view.selected_slice = slices[index]
+        slices = self._slices()
+        if len(slices) > index:
+            self._simpler.view.selected_slice = slices[index]
 
     def _on_matrix_pressed(self, button):
         slice_index = self._button_coordinate_to_slice_index(button)

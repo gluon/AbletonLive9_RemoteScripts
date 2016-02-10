@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/mode_collector.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mode_collector.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, listens, Subject, SlotManager
 
 class ModeCollector(SlotManager, Subject):

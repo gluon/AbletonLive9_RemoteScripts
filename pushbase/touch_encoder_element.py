@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/touch_encoder_element.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/touch_encoder_element.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager
 from ableton.v2.control_surface.elements import TouchEncoderElement as TouchEncoderElementBase
 

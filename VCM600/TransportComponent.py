@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/VCM600/TransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/VCM600/TransportComponent.py
 from _Framework.TransportComponent import TransportComponent as TransportComponentBase
 
 class TransportComponent(TransportComponentBase):

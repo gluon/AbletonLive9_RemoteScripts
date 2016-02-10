@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/drum_group_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/drum_group_component.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import nop, listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface.control import control_matrix, ButtonControl
@@ -40,7 +41,9 @@ class DrumPadCopyHandler(object):
         return self._show_notification(message)
 
     def duplicate_pad(self, drum_group_device, drum_pad):
-        return self._start_copying(drum_pad) if not self.is_copying else self._finish_copying(drum_group_device, drum_pad)
+        if not self.is_copying:
+            return self._start_copying(drum_pad)
+        return self._finish_copying(drum_group_device, drum_pad)
 
     def stop_copying(self):
         self.is_copying = False
@@ -161,4 +164,6 @@ class DrumGroupComponent(SlideableTouchStripComponent, DrumGroupComponent, Messe
     @listenable_property
     def selected_note(self):
         selected_drum_pad = self._drum_group_device.view.selected_drum_pad if liveobj_valid(self._drum_group_device) else None
-        return selected_drum_pad.note if liveobj_valid(selected_drum_pad) else -1
+        if liveobj_valid(selected_drum_pad):
+            return selected_drum_pad.note
+        return -1

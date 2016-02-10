@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/skin_default.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/skin_default.py
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface import Skin
 from .colors import Basic, Rgb, Pulse, Blink, BiLed
 
@@ -46,6 +47,7 @@ class Colors:
         On = Basic.FULL
         Off = Basic.HALF
         Transition = Basic.FULL_BLINK_FAST
+        ArrangementRecordingOn = Basic.FULL_BLINK_SLOW
         FixedLengthRecordingOn = BiLed.YELLOW
         FixedLengthRecordingOff = BiLed.OFF
 

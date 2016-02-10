@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/melodic_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/melodic_component.py
+from __future__ import absolute_import, print_function
+from itertools import izip_longest
 from ableton.v2.base import forward_property, find_if, listens
 from ableton.v2.control_surface.elements import to_midi_value
 from ableton.v2.control_surface.mode import ModesComponent, LayerMode
@@ -15,12 +16,12 @@ NUM_NOTE_EDITORS = 7
 
 class MelodicComponent(ModesComponent, Messenger):
 
-    def __init__(self, clip_creator = None, parameter_provider = None, grid_resolution = None, note_layout = None, note_editor_settings = None, skin = None, instrument_play_layer = None, instrument_sequence_layer = None, layer = None, *a, **k):
+    def __init__(self, clip_creator = None, parameter_provider = None, grid_resolution = None, note_layout = None, note_editor_settings = None, note_editor_class = NoteEditorComponent, velocity_range_thresholds = None, skin = None, instrument_play_layer = None, instrument_sequence_layer = None, pitch_mod_touch_strip_mode = None, layer = None, *a, **k):
         super(MelodicComponent, self).__init__(*a, **k)
         self._matrices = None
         self._grid_resolution = grid_resolution
         self._instrument = self.register_component(InstrumentComponent(note_layout=note_layout))
-        self._note_editors = self.register_components(*[ NoteEditorComponent(clip_creator=clip_creator, grid_resolution=self._grid_resolution, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
+        self._note_editors = self.register_components(*[ note_editor_class(clip_creator=clip_creator, grid_resolution=self._grid_resolution, velocity_range_thresholds=velocity_range_thresholds, is_enabled=False) for _ in xrange(NUM_NOTE_EDITORS) ])
         for editor in self._note_editors:
             note_editor_settings.add_editor(editor)
 
@@ -28,7 +29,7 @@ class MelodicComponent(ModesComponent, Messenger):
         self._loop_selector = self.register_component(LoopSelectorComponent(clip_creator=clip_creator, paginator=self._paginator, is_enabled=False))
         self._playhead = None
         self._playhead_component = self.register_component(PlayheadComponent(grid_resolution=grid_resolution, paginator=self._paginator, follower=self._loop_selector, feedback_channels=PLAYHEAD_FEEDBACK_CHANNELS, is_enabled=False))
-        self.add_mode('play', LayerMode(self._instrument, instrument_play_layer))
+        self.add_mode('play', [LayerMode(self._instrument, instrument_play_layer), pitch_mod_touch_strip_mode])
         self.add_mode('sequence', [LayerMode(self._instrument, instrument_sequence_layer),
          self._loop_selector,
          note_editor_settings,
@@ -63,7 +64,7 @@ class MelodicComponent(ModesComponent, Messenger):
     def set_note_editor_matrices(self, matrices):
         raise not matrices or len(matrices) <= NUM_NOTE_EDITORS or AssertionError
         self._matrices = matrices
-        for editor, matrix in map(None, self._note_editors, matrices or []):
+        for editor, matrix in izip_longest(self._note_editors, matrices or []):
             if editor:
                 editor.set_button_matrix(matrix)
 

@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/slideable_touch_strip_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/slideable_touch_strip_component.py
 """
 Component that navigates a series of pages.
 """
+from __future__ import absolute_import, print_function
 from math import ceil
 from itertools import imap
 from ableton.v2.base import clamp, listens

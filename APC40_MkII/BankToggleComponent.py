@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC40_MkII/BankToggleComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC40_MkII/BankToggleComponent.py
 from _Framework.ComboElement import ToggleElement
 from _Framework.Control import ToggleButtonControl
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

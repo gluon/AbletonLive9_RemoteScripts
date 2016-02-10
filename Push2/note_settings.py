@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/note_settings.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/note_settings.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, listens, liveobj_valid
 from ableton.v2.control_surface.control import StepEncoderControl
 from pushbase.note_settings_component import NoteSettingBase, NoteSettingsComponentBase, step_offset_percentage
@@ -103,7 +104,9 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
     @listenable_property
     def color_index(self):
         clip = self.song.view.detail_clip
-        return clip.color_index if liveobj_valid(clip) else -1
+        if liveobj_valid(clip):
+            return clip.color_index
+        return -1
 
     @listens('detail_clip.color_index')
     def __on_color_index_changed(self, *a):

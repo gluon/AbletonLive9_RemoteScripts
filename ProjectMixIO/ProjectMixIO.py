@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ProjectMixIO/ProjectMixIO.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ProjectMixIO/ProjectMixIO.py
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.MainDisplayController import MainDisplayController
@@ -73,6 +73,9 @@ class ProjectMixIO:
 
     def request_rebuild_midi_map(self):
         self.__c_instance.request_rebuild_midi_map()
+
+    def can_lock_to_devices(self):
+        return False
 
     def build_midi_map(self, midi_map_handle):
         for s in self.__channel_strips:

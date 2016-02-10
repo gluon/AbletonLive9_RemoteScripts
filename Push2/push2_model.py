@@ -1,12 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/push2_model.py
-import os
-import sys
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/push2_model.py
+from __future__ import absolute_import, print_function
 from pprint import pformat
 import logging
-j = os.path.join
-dn = os.path.dirname
-sys.path.append(j(dn(dn(__file__)), '_Tools'))
-import simplejson as json
+import json
 from .model import RootModel
 from .model.generation import generate_mrs_model, ModelUpdateNotifier
 logger = logging.getLogger(__name__)
@@ -34,6 +30,8 @@ class Sender(object):
     def send(self, root_model, send_all = False):
 
         def send_data(data):
+            if data['command'] == 'full-model-update':
+                data['fingerprint'] = root_model.__fingerprint__
             raw = json.dumps(data)
             self._message_sink(raw)
             if logger.isEnabledFor(logging.DEBUG):

@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/util.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/util.py
 """
 Various utilities.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import wraps, partial
-from itertools import chain, imap
+from itertools import chain, imap, izip_longest
 
 def clamp(val, minv, maxv):
     return max(minv, min(val, maxv))
@@ -33,11 +33,17 @@ def in_range(value, lower_bound, upper_open_bound):
 
 
 def sign(value):
-    return 1.0 if value >= 0.0 else -1.0
+    if value >= 0.0:
+        return 1.0
+    return -1.0
 
 
 def to_slice(obj):
-    return obj if isinstance(obj, slice) else (slice(obj, obj + 1) if obj != -1 else slice(obj, None))
+    if isinstance(obj, slice):
+        return obj
+    if obj != -1:
+        return slice(obj, obj + 1)
+    return slice(obj, None)
 
 
 def slice_size(slice, width):
@@ -50,7 +56,7 @@ def chunks(l, chunk_size):
 
 
 def maybe(fn):
-    return lambda x: fn(x) if x is not None else None
+    return lambda x: (fn(x) if x is not None else None)
 
 
 def memoize(function):
@@ -209,7 +215,7 @@ def monkeypatch_extend(target, name = None):
 
             newfunc = extended
         else:
-            raise False or AssertionError, 'Must have something to extend'
+            raise False or AssertionError('Must have something to extend')
         setattr(target, patchname, newfunc)
         return func
 
@@ -348,7 +354,7 @@ def group(lst, n):
     Returns a list of lists with elements from 'lst' grouped in blocks
     of 'n' elements.
     """
-    return map(None, *[ lst[i::n] for i in range(n) ])
+    return list(izip_longest(*[ lst[i::n] for i in range(n) ]))
 
 
 def find_if(predicate, seq):
@@ -433,16 +439,6 @@ def recursive_map(fn, element, sequence_type = None):
         return map(lambda x: recursive_map(fn, x, sequence_type), element)
     else:
         return fn(element)
-
-
-def chain_from_iterable(iterables):
-    """
-    Alternate constructor for chain(). Gets chained inputs from a single iterable
-    argument that is evaluated lazily.
-    """
-    for it in iterables:
-        for element in it:
-            yield element
 
 
 def is_matrix(iterable):
@@ -664,7 +660,7 @@ class Slicer(object):
         new = key if isinstance(key, tuple) else (key,)
         keys = self._keys + new
         if not len(keys) <= self._dimensions:
-            raise AssertionError, 'Too many dimensions'
+            raise AssertionError('Too many dimensions')
             return len(keys) == self._dimensions and self._extractor(*keys)
         else:
             return Slicer(dimensions=self._dimensions, extractor=self._extractor, keys=keys)
@@ -693,7 +689,7 @@ def slicer(dimensions):
 
 
 def print_message(*messages):
-    print ' '.join(map(str, messages))
+    print(' '.join(map(str, messages)))
 
 
 class overlaymap(object):
@@ -719,7 +715,7 @@ class overlaymap(object):
 
     def keys(self):
         res = set()
-        for key in chain_from_iterable(self._maps):
+        for key in chain.from_iterable(self._maps):
             res.add(key)
 
         return list(res)
@@ -737,7 +733,7 @@ def trace_value(value, msg = 'Value: '):
     Prints value and returns value. Useful when debugging the results
     of sub-expressions.
     """
-    print msg, value
+    print(msg, value)
     return value
 
 

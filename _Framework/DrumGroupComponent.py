@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/DrumGroupComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/DrumGroupComponent.py
 from itertools import imap
 from .Control import PlayableControl, ButtonControl, control_matrix
 from .Dependency import depends
@@ -59,11 +59,15 @@ class DrumGroupComponent(SlideComponent, Slideable):
 
     @property
     def width(self):
-        return self.drum_matrix.width if self.drum_matrix.width else 4
+        if self.drum_matrix.width:
+            return self.drum_matrix.width
+        return 4
 
     @property
     def height(self):
-        return self.drum_matrix.height if self.drum_matrix.height else 4
+        if self.drum_matrix.height:
+            return self.drum_matrix.height
+        return 4
 
     @property
     def pressed_pads(self):

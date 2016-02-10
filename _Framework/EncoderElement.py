@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/EncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/EncoderElement.py
 from __future__ import absolute_import
 import Live
 from .ComboElement import WrapperElement
@@ -12,8 +12,9 @@ def _not_implemented(value):
 
 
 _map_modes = map_modes = Live.MidiMap.MapMode
-ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: v if v <= 64 else v - 128,
- _map_modes.relative_smooth_signed_bit: lambda v: v if v <= 64 else 64 - v}
+ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: (v if v <= 64 else v - 128),
+ _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v),
+ _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
 
 class EncoderElement(InputControlElement):
     """

@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/__init__.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/__init__.py
+from __future__ import absolute_import, print_function
 from .clip_creator import ClipCreator
 from .component import Component
 from .compound_component import CompoundComponent
 from .compound_element import NestedElementClient, CompoundElement
 from .control_element import ControlElement, ControlElementClient, ElementOwnershipHandler, get_element, NotifyingControlElement, OptimizedOwnershipHandler
-from .control_surface import ControlSurface
+from .control_surface import ControlSurface, SimpleControlSurface
 from .device_bank_registry import DeviceBankRegistry
 from .identifiable_control_surface import IdentifiableControlSurface
 from .input_control_element import InputControlElement, InputSignal, ParameterSlot, MIDI_CC_TYPE, MIDI_INVALID_TYPE, MIDI_NOTE_TYPE, MIDI_PB_TYPE, MIDI_SYSEX_TYPE
@@ -13,44 +13,45 @@ from .layer import BackgroundLayer, CompoundLayer, Layer, LayerClient, LayerErro
 from .midi_map import MidiMap
 from .resource import Resource, CompoundResource, ExclusiveResource, SharedResource, StackingResource, PrioritizedResource, ProxyResource, DEFAULT_PRIORITY
 from .skin import SkinColorMissingError, Skin, merge_skins
-__all__ = (ClipCreator,
+__all__ = (BackgroundLayer,
+ ClipCreator,
  Component,
  CompoundComponent,
- NestedElementClient,
  CompoundElement,
+ CompoundLayer,
+ CompoundResource,
  ControlElement,
  ControlElementClient,
- ElementOwnershipHandler,
- get_element,
- NotifyingControlElement,
- OptimizedOwnershipHandler,
  ControlSurface,
+ DEFAULT_PRIORITY,
  DeviceBankRegistry,
+ ElementOwnershipHandler,
+ ExclusiveResource,
+ get_element,
  IdentifiableControlSurface,
  InputControlElement,
  InputSignal,
- ParameterSlot,
+ Layer,
+ LayerClient,
+ LayerError,
+ merge_skins,
+ MidiMap,
  MIDI_CC_TYPE,
  MIDI_INVALID_TYPE,
  MIDI_NOTE_TYPE,
  MIDI_PB_TYPE,
  MIDI_SYSEX_TYPE,
- BackgroundLayer,
- CompoundLayer,
- Layer,
- LayerClient,
- LayerError,
- SimpleLayerOwner,
- UnhandledElementError,
- MidiMap,
- Resource,
- CompoundResource,
- ExclusiveResource,
- SharedResource,
- StackingResource,
+ NestedElementClient,
+ NotifyingControlElement,
+ OptimizedOwnershipHandler,
+ ParameterSlot,
  PrioritizedResource,
  ProxyResource,
- DEFAULT_PRIORITY,
- SkinColorMissingError,
+ Resource,
+ SharedResource,
+ SimpleControlSurface,
+ SimpleLayerOwner,
  Skin,
- merge_skins)
+ SkinColorMissingError,
+ StackingResource,
+ UnhandledElementError)

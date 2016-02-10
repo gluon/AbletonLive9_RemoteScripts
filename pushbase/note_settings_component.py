@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/note_settings_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_settings_component.py
+from __future__ import absolute_import, print_function
 import math
 from functools import partial
-from itertools import imap
-from ableton.v2.base import chain_from_iterable, clamp, find_if, forward_property, listens, listens_group, Subject, task
+from itertools import imap, chain, izip_longest
+from ableton.v2.base import clamp, find_if, forward_property, listens, listens_group, Subject, task
 from ableton.v2.control_surface import defaults, Component
 from ableton.v2.control_surface.control import ButtonControl, ControlManager, EncoderControl, StepEncoderControl
 from ableton.v2.control_surface.elements import DisplayDataSource
@@ -25,7 +26,9 @@ class NoteSettingBase(ControlManager, Subject):
 
     @property
     def step_length(self):
-        return self._grid_resolution.step_length if self._grid_resolution else 1.0
+        if self._grid_resolution:
+            return self._grid_resolution.step_length
+        return 1.0
 
     def set_min_max(self, min_max_value):
         self._min_max_value = min_max_value
@@ -66,7 +69,9 @@ def step_offset_percentage(step_length, value):
 def step_offset_min_max_to_string(step_length, min_value, max_value):
     min_value = step_offset_percentage(step_length, min_value)
     max_value = step_offset_percentage(step_length, max_value)
-    return '%d%%' % min_value if min_value == max_value else (RANGE_STRING_INT + '%%') % (min_value, max_value)
+    if min_value == max_value:
+        return '%d%%' % min_value
+    return (RANGE_STRING_INT + '%%') % (min_value, max_value)
 
 
 def convert_value_to_graphic(value, value_range):
@@ -105,7 +110,9 @@ class NoteLengthCoarseSetting(NoteSetting):
             num_non_decimal_figures = int(math.log10(value)) if value > 0 else 0
             return '%%.%dg' % (num_non_decimal_figures + 2,)
 
-        return (format_string(min_value) + ' stp') % min_value if min_value == max_value else (format_string(min_value) + CHAR_ELLIPSIS + format_string(max_value)) % (min_value, max_value)
+        if min_value == max_value:
+            return (format_string(min_value) + ' stp') % min_value
+        return (format_string(min_value) + CHAR_ELLIPSIS + format_string(max_value)) % (min_value, max_value)
 
     def encoder_value_to_attribute(self, value):
         return self.step_length * value
@@ -139,7 +146,9 @@ class NoteVelocitySetting(NoteSetting):
         return value * 128
 
     def attribute_min_max_to_string(self, min_value, max_value):
-        return str(int(min_value)) if int(min_value) == int(max_value) else RANGE_STRING_INT % (min_value, max_value)
+        if int(min_value) == int(max_value):
+            return str(int(min_value))
+        return RANGE_STRING_INT % (min_value, max_value)
 
 
 class NoteSettingsComponentBase(Component):
@@ -159,7 +168,7 @@ class NoteSettingsComponentBase(Component):
         self._add_setting(NoteVelocitySetting(grid_resolution=grid_resolution))
 
     def _add_setting(self, setting):
-        raise len(self._settings) < 8 or AssertionError, 'Cannot show more than 8 settings'
+        raise len(self._settings) < 8 or AssertionError('Cannot show more than 8 settings')
         self._settings.append(setting)
         self._update_encoders()
         self.register_disconnectable(setting)
@@ -184,7 +193,7 @@ class NoteSettingsComponentBase(Component):
 
     def _update_encoders(self):
         if self.is_enabled() and self._encoders:
-            for encoder, setting in map(None, self._encoders[-len(self._settings):], self._settings):
+            for encoder, setting in izip_longest(self._encoders[-len(self._settings):], self._settings):
                 setting.encoder.set_control_element(encoder)
 
         else:
@@ -306,6 +315,10 @@ class NoteEditorSettingsComponent(ModesComponent):
     def step_settings(self):
         return self._settings_modes
 
+    @property
+    def editors(self):
+        return self._editors
+
     def add_editor(self, editor):
         raise editor != None or AssertionError
         self._editors.append(editor)
@@ -385,7 +398,7 @@ class NoteEditorSettingsComponent(ModesComponent):
     @listens_group('active_steps')
     def _on_active_steps_changed(self, editor):
         if self.is_enabled():
-            all_steps = list(set(chain_from_iterable(imap(lambda e: e.active_steps, self._editors))))
+            all_steps = list(set(chain.from_iterable(imap(lambda e: e.active_steps, self._editors))))
             self._automation.selected_time = all_steps
             self._update_note_infos()
             if len(all_steps) > 0:

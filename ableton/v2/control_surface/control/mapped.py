@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/mapped.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/mapped.py
+from __future__ import absolute_import, print_function
 from .control import InputControl
 
 class MappedControl(InputControl):
@@ -18,14 +18,14 @@ class MappedControl(InputControl):
             super(MappedControl.State, self).set_control_element(control_element)
             self._update_direct_connection()
 
-        def _get_direct_mapping(self):
+        @property
+        def mapped_parameter(self):
             return self._direct_mapping
 
-        def _set_direct_mapping(self, direct_mapping):
+        @mapped_parameter.setter
+        def mapped_parameter(self, direct_mapping):
             self._direct_mapping = direct_mapping
             self._update_direct_connection()
-
-        mapped_parameter = property(_get_direct_mapping, _set_direct_mapping)
 
         def _update_direct_connection(self):
             if self._control_element:

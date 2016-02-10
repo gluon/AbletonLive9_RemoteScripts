@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/matrix_maps.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/matrix_maps.py
 """
 Pad Translations for Drum Rack (pad_x, pad_y, note, channel)
 """
+from __future__ import absolute_import, print_function
 PAD_TRANSLATIONS = ((0, 0, 60, 13),
  (1, 0, 61, 13),
  (2, 0, 62, 13),

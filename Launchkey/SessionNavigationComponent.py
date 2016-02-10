@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchkey/SessionNavigationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchkey/SessionNavigationComponent.py
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ScrollComponent import ScrollComponent
 from _Framework import Task
@@ -51,16 +51,17 @@ class ArmingTrackScrollComponent(ScrollComponent):
     def _track_to_arm(self):
         track = self.song().view.selected_track
         can_arm_track = track != None and track.has_midi_input and track.can_be_armed and not track.arm
-        return track if can_arm_track else None
+        if can_arm_track:
+            return track
 
     def _try_arm(self):
         track_to_arm = self._track_to_arm()
         if track_to_arm != None:
             song = self.song()
             tracks = song.tracks
-            if song.is_playing:
-                check_arrangement = song.record_mode
-                if is_recording_clip(tracks, check_arrangement) or song.exclusive_arm:
+            check_arrangement = song.is_playing and song.record_mode
+            if not is_recording_clip(tracks, check_arrangement):
+                if song.exclusive_arm:
                     for track in tracks:
                         if track.can_be_armed and track != track_to_arm:
                             track.arm = False

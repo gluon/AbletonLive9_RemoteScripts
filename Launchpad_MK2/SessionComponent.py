@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/SessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/SessionComponent.py
 from _Framework.Util import in_range
 from _Framework.SubjectSlot import subject_slot_group
 from _Framework.SessionComponent import SessionComponent as SessionComponentBase

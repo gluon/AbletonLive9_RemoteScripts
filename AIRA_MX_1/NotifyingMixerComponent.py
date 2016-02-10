@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/AIRA_MX_1/NotifyingMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AIRA_MX_1/NotifyingMixerComponent.py
 from _Framework.MixerComponent import MixerComponent
 from _Framework.Control import ButtonControl
 

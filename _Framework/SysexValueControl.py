@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/SysexValueControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/SysexValueControl.py
 from __future__ import absolute_import
 from .InputControlElement import InputControlElement, MIDI_SYSEX_TYPE
 

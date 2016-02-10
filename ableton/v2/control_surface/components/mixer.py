@@ -1,6 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/mixer.py
-from __future__ import absolute_import
-from itertools import izip
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/mixer.py
+from __future__ import absolute_import, print_function
+from itertools import izip, izip_longest
 from ...base import clamp, listens, liveobj_valid
 from ..compound_component import CompoundComponent
 from .channel_strip import ChannelStripComponent, release_control
@@ -78,10 +78,12 @@ class MixerComponent(CompoundComponent):
         self._prehear_volume_control = None
         self._crossfader_control = None
 
-    def _get_send_index(self):
+    @property
+    def send_index(self):
         return self._send_index
 
-    def _set_send_index(self, index):
+    @send_index.setter
+    def send_index(self, index):
         if 0 <= index < self.num_sends or index is None:
             if self._send_index != index:
                 self._send_index = index
@@ -89,8 +91,6 @@ class MixerComponent(CompoundComponent):
                 self.on_send_index_changed()
         else:
             raise IndexError
-
-    send_index = property(_get_send_index, _set_send_index)
 
     def on_send_index_changed(self):
         pass
@@ -120,35 +120,35 @@ class MixerComponent(CompoundComponent):
         self.update()
 
     def set_volume_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_volume_control(control)
 
     def set_pan_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_pan_control(control)
 
     def set_send_controls(self, controls):
         self._send_controls = controls
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             if self._send_index is None:
                 strip.set_send_controls(None)
             else:
                 strip.set_send_controls((None,) * self._send_index + (control,))
 
     def set_arm_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_arm_button(button)
 
     def set_solo_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_mute_button(button)
 
     def set_track_select_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_select_button(button)
 
     def set_shift_button(self, button):

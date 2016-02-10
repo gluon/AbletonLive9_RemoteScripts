@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchkey_MK2/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchkey_MK2/consts.py
 PRODUCT_ID_BYTE_PREFIX = (0, 32, 41)
 LAUNCHKEY_25_ID_BYTE = 123
 LAUNCHKEY_49_ID_BYTE = 124

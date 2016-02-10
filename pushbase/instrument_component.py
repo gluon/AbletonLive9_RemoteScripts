@@ -1,14 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/instrument_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/instrument_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import Subject, index_if, listenable_property, listens, liveobj_valid, find_if
 from ableton.v2.control_surface import CompoundComponent
-from ableton.v2.control_surface.control import control_matrix, ToggleButtonControl
+from ableton.v2.control_surface.control import control_matrix
 from ableton.v2.control_surface.components import PlayableComponent, Slideable, SlideComponent
 from . import consts
 from .melodic_pattern import SCALES, MelodicPattern, pitch_index_to_string
 from .message_box_component import Messenger
 from .pad_control import PadControl
 from .slideable_touch_strip_component import SlideableTouchStripComponent
-from .touch_strip_element import TouchStripStates, TouchStripModes, MODWHEEL_BEHAVIOUR, DEFAULT_BEHAVIOUR
 DEFAULT_SCALE = SCALES[0]
 
 class NoteLayout(Subject):
@@ -77,7 +77,6 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
     selectable layouts for the notes.
     """
     __events__ = ('pattern',)
-    touch_strip_toggle = ToggleButtonControl()
     matrix = control_matrix(PadControl, pressed_color='Instrument.NoteAction')
 
     def __init__(self, note_layout = None, *a, **k):
@@ -89,8 +88,6 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         self._last_page_length = self.page_length
         self._delete_button = None
         self._last_page_offset = self.page_offset
-        self._touch_strip = None
-        self._touch_strip_indication = None
         self._detail_clip = None
         self._has_notes = [False] * 128
         self._has_notes_pattern = self._get_pattern(0)
@@ -136,12 +133,16 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
     def contents(self, index):
         if self._detail_clip:
             note = self._has_notes_pattern[index].index
-            return self._has_notes[note] if note is not None else False
+            if note is not None:
+                return self._has_notes[note]
+            return False
         return False
 
     @property
     def page_length(self):
-        return len(self._note_layout.notes) if self._note_layout.is_in_key else 12
+        if self._note_layout.is_in_key:
+            return len(self._note_layout.notes)
+        return 12
 
     @property
     def position_count(self):
@@ -162,7 +163,9 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
 
     @property
     def page_offset(self):
-        return 0 if self._note_layout.is_fixed else self._first_scale_note_offset()
+        if self._note_layout.is_fixed:
+            return 0
+        return self._first_scale_note_offset()
 
     def _get_position(self):
         return self._first_note
@@ -200,29 +203,6 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
     @listens('value')
     def _on_delete_value(self, value):
         self._set_control_pads_from_script(bool(value))
-
-    @touch_strip_toggle.toggled
-    def touch_strip_toggle(self, toggled, button):
-        self._update_touch_strip()
-        self._update_touch_strip_indication()
-        self.show_notification(consts.MessageBoxText.TOUCHSTRIP_MODWHEEL_MODE if toggled else consts.MessageBoxText.TOUCHSTRIP_PITCHBEND_MODE)
-
-    def set_touch_strip(self, control):
-        self._touch_strip = control
-        self._update_touch_strip()
-
-    def _update_touch_strip(self):
-        if self._touch_strip:
-            self._touch_strip.behaviour = MODWHEEL_BEHAVIOUR if self.touch_strip_toggle.is_toggled else DEFAULT_BEHAVIOUR
-
-    def set_touch_strip_indication(self, control):
-        self._touch_strip_indication = control
-        self._update_touch_strip_indication()
-
-    def _update_touch_strip_indication(self):
-        if self._touch_strip_indication:
-            self._touch_strip_indication.set_mode(TouchStripModes.CUSTOM_FREE)
-            self._touch_strip_indication.send_state([ (TouchStripStates.STATE_FULL if self.touch_strip_toggle.is_toggled else TouchStripStates.STATE_HALF) for _ in xrange(self._touch_strip_indication.state_count) ])
 
     def set_note_strip(self, strip):
         self._touch_slider.set_scroll_strip(strip)
@@ -274,8 +254,6 @@ class InstrumentComponent(PlayableComponent, CompoundComponent, Slideable, Messe
         if self.is_enabled():
             self._update_matrix()
             self._update_aftertouch()
-            self._update_touch_strip()
-            self._update_touch_strip_indication()
 
     def _update_pattern(self):
         self._pattern = self._get_pattern()

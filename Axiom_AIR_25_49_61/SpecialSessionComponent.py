@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_AIR_25_49_61/SpecialSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 
 class SpecialSessionComponent(SessionComponent):
@@ -56,20 +56,20 @@ class SpecialSessionComponent(SessionComponent):
         return list_of_tracks
 
     def _change_offsets(self, track_increment, scene_increment):
-        if not track_increment != 0:
-            offsets_changed = scene_increment != 0
-            if offsets_changed:
-                self._track_offset += track_increment
-                self._scene_offset += scene_increment
-                if self._mixer != None:
-                    self._mixer.set_track_offset(self.track_offset())
-                if self._alt_mixer != None:
-                    self._alt_mixer.set_track_offset(self.track_offset())
-            self._reassign_tracks()
-            if offsets_changed:
-                self._reassign_scenes()
-                self.notify_offset()
-                self.width() > 0 and self.height() > 0 and self._do_show_highlight()
+        offsets_changed = track_increment != 0 or scene_increment != 0
+        if offsets_changed:
+            self._track_offset += track_increment
+            self._scene_offset += scene_increment
+            if self._mixer != None:
+                self._mixer.set_track_offset(self.track_offset())
+            if self._alt_mixer != None:
+                self._alt_mixer.set_track_offset(self.track_offset())
+        self._reassign_tracks()
+        if offsets_changed:
+            self._reassign_scenes()
+            self.notify_offset()
+            if self.width() > 0 and self.height() > 0:
+                self._do_show_highlight()
 
     def _next_track_value(self, value):
         if self.is_enabled():

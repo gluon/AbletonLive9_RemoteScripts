@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/quantization_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/quantization_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listenable_property, listens
 from ableton.v2.control_surface import Component, CompoundComponent
@@ -16,6 +17,7 @@ QUANTIZATION_OPTIONS = [RecordingQuantization.rec_q_quarter,
  RecordingQuantization.rec_q_thirtysecond]
 DEFAULT_QUANTIZATION_INDEX = QUANTIZATION_OPTIONS.index(RecordingQuantization.rec_q_sixtenth)
 QUANTIZATION_NAMES = ('1/4', '1/8', '1/8t', '1/8+t', '1/16', '1/16t', '1/16+t', '1/32')
+QUANTIZATION_NAMES_UNICODE = (u'\xbc', u'\u215b', u'\u215bt', u'\u215b+t', u'\ue001', u'\ue001t', u'\ue001+t', u'\ue002')
 
 def quantize_amount_to_string(amount):
     """
@@ -34,8 +36,9 @@ class QuantizationSettingsComponent(Component):
     quantize_to_index = listenable_property.managed(DEFAULT_QUANTIZATION_INDEX)
     record_quantization_index = listenable_property.managed(DEFAULT_QUANTIZATION_INDEX)
 
-    def __init__(self, *a, **k):
+    def __init__(self, quantization_names = QUANTIZATION_NAMES, *a, **k):
         super(QuantizationSettingsComponent, self).__init__(*a, **k)
+        self._quantization_names = quantization_names
         self.__on_swing_amount_changed.subject = self.song
         self.__on_record_quantization_changed.subject = self.song
         self.__on_record_quantization_changed()
@@ -54,7 +57,11 @@ class QuantizationSettingsComponent(Component):
 
     @property
     def quantization_option_names(self):
-        return QUANTIZATION_NAMES
+        return self._quantization_names
+
+    @property
+    def selected_quantization_name(self):
+        return self.quantization_option_names[self.quantize_to_index]
 
     @swing_amount_encoder.value
     def swing_amount_encoder(self, value, encoder):
@@ -113,7 +120,7 @@ class QuantizationComponent(CompoundComponent, Messenger):
         clip = self.song.view.detail_clip
         if clip:
             clip.quantize_pitch(note, self._settings.quantize_to, self._settings.quantize_amount)
-            self.show_notification(MessageBoxText.QUANTIZE_CLIP_PITCH % dict(amount=quantize_amount_to_string(self._settings.quantize_amount), to=QUANTIZATION_NAMES[self._settings.quantize_to_index]))
+            self.show_notification(MessageBoxText.QUANTIZE_CLIP_PITCH % dict(amount=quantize_amount_to_string(self._settings.quantize_amount), to=self._settings.selected_quantization_name))
         self._cancel_quantize = True
 
     @action_button.pressed_delayed
@@ -130,5 +137,5 @@ class QuantizationComponent(CompoundComponent, Messenger):
         clip = self.song.view.detail_clip
         if clip and not self._cancel_quantize:
             clip.quantize(self._settings.quantize_to, self._settings.quantize_amount)
-            self.show_notification(MessageBoxText.QUANTIZE_CLIP % dict(amount=quantize_amount_to_string(self._settings.quantize_amount), to=QUANTIZATION_NAMES[self._settings.quantize_to_index]))
+            self.show_notification(MessageBoxText.QUANTIZE_CLIP % dict(amount=quantize_amount_to_string(self._settings.quantize_amount), to=self._settings.selected_quantization_name))
         self._cancel_quantize = False

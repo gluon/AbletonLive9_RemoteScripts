@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/__init__.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/__init__.py
+from __future__ import absolute_import, print_function
 
 def get_capabilities():
     from ableton.v2.control_surface import capabilities as caps
@@ -18,5 +18,5 @@ def get_capabilities():
 def create_instance(c_instance):
     from .push2 import Push2
     from .push2_model import Root, Sender
-    root = Root(sender=Sender(logger=c_instance, message_sink=c_instance.send_model_update, process_connected=c_instance.process_connected))
+    root = Root(sender=Sender(message_sink=c_instance.send_model_update, process_connected=c_instance.process_connected))
     return Push2(c_instance=c_instance, model=root)

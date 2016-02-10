@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/consts.py
 PRODUCT_ID_BYTES = (0, 32, 41, 105, 0, 0, 0)
 IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 STANDARD_SYSEX_PREFIX = (240, 0, 32, 41, 2, 24)

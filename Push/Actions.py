@@ -1,9 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/actions.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/actions.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import depends, listens, task
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.mode import SetAttributeMode, ModesComponent
 from pushbase.consts import MessageBoxText
+from pushbase.device_chain_utils import is_empty_drum_pad
 from pushbase.browser_modes import BrowserAddEffectMode
 from pushbase.action_with_options_component import OptionsComponent
 from pushbase.message_box_component import Messenger
@@ -107,8 +109,7 @@ class CreateDeviceComponent(CompoundComponent):
     def on_enabled_changed(self):
         self._go_to_hotswap_task.kill()
         if self.is_enabled():
-            selected = self._selection.selected_object
-            if isinstance(selected, Live.DrumPad.DrumPad) and (not selected.chains or not selected.chains[0].devices):
+            if is_empty_drum_pad(self._selection.selected_object):
                 self._create_device_modes.selected_mode = 'hotswap'
             else:
                 self._create_device_modes.selected_mode = 'create'

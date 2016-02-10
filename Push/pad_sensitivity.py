@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/pad_sensitivity.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/pad_sensitivity.py
+from __future__ import absolute_import, print_function
 from itertools import repeat
 from ableton.v2.base import find_if, second, lazy_attribute, nop, NamedTuple, task
 from ableton.v2.control_surface import Component

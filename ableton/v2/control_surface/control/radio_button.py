@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/radio_button.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/radio_button.py
+from __future__ import absolute_import, print_function
 from ...base import nop
 from .control import control_event, control_color
 from .button import ButtonControlBase
@@ -20,17 +20,17 @@ class RadioButtonControl(ButtonControlBase):
             self._checked = False
             self._on_checked = nop
 
-        def _get_is_checked(self):
+        @property
+        def is_checked(self):
             return self._checked
 
-        def _set_is_checked(self, value):
+        @is_checked.setter
+        def is_checked(self, value):
             if self._checked != value:
                 self._checked = value
                 if self._checked:
                     self._on_checked()
                 self._send_current_color()
-
-        is_checked = property(_get_is_checked, _set_is_checked)
 
         def _send_button_color(self):
             self._control_element.set_light(self.checked_color if self._checked else self.unchecked_color)

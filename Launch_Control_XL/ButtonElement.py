@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launch_Control_XL/ButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launch_Control_XL/ButtonElement.py
 from _Framework.ButtonElement import ON_VALUE, OFF_VALUE, ButtonElement as ButtonElementBase
 
 class ButtonElement(ButtonElementBase):

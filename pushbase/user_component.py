@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/user_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/user_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import Component
 from . import sysex
@@ -22,12 +23,15 @@ class UserComponentBase(Component):
         return self._selected_mode
 
     def _set_mode(self, mode):
+        self._do_set_mode(mode)
+
+    mode = property(_get_mode, _set_mode)
+
+    def _do_set_mode(self, mode):
         if self.is_enabled():
             self._apply_mode(mode)
         else:
             self._pending_mode_to_select = mode
-
-    mode = property(_get_mode, _set_mode)
 
     def update(self):
         super(UserComponentBase, self).update()

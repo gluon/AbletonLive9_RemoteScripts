@@ -1,9 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/device_navigation_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/device_navigation_component.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from contextlib import contextmanager
 import Live.DrumPad
-from ableton.v2.base import const, depends, disconnectable, find_if, inject, in_range, listens, liveobj_valid, NamedTuple
+from ableton.v2.base import const, depends, disconnectable, inject, in_range, listens, liveobj_valid, NamedTuple
 from ableton.v2.control_surface import CompoundComponent
 from pushbase import consts
 from pushbase.device_chain_utils import is_first_device_on_pad
@@ -17,9 +17,9 @@ class DeviceNavigationComponent(CompoundComponent):
     track and navigates in its hierarchy.
     """
 
-    def __init__(self, device_bank_registry = None, info_layer = None, delete_handler = None, session_ring = None, *a, **k):
+    def __init__(self, device_bank_registry = None, banking_info = None, info_layer = None, delete_handler = None, session_ring = None, *a, **k):
         super(DeviceNavigationComponent, self).__init__(*a, **k)
-        self._make_navigation_node = partial(make_navigation_node, session_ring=session_ring, device_bank_registry=device_bank_registry)
+        self._make_navigation_node = partial(make_navigation_node, session_ring=session_ring, device_bank_registry=device_bank_registry, banking_info=banking_info)
         self._delete_handler = delete_handler
         self._device_list = self.register_component(ScrollableListWithTogglesComponent())
         self._on_selection_clicked_in_controller.subject = self._device_list
@@ -96,9 +96,9 @@ class DeviceNavigationComponent(CompoundComponent):
             if isinstance(selected, Live.Chain.Chain) and selected_device and selected_device.canonical_parent == selected and selected.devices[0] == selected_device:
                 is_just_default_child_selection = True
         if not is_just_default_child_selection:
-            if selected_device:
-                target = selected_device.canonical_parent
-                node = (not self._current_node or self._current_node.object != target) and self._make_navigation_node(target, is_entering=False)
+            target = selected_device and selected_device.canonical_parent
+            if not self._current_node or self._current_node.object != target:
+                node = self._make_navigation_node(target, is_entering=False)
                 self._set_current_node(node)
 
     def _set_current_node(self, node):
@@ -187,11 +187,11 @@ class DeviceNavigationComponent(CompoundComponent):
             if self._current_node:
                 self._current_node.delete_child(index)
             return True
-        elif consts.PROTO_FAST_DEVICE_NAVIGATION:
+        if consts.PROTO_FAST_DEVICE_NAVIGATION:
             if self._device_list.selected_option == index:
                 self._set_current_node(self._make_enter_node())
                 return True
-            elif not in_range(index, 0, len(self._device_list.option_names)):
+            if not in_range(index, 0, len(self._device_list.option_names)):
                 self._set_current_node(self._make_exit_node())
                 return True
         return index == None
@@ -221,10 +221,9 @@ class DeviceNavigationComponent(CompoundComponent):
             pass
 
     def _make_enter_node(self):
-        if self._device_list.selected_option >= 0:
-            if self._device_list.selected_option < len(self._current_node.children):
-                child = self._current_node.children[self._device_list.selected_option][1]
-                return self._make_navigation_node(child, is_entering=True)
+        if self._device_list.selected_option >= 0 and self._device_list.selected_option < len(self._current_node.children):
+            child = self._current_node.children[self._device_list.selected_option][1]
+            return self._make_navigation_node(child, is_entering=True)
 
     def _make_exit_node(self):
         return self._make_navigation_node(self._current_node and self._current_node.parent, is_entering=False)

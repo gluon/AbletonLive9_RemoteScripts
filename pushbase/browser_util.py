@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/browser_util.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/browser_util.py
+from __future__ import absolute_import, print_function
 import Live
 FilterType = Live.Browser.FilterType
 DeviceType = Live.Device.DeviceType
@@ -10,16 +11,18 @@ def filter_type_for_hotswap_target(target, default = FilterType.disabled):
     if isinstance(target, Live.Device.Device):
         if target.type == DeviceType.instrument:
             return FilterType.instrument_hotswap
-        elif target.type == DeviceType.audio_effect:
+        if target.type == DeviceType.audio_effect:
             return FilterType.audio_effect_hotswap
-        elif target.type == DeviceType.midi_effect:
+        if target.type == DeviceType.midi_effect:
             return FilterType.midi_effect_hotswap
-        else:
-            FilterType.disabled
-    elif isinstance(target, Live.DrumPad.DrumPad):
-        return FilterType.drum_pad_hotswap
-    elif isinstance(target, Live.Chain.Chain):
-        return filter_type_for_hotswap_target(target.canonical_parent) if target else FilterType.disabled
+        FilterType.disabled
+    else:
+        if isinstance(target, Live.DrumPad.DrumPad):
+            return FilterType.drum_pad_hotswap
+        if isinstance(target, Live.Chain.Chain):
+            if target:
+                return filter_type_for_hotswap_target(target.canonical_parent)
+            return FilterType.disabled
     return default
 
 

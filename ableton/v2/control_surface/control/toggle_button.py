@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/toggle_button.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/toggle_button.py
+from __future__ import absolute_import, print_function
 from .control import Connectable, control_event, control_color
 from .button import ButtonControlBase
 
@@ -19,15 +19,15 @@ class ToggleButtonControl(ButtonControlBase):
                 self.toggled_color = toggled_color
             self._is_toggled = False
 
-        def _get_is_toggled(self):
+        @property
+        def is_toggled(self):
             return self._is_toggled
 
-        def _set_is_toggled(self, toggled):
+        @is_toggled.setter
+        def is_toggled(self, toggled):
             if self._is_toggled != toggled:
                 self._is_toggled = toggled
                 self._send_current_color()
-
-        is_toggled = property(_get_is_toggled, _set_is_toggled)
 
         def connect_property(self, *a):
             super(ToggleButtonControl.State, self).connect_property(*a)

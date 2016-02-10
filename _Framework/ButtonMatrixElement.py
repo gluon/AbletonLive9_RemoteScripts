@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ButtonMatrixElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ButtonMatrixElement.py
 from __future__ import absolute_import
 from .CompoundElement import CompoundElement
 from .Util import in_range, product, const, slicer, to_slice
@@ -88,7 +88,7 @@ class ButtonMatrixElement(CompoundElement):
             return self._do_get_item(index)
 
     def _do_get_item(self, index):
-        raise in_range(index, 0, len(self)) or AssertionError, 'Index out of range'
+        raise in_range(index, 0, len(self)) or AssertionError('Index out of range')
         row, col = divmod(index, self.width())
         return self.get_button(col, row)
 

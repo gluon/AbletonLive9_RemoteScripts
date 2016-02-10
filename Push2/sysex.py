@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/sysex.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/sysex.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import chunks
 from ableton.v2.control_surface import midi
 from pushbase.sysex import LIVE_MODE, USER_MODE
@@ -75,7 +76,9 @@ TOUCHSTRIP_STATE_TO_BRIGHTNESS = {TouchStripStates.STATE_OFF: 0,
  TouchStripStates.STATE_FULL: 6}
 
 def _make_touch_strip_light(state):
-    return state[0] | state[1] << 3 if len(state) == 2 else state[0]
+    if len(state) == 2:
+        return state[0] | state[1] << 3
+    return state[0]
 
 
 def make_touch_strip_light_message(states):

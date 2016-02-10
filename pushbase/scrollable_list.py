@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/scrollable_list.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/scrollable_list.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import BooleanContext, clamp, forward_property, in_range, index_if, Subject, listens, task
 from ableton.v2.control_surface import CompoundComponent, defaults
@@ -167,7 +167,8 @@ class ScrollableList(Subject, Scrollable):
 
     @property
     def selected_item(self):
-        return self._items[self.selected_item_index] if in_range(self._selected_item_index, 0, len(self._items)) else None
+        if in_range(self._selected_item_index, 0, len(self._items)):
+            return self._items[self.selected_item_index]
 
     @property
     def items(self):
@@ -382,7 +383,8 @@ class ListComponent(CompoundComponent):
 
     @property
     def selected_item(self):
-        return self._scrollable_list.selected_item if self._scrollable_list != None else None
+        if self._scrollable_list != None:
+            return self._scrollable_list.selected_item
 
     @property
     def next_item(self):

@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/control_list.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/control_list.py
+from __future__ import absolute_import, print_function
 from functools import partial
+from itertools import izip_longest
 from ...base import clamp, first, second, mixin, product, flatten, is_matrix, find_if
 from .control import Connectable, Control
 from .radio_button import RadioButtonControl
@@ -23,10 +24,12 @@ class ControlList(Control):
             self._extra_kws = k
             self.control_count = control.control_count
 
-        def _get_control_count(self):
+        @property
+        def control_count(self):
             return len(self._controls)
 
-        def _set_control_count(self, count):
+        @control_count.setter
+        def control_count(self, count):
             dynamic_create = count == ControlList.DYNAMIC_CONTROL_COUNT
             if len(self._controls) != count and not dynamic_create or self._dynamic_create != dynamic_create:
                 self._dynamic_create = count == ControlList.DYNAMIC_CONTROL_COUNT
@@ -35,19 +38,17 @@ class ControlList(Control):
                 self._create_controls(count)
                 self._update_controls()
 
-        control_count = property(_get_control_count, _set_control_count)
-
-        def _get_unavailable_color(self):
+        @property
+        def unavailable_color(self):
             return self._unavailable_color
 
-        def _set_unavailable_color(self, value):
+        @unavailable_color.setter
+        def unavailable_color(self, value):
             self._unavailable_color = value
             control_elements = self._control_elements or []
-            for control, element in map(None, self._controls, control_elements):
+            for control, element in izip_longest(self._controls, control_elements):
                 if not control and element:
                     self._send_unavailable_color(element)
-
-        unavailable_color = property(_get_unavailable_color, _set_unavailable_color)
 
         def _create_controls(self, count):
             if count > len(self._controls):
@@ -79,7 +80,7 @@ class ControlList(Control):
 
         def _update_controls(self):
             control_elements = self._control_elements or []
-            for control, element in map(None, self._controls, control_elements):
+            for control, element in izip_longest(self._controls, control_elements):
                 if control:
                     control._get_state(self._manager).set_control_element(element)
                 elif element:
@@ -114,10 +115,12 @@ class RadioButtonGroup(ControlList, RadioButtonControl):
             self._checked_index = -1
             super(RadioButtonGroup.State, self).__init__(*a, **k)
 
-        def _get_checked_index(self):
+        @property
+        def checked_index(self):
             return self._checked_index
 
-        def _set_checked_index(self, index):
+        @checked_index.setter
+        def checked_index(self, index):
             if not -1 <= index < self.control_count:
                 raise AssertionError
                 self[index].is_checked = index != -1 and True
@@ -125,8 +128,6 @@ class RadioButtonGroup(ControlList, RadioButtonControl):
                 checked_control = find_if(lambda c: c.is_checked, self)
                 if checked_control is not None:
                     checked_control.is_checked = False
-
-        checked_index = property(_get_checked_index, _set_checked_index)
 
         def connect_property(self, *a):
             super(RadioButtonGroup.State, self).connect_property(*a)
@@ -171,10 +172,12 @@ class MatrixControl(ControlList):
             self._dimensions = (None, None)
             super(MatrixControl.State, self).__init__(control, manager, *a, **k)
 
-        def _get_dimensions(self):
+        @property
+        def dimensions(self):
             return self._dimensions
 
-        def _set_dimensions(self, dimensions):
+        @dimensions.setter
+        def dimensions(self, dimensions):
             if not first(dimensions):
                 raise AssertionError
                 raise second(dimensions) or AssertionError
@@ -184,8 +187,6 @@ class MatrixControl(ControlList):
             count = first(dimensions) * second(dimensions)
             self._create_controls(count)
             self._update_controls()
-
-        dimensions = property(_get_dimensions, _set_dimensions)
 
         def _create_controls(self, count):
             super(MatrixControl.State, self)._create_controls(count)

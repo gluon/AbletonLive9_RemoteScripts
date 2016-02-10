@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/bank_selection_component.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/bank_selection_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import NamedTuple, listenable_property, listens, listens_group, liveobj_valid, SlotManager, nop
 from ableton.v2.control_surface import Component
-from ableton.v2.control_surface.control import control_list, forward_control, ButtonControl
+from ableton.v2.control_surface.control import control_list, ButtonControl
+from pushbase.banking_util import MAIN_KEY
 from .item_lister_component import ItemListerComponent, ItemProvider
-from .bank_definitions import MAIN_KEY
 
 class BankProvider(ItemProvider, SlotManager):
 
@@ -53,7 +53,9 @@ class BankProvider(ItemProvider, SlotManager):
 
     def internal_bank_names(self, original_bank_names):
         num_banks = len(original_bank_names)
-        return original_bank_names if num_banks > 0 else [MAIN_KEY]
+        if num_banks > 0:
+            return original_bank_names
+        return [MAIN_KEY]
 
 
 class EditModeOptionsComponent(Component):
@@ -70,7 +72,8 @@ class EditModeOptionsComponent(Component):
 
     def _option_for_button(self, button):
         options = self.options
-        return options[button.index - 1] if len(options) > button.index - 1 else None
+        if len(options) > button.index - 1:
+            return options[button.index - 1]
 
     @option_buttons.pressed
     def option_buttons(self, button):
@@ -91,11 +94,15 @@ class EditModeOptionsComponent(Component):
 
     @listenable_property
     def device(self):
-        return self._device.name if liveobj_valid(self._device) else ''
+        if liveobj_valid(self._device):
+            return self._device.name
+        return ''
 
     @listenable_property
     def options(self):
-        return self._device_options_provider.options if self._device_options_provider else []
+        if self._device_options_provider:
+            return self._device_options_provider.options
+        return []
 
     @listens('device')
     def __on_device_changed(self):
@@ -133,7 +140,6 @@ class EditModeOptionsComponent(Component):
 
 class BankSelectionComponent(ItemListerComponent):
     __events__ = ('back',)
-    select_buttons = forward_control(ItemListerComponent.select_buttons)
 
     def __init__(self, bank_registry = None, banking_info = None, device_options_provider = None, *a, **k):
         self._bank_provider = BankProvider(bank_registry=bank_registry, banking_info=banking_info)
@@ -141,8 +147,7 @@ class BankSelectionComponent(ItemListerComponent):
         self._options = self.register_component(EditModeOptionsComponent(back_callback=self.notify_back, device_options_provider=device_options_provider))
         self.register_disconnectable(self._bank_provider)
 
-    @select_buttons.checked
-    def select_buttons(self, button):
+    def _on_select_button_pressed(self, button):
         self._bank_provider.select_item(self.items[button.index].item)
 
     def set_option_buttons(self, buttons):

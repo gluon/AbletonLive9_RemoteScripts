@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/mode_behaviours.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/mode_behaviours.py
+from __future__ import absolute_import, print_function
 from itertools import imap
 from ableton.v2.control_surface.mode import ModeButtonBehaviour
 
@@ -13,10 +14,10 @@ class CancellableBehaviour(ModeButtonBehaviour):
     def press_immediate(self, component, mode):
         active_modes = component.active_modes
         groups = component.get_mode_groups(mode)
-        if not mode in active_modes:
-            can_cancel_mode = any(imap(lambda other: groups & component.get_mode_groups(other), active_modes))
-            if can_cancel_mode:
-                groups and component.pop_groups(groups)
+        can_cancel_mode = mode in active_modes or any(imap(lambda other: groups & component.get_mode_groups(other), active_modes))
+        if can_cancel_mode:
+            if groups:
+                component.pop_groups(groups)
             else:
                 component.pop_mode(mode)
             self.restore_previous_mode(component)

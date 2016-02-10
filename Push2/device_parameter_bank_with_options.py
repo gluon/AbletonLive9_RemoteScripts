@@ -1,8 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/device_parameter_bank_with_options.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_parameter_bank_with_options.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, liveobj_valid, find_if
+from pushbase.device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
 from .custom_bank_definitions import OPTIONS_KEY, SHOW_WAVEFORM_KEY
-from .device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
 OPTIONS_PER_BANK = 7
 
 class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):

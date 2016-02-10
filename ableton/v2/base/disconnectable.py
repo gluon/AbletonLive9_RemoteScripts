@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/disconnectable.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/disconnectable.py
+from __future__ import absolute_import, print_function
 from .util import find_if
 
 class Disconnectable(object):
@@ -22,6 +22,12 @@ class CompoundDisconnectable(Disconnectable):
     def __init__(self, *a, **k):
         super(CompoundDisconnectable, self).__init__(*a, **k)
         self._registered_disconnectables = []
+
+    def register_disconnectables(self, disconnectables):
+        for disconnectable in disconnectables:
+            self.register_disconnectable(disconnectable)
+
+        return disconnectables
 
     def register_disconnectable(self, slot):
         if slot not in self._registered_disconnectables:

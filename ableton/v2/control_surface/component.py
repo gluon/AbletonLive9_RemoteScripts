@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/component.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/component.py
+from __future__ import absolute_import, print_function
 import Live
 from .control import ControlManager
 from ..base import depends, lazy_attribute, Subject, task, is_iterable
@@ -69,9 +69,9 @@ class Component(ControlManager, Subject):
         self._update_is_enabled()
 
     def _update_is_enabled(self):
-        if self._recursive_is_enabled:
-            is_enabled = self._explicit_is_enabled
-            self._is_enabled = is_enabled != self._is_enabled and is_enabled
+        is_enabled = self._recursive_is_enabled and self._explicit_is_enabled
+        if is_enabled != self._is_enabled:
+            self._is_enabled = is_enabled
             self._internal_on_enabled_changed()
             self.on_enabled_changed()
             self.notify_enabled(is_enabled)
@@ -103,22 +103,22 @@ class Component(ControlManager, Subject):
         self._has_task_group = True
         return tasks
 
-    def _get_layer(self):
+    @property
+    def layer(self):
         return self._layer
 
-    def _set_layer(self, new_layer):
+    @layer.setter
+    def layer(self, new_layer):
         if self._layer != new_layer:
             self._release_all_layers()
             self._layer = new_layer
             if self.is_enabled():
                 self._grab_all_layers()
 
-    layer = property(_get_layer, _set_layer)
-
     def _grab_all_layers(self):
         for layer in self._get_layer_iterable():
             grabbed = layer.grab(self)
-            raise grabbed or AssertionError, 'Only one component can use a layer at atime'
+            raise grabbed or AssertionError('Only one component can use a layer at atime')
 
     def _release_all_layers(self):
         for layer in self._get_layer_iterable():
@@ -127,14 +127,18 @@ class Component(ControlManager, Subject):
     def _get_layer_iterable(self):
         if self._layer is None:
             return tuple()
-        return self._layer if is_iterable(self._layer) else (self._layer,)
+        if is_iterable(self._layer):
+            return self._layer
+        return (self._layer,)
 
     def is_enabled(self, explicit = False):
         """
         Returns whether the component is enabled.
         If 'explicit' is True the parent state is ignored.
         """
-        return self._is_enabled if not explicit else self._explicit_is_enabled
+        if not explicit:
+            return self._is_enabled
+        return self._explicit_is_enabled
 
     @depends(parent_task_group=None)
     def _register_timer_callback(self, callback, parent_task_group = None):

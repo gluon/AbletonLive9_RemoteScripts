@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/AIRA_MX_1/Colors.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AIRA_MX_1/Colors.py
 from _Framework.ButtonElement import Color
 BLINK_LED_CHANNEL = 14
 

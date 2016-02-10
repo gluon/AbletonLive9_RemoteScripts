@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/toggle.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/toggle.py
+from __future__ import absolute_import, print_function
 from ...base import listens
 from ..component import Component
 
@@ -32,22 +32,23 @@ class ToggleComponent(Component):
     def view_transform(self, value):
         return value
 
-    def _get_subject(self):
+    @property
+    def subject(self):
         return self._property_slot.subject
 
-    def _set_subject(self, model):
+    @subject.setter
+    def subject(self, model):
         self._property_slot.subject = model
         self.update()
 
-    subject = property(_get_subject, _set_subject)
+    @property
+    def value(self):
+        if self.subject:
+            return getattr(self.subject, self._property_name)
 
-    def _get_value(self):
-        return getattr(self.subject, self._property_name) if self.subject else None
-
-    def _set_value(self, value):
+    @value.setter
+    def value(self, value):
         setattr(self.subject, self._property_name, value)
-
-    value = property(_get_value, _set_value)
 
     def set_toggle_button(self, button):
         raise button is None or not self.is_momentary or button.is_momentary() or AssertionError

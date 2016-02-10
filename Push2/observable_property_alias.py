@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/observable_property_alias.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/observable_property_alias.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager, Slot
 
 class ObservablePropertyAlias(SlotManager):

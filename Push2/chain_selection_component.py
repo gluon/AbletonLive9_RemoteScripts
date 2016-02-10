@@ -1,7 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/chain_selection_component.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/chain_selection_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import SlotManager, listens, liveobj_valid
-from ableton.v2.control_surface.control import forward_control
 from .item_lister_component import ItemListerComponent, ItemProvider
 
 class ChainProvider(SlotManager, ItemProvider):
@@ -26,7 +25,8 @@ class ChainProvider(SlotManager, ItemProvider):
 
     @property
     def selected_item(self):
-        return self._rack.view.selected_chain if liveobj_valid(self._rack) else None
+        if liveobj_valid(self._rack):
+            return self._rack.view.selected_chain
 
     def select_chain(self, chain):
         self._rack.view.selected_chain = chain
@@ -41,15 +41,13 @@ class ChainProvider(SlotManager, ItemProvider):
 
 
 class ChainSelectionComponent(ItemListerComponent):
-    select_buttons = forward_control(ItemListerComponent.select_buttons)
 
     def __init__(self, *a, **k):
         self._chain_parent = ChainProvider()
         super(ChainSelectionComponent, self).__init__(item_provider=self._chain_parent, *a, **k)
         self.register_disconnectable(self._chain_parent)
 
-    @select_buttons.checked
-    def select_buttons(self, button):
+    def _on_select_button_pressed(self, button):
         self._chain_parent.select_chain(self.items[button.index].item)
 
     def set_parent(self, parent):

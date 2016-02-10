@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/session_ring.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/session_ring.py
+from __future__ import absolute_import, print_function
 from ...base import const, depends, nop, listens
 from ..component import Component
 
@@ -90,21 +90,21 @@ class SessionRingComponent(Component):
         index = self.track_offset
         return self.tracks_to_use()[index:index + self.num_tracks]
 
-    def _get_track_offset(self):
+    @property
+    def track_offset(self):
         return self._session_ring.track_offset
 
-    def _set_track_offset(self, offset):
+    @track_offset.setter
+    def track_offset(self, offset):
         self.set_offsets(offset, self.scene_offset)
 
-    track_offset = property(_get_track_offset, _set_track_offset)
-
-    def _get_scene_offset(self):
+    @property
+    def scene_offset(self):
         return self._session_ring.scene_offset
 
-    def _set_scene_offset(self, offset):
+    @scene_offset.setter
+    def scene_offset(self, offset):
         self.set_offsets(self.track_offset, offset)
-
-    scene_offset = property(_get_scene_offset, _set_scene_offset)
 
     @property
     def num_tracks(self):

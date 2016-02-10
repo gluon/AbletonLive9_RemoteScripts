@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/sysex_element.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/sysex_element.py
+from __future__ import absolute_import, print_function
 from ..input_control_element import InputControlElement, MIDI_SYSEX_TYPE
 from .. import midi
 
@@ -31,7 +31,7 @@ class SysexElement(InputControlElement):
     def send_value(self, *arguments):
         raise self._send_message_generator is not None or AssertionError
         message = self._send_message_generator(*arguments)
-        raise midi.is_valid_sysex(message) or AssertionError, 'Trying to send sysex message %r, which is not valid.' % map(hex, message)
+        raise midi.is_valid_sysex(message) or AssertionError('Trying to send sysex message %r, which is not valid.' % map(hex, message))
         self.send_midi(message)
 
     def enquire_value(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/AIRA_MX_1/RolandMX1.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AIRA_MX_1/RolandMX1.py
 from __future__ import with_statement
 from functools import partial
 from _Framework.Util import recursive_map

@@ -1,9 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/layer.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/layer.py
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from itertools import repeat, izip
 from .control_element import ControlElementClient, get_element
 from .resource import ExclusiveResource, CompoundResource
@@ -46,9 +46,9 @@ class LayerClient(ControlElementClient):
     def set_control_element(self, control_element, grabbed):
         layer = self.layer
         owner = self.layer_client
-        raise owner or AssertionError
-        if not control_element in layer._element_to_names:
-            raise AssertionError, 'Control not in layer: %s' % (control_element,)
+        if not owner:
+            raise AssertionError
+            raise control_element in layer._element_to_names or AssertionError('Control not in layer: %s' % (control_element,))
             names = layer._element_to_names[control_element]
             control_element = grabbed or None
         for name in names:
@@ -75,15 +75,15 @@ class CompoundLayer(CompoundResource):
     thought.
     """
 
-    def _get_priority(self):
+    @property
+    def priority(self):
         raise self.first.priority == self.second.priority or AssertionError
         return self.first.priority
 
-    def _set_priority(self, priority):
+    @priority.setter
+    def priority(self, priority):
         self.first.priority = priority
         self.second.priority = priority
-
-    priority = property(_get_priority, _set_priority)
 
     def __getattr__(self, key):
         try:
@@ -101,16 +101,16 @@ class LayerBase(ExclusiveResource):
     def __add__(self, other):
         return CompoundLayer(self, other)
 
-    def _get_priority(self):
+    @property
+    def priority(self):
         return self._priority
 
-    def _set_priority(self, priority):
+    @priority.setter
+    def priority(self, priority):
         if priority != self._priority:
             if self.owner:
                 raise RuntimeError("Cannot change priority of a layer while it's owned")
             self._priority = priority
-
-    priority = property(_get_priority, _set_priority)
 
     def grab(self, client, *a, **k):
         if client == self.owner:

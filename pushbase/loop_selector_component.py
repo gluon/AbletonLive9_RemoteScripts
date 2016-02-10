@@ -1,9 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/loop_selector_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/loop_selector_component.py
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
 from itertools import izip
-from ableton.v2.base import clamp, listens, liveobj_valid, Subject, task
+from ableton.v2.base import clamp, listens, liveobj_changed, liveobj_valid, Subject, task
 from ableton.v2.control_surface import defaults, Component
 from ableton.v2.control_surface.control import ButtonControl
 
@@ -132,7 +132,7 @@ class LoopSelectorComponent(Component):
         self.set_detail_clip(self.song.view.detail_clip)
 
     def set_detail_clip(self, clip):
-        if clip != self._sequencer_clip:
+        if liveobj_changed(clip, self._sequencer_clip):
             self._is_following = liveobj_valid(clip) and (self._is_following or clip_is_new_recording(clip))
             self._on_playing_position_changed.subject = clip
             self._on_playing_status_changed.subject = clip
@@ -287,7 +287,9 @@ class LoopSelectorComponent(Component):
 
             def color_for_page(absolute_page):
                 if l_start <= absolute_page < l_start + l_length:
-                    return 'LoopSelector.InsideLoopStartBar' if absolute_page % pages_per_measure == 0 else 'LoopSelector.InsideLoop'
+                    if absolute_page % pages_per_measure == 0:
+                        return 'LoopSelector.InsideLoopStartBar'
+                    return 'LoopSelector.InsideLoop'
                 else:
                     return 'LoopSelector.OutsideLoop'
 

@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/collection/indexed_dict.py
-from . import OrderedDict
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/collection/indexed_dict.py
+from __future__ import absolute_import, print_function
+from collections import OrderedDict
 
 class IndexedDict(OrderedDict):
     """ Dictionary whose values are accessible by indices """

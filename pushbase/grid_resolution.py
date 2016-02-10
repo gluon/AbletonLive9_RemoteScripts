@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/grid_resolution.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/grid_resolution.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import product, listens, SlotManager, Subject
 GridQuantization = Live.Clip.GridQuantization

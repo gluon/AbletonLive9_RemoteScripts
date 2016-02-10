@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC20/ShiftableSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC20/ShiftableSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 from _Framework.Layer import Layer
 from consts import NOTE_MODE, ABLETON_MODE

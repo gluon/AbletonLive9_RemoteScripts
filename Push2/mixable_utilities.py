@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/mixable_utilities.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mixable_utilities.py
+from __future__ import absolute_import, print_function
 import Live
 from pushbase.device_chain_utils import find_instrument_meeting_requirement
 

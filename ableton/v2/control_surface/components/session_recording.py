@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/session_recording.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/session_recording.py
+from __future__ import absolute_import, print_function
 import Live
 from ...base import find_if, listens, liveobj_valid
 from ..compound_component import CompoundComponent
@@ -54,6 +54,7 @@ class SessionRecordingComponent(CompoundComponent):
         self._reconnect_track_listeners()
         self.register_slot(song, self.update, 'overdub')
         self.register_slot(song, self.update, 'session_record_status')
+        self.register_slot(song, self._update_record_button, 'session_record')
         self.register_slot(song.view, self.update, 'selected_track')
         self.register_slot(song.view, self.update, 'selected_scene')
         self.register_slot(song.view, self.update, 'detail_clip')
@@ -169,9 +170,9 @@ class SessionRecordingComponent(CompoundComponent):
         if self.is_enabled():
             clip = self._get_playing_clip()
             selected_track = self.song.view.selected_track
-            if selected_track:
-                track_frozen = selected_track.is_frozen
-                clip and not track_frozen and clip.clear_all_envelopes()
+            track_frozen = selected_track and selected_track.is_frozen
+            if clip and not track_frozen:
+                clip.clear_all_envelopes()
             self._update_delete_automation_button_color()
 
     def _get_playing_clip(self):
@@ -285,9 +286,9 @@ class SessionRecordingComponent(CompoundComponent):
         was any recording at all """
         song = self.song
         status = song.session_record_status
-        if not status != Live.Song.SessionRecordStatus.off:
-            was_recording = song.session_record
-            song.session_record = was_recording and False
+        was_recording = status != Live.Song.SessionRecordStatus.off or song.session_record
+        if was_recording:
+            song.session_record = False
         return was_recording
 
     def _start_recording(self):
@@ -322,11 +323,11 @@ class SessionRecordingComponent(CompoundComponent):
                 manager.register_slot(track, self.update, 'playing_slot_index')
                 manager.register_slot(track, self.update, 'fired_slot_index')
 
-    def _set_scene_list_mode(self, scene_list_mode):
-        self._scene_list_mode = scene_list_mode
-        self._update_new_button()
-
-    def _get_scene_list_mode(self):
+    @property
+    def scene_list_mode(self):
         return self._scene_list_mode
 
-    scene_list_mode = property(_get_scene_list_mode, _set_scene_list_mode)
+    @scene_list_mode.setter
+    def scene_list_mode(self, scene_list_mode):
+        self._scene_list_mode = scene_list_mode
+        self._update_new_button()

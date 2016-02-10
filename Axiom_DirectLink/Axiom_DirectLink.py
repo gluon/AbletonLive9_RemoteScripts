@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_DirectLink/Axiom_DirectLink.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_DirectLink/Axiom_DirectLink.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

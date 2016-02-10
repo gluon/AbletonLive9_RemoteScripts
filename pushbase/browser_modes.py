@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/browser_modes.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/browser_modes.py
 """
 Different mode objects that turn live into different browsing modes.
 """
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import depends, index_if, liveobj_valid
 from ableton.v2.control_surface.mode import Mode
@@ -68,7 +69,9 @@ class BrowserAddEffectMode(Mode):
         self._browser.filter_type = Live.Browser.FilterType.disabled
 
     def get_insert_mode(self):
-        return Live.Track.DeviceInsertMode.selected_left if self.insert_left else Live.Track.DeviceInsertMode.selected_right
+        if self.insert_left:
+            return Live.Track.DeviceInsertMode.selected_left
+        return Live.Track.DeviceInsertMode.selected_right
 
     def get_selection_for_insert(self):
         """
@@ -83,9 +86,9 @@ class BrowserAddEffectMode(Mode):
         index = index_if(lambda device: device == selected, chain.devices)
         is_drum_pad = isinstance(chain.canonical_parent, Live.DrumPad.DrumPad)
         midi_support = chain.has_midi_input
-        if not is_drum_pad:
-            supports_instrument = chain.has_midi_input and (chain.has_audio_output or isinstance(chain, Live.Track.Track))
-            left = self.insert_left and (chain.devices[index - 1] if index > 0 else None)
+        supports_instrument = is_drum_pad or chain.has_midi_input and (chain.has_audio_output or isinstance(chain, Live.Track.Track))
+        if self.insert_left:
+            left = chain.devices[index - 1] if index > 0 else None
             return filter_type_between(left, selected, midi_support, is_drum_pad, supports_instrument)
         else:
             right = chain.devices[index + 1] if index < chain_len - 1 else None
@@ -114,7 +117,9 @@ def filter_type_between(left, right, supports_midi = False, is_drum_pad = False,
         return Types.audio_effect_hotswap
     if supports_midi:
         if supports_instrument:
-            return Types.drum_pad_hotswap if is_drum_pad else Types.instrument_hotswap
+            if is_drum_pad:
+                return Types.drum_pad_hotswap
+            return Types.instrument_hotswap
         else:
             return Types.midi_effect_hotswap
     return Types.audio_effect_hotswap

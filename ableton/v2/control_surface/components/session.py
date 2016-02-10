@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/session.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/session.py
+from __future__ import absolute_import, print_function
 import Live
 from itertools import count
 from ...base import in_range, product, listens, listens_group
@@ -201,7 +201,7 @@ class SessionComponent(CompoundComponent):
 
     def _reassign_tracks(self):
         tracks_to_use = self._session_ring.tracks_to_use()
-        tracks = map(lambda t: t if isinstance(t, Live.Track.Track) else None, tracks_to_use)
+        tracks = map(lambda t: (t if isinstance(t, Live.Track.Track) else None), tracks_to_use)
         self.__on_fired_slot_index_changed.replace_subjects(tracks, count())
         self.__on_playing_slot_index_changed.replace_subjects(tracks, count())
         self._update_stop_all_clips_button()
@@ -239,11 +239,11 @@ class SessionComponent(CompoundComponent):
     def _update_stop_clips_led(self, index):
         tracks_to_use = self._session_ring.tracks_to_use()
         track_index = index + self._session_ring.track_offset
-        button = self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons) and self._stop_track_clip_buttons[index]
-        if button != None:
-            value_to_send = None
-            if track_index < len(tracks_to_use):
-                if tracks_to_use[track_index].clip_slots:
+        if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):
+            button = self._stop_track_clip_buttons[index]
+            if button != None:
+                value_to_send = None
+                if track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots:
                     track = tracks_to_use[track_index]
                     if track.fired_slot_index == -2:
                         value_to_send = self._stop_clip_triggered_value

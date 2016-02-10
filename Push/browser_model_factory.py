@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/browser_model_factory.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/browser_model_factory.py
+from __future__ import absolute_import, print_function
 import Live
 from .browser_model import filter_type_for_browser, EmptyBrowserModel, QueryingBrowserModel
 from .browser_query import TagBrowserQuery, PathBrowserQuery, PlacesBrowserQuery, SourceBrowserQuery

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/settings.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/settings.py
+from __future__ import absolute_import, print_function
 from pushbase.setting import OnOffSetting
 
 def create_settings(preferences = None):

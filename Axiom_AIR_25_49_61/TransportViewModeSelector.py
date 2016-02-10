@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom_AIR_25_49_61/TransportViewModeSelector.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_AIR_25_49_61/TransportViewModeSelector.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
 
 class TransportViewModeSelector(ModeSelectorComponent):

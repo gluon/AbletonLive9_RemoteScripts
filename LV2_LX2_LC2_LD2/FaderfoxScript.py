@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/LV2_LX2_LC2_LD2/FaderfoxScript.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/LV2_LX2_LC2_LD2/FaderfoxScript.py
 import Live
 from consts import *
 import sys
 from FaderfoxHelper import FaderfoxHelper
 from ParamMap import ParamMap
 from Devices import *
+from _Generic.util import DeviceAppointer
 
 class FaderfoxScript:
     __filter_funcs__ = ['update_display', 'log', 'song']
@@ -31,6 +32,7 @@ class FaderfoxScript:
             live = 'Live 5'
         self.show_message(self.__name__ + ' ' + self.__version__ + ' for ' + live)
         self.is_lv1 = False
+        self._device_appointer = DeviceAppointer(song=self.song(), appointed_device_setter=self._set_appointed_device)
 
     def is_live_5(self):
         return hasattr(Live, 'is_live_5')
@@ -44,6 +46,8 @@ class FaderfoxScript:
     def disconnect(self):
         for c in self.components:
             c.disconnect()
+
+        self._device_appointer.disconnect()
 
     def application(self):
         return Live.Application.get_application()
@@ -68,7 +72,7 @@ class FaderfoxScript:
         if self.device_controller:
             self.device_controller.unlock_from_device(device)
 
-    def set_appointed_device(self, device):
+    def _set_appointed_device(self, device):
         if self.device_controller:
             self.device_controller.set_appointed_device(device)
 
@@ -131,4 +135,4 @@ class FaderfoxScript:
 
             self.param_map.receive_midi_note(channel, status, note_no, note_vel)
         else:
-            raise False or AssertionError, 'Unknown MIDI message %s' % str(midi_bytes)
+            raise False or AssertionError('Unknown MIDI message %s' % str(midi_bytes))

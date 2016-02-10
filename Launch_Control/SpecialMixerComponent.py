@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launch_Control/SpecialMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launch_Control/SpecialMixerComponent.py
+from itertools import izip_longest
 from _Framework.MixerComponent import MixerComponent
 from _Framework.ModesComponent import ModesComponent, LayerMode, LatchingBehaviour
 from _Framework.SubjectSlot import subject_slot
@@ -45,12 +46,12 @@ class SpecialMixerComponent(MixerComponent):
     selected_send_index = property(_get_selected_send_index, _set_selected_send_index)
 
     def set_pan_controls(self, controls):
-        for control, channel_strip in map(None, controls or [], self._channel_strips):
+        for control, channel_strip in izip_longest(controls or [], self._channel_strips):
             if channel_strip:
                 channel_strip.set_pan_control(control)
 
     def set_volume_controls(self, controls):
-        for control, channel_strip in map(None, controls or [], self._channel_strips):
+        for control, channel_strip in izip_longest(controls or [], self._channel_strips):
             if channel_strip:
                 channel_strip.set_volume_control(control)
 

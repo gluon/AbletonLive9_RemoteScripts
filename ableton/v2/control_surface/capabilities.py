@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/capabilities.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/capabilities.py
+from __future__ import absolute_import, print_function
 PORTS_KEY = 'ports'
 CONTROLLER_ID_KEY = 'controller_id'
 TYPE_KEY = 'surface_type'

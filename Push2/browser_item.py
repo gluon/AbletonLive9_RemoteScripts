@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/browser_item.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_item.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import Proxy
 
 class BrowserItem(object):
@@ -51,7 +52,9 @@ class BrowserItem(object):
 
     @property
     def uri(self):
-        return self._contained_item.uri if self._contained_item is not None else self._name
+        if self._contained_item is not None:
+            return self._contained_item.uri
+        return self._name
 
 
 class ProxyBrowserItem(Proxy):

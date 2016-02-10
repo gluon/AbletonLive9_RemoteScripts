@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/profile.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/profile.py
+from __future__ import absolute_import, print_function
 from functools import wraps, partial
 ENABLE_PROFILING = False
 if ENABLE_PROFILING:
@@ -17,7 +17,7 @@ def profile(fn):
             if PROFILER:
                 return PROFILER.runcall(partial(fn, self, *a, **k))
             else:
-                print 'Can not profile (%s), it is probably reloaded' % fn.__name__
+                print('Can not profile (%s), it is probably reloaded' % fn.__name__)
                 return fn(*a, **k)
 
         return wrapper

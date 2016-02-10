@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/MackieControlXT/MackieControlXT.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MackieControlXT/MackieControlXT.py
 from MackieControl.consts import *
 from MackieControl.MainDisplay import MainDisplay
 from MackieControl.ChannelStrip import ChannelStrip

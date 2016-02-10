@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/MPD218/MPD218.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MPD218/MPD218.py
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase
 PAD_CHANNEL = 9
 PAD_IDS = [[48,

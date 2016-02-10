@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/value_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/value_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, listens
 from ableton.v2.control_surface import CompoundComponent, Component, ParameterSlot
 from ableton.v2.control_surface.control import EncoderControl, ButtonControl
@@ -67,10 +68,13 @@ class ValueComponentBase(CompoundComponent):
     def create_display_component(self, *a, **k):
         raise NotImplementedError
 
-    encoder = EncoderControl()
-
-    def __init__(self, display_label = ' ', display_seg_start = 0, *a, **k):
+    def __init__(self, display_label = ' ', display_seg_start = 0, encoder_touch_delay = 0, *a, **k):
         super(ValueComponentBase, self).__init__(*a, **k)
+        encoder = EncoderControl(touch_event_delay=encoder_touch_delay)
+        encoder.touched = ValueComponentBase.__on_encoder_touched
+        encoder.released = ValueComponentBase.__on_encoder_released
+        encoder.value = ValueComponentBase.__on_encoder_value
+        self.add_control('encoder', encoder)
         self._display = self.register_component(self.create_display_component(display_label=display_label, display_seg_start=display_seg_start))
         self._display.set_enabled(False)
 
@@ -78,16 +82,13 @@ class ValueComponentBase(CompoundComponent):
     def display(self):
         return self._display
 
-    @encoder.touched
-    def encoder(self, encoder):
+    def __on_encoder_touched(self, encoder):
         self._update_display_state()
 
-    @encoder.released
-    def encoder(self, encoder):
+    def __on_encoder_released(self, encoder):
         self._update_display_state()
 
-    @encoder.value
-    def encoder(self, value, encoder):
+    def __on_encoder_value(self, value, encoder):
         self._on_value(value)
 
     def _on_value(self, value):

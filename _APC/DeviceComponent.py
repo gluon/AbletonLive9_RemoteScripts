@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_APC/DeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_APC/DeviceComponent.py
 from itertools import ifilter
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.DeviceComponent import DeviceComponent as DeviceComponentBase
@@ -22,7 +22,9 @@ class DeviceComponent(DeviceComponentBase, CompoundComponent):
 
     def _number_of_parameter_banks(self):
         num = super(DeviceComponent, self)._number_of_parameter_banks()
-        return max(num, 8) if self._use_fake_banks else num
+        if self._use_fake_banks:
+            return max(num, 8)
+        return num
 
     def _on_device_bank_changed(self, device, bank):
         super(DeviceComponent, self)._on_device_bank_changed(device, bank)

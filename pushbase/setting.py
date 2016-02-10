@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/setting.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/setting.py
+from __future__ import absolute_import, print_function
 from math import fabs
 from ableton.v2.base import sign, clamp, Subject, Event
 
@@ -12,10 +13,10 @@ class Setting(Subject):
     def __init__(self, name = '', values = None, default_value = None, preferences = None, *a, **k):
         super(Setting, self).__init__(*a, **k)
         self.name = name
-        if not values:
-            self.values = []
-            self._preferences = preferences if preferences != None else {}
-            default_value = name in self._preferences and self._preferences[name] in values and self._preferences[name]
+        self.values = values or []
+        self._preferences = preferences if preferences != None else {}
+        if name in self._preferences and self._preferences[name] in values:
+            default_value = self._preferences[name]
         self._preferences[name] = None
         self.value = default_value
 
@@ -84,7 +85,8 @@ class EnumerableSetting(Setting):
         current_position = self.values.index(self.value)
         new_position = clamp(current_position + relative_position, 0, len(self.values) - 1)
         self.value = self.values[new_position]
-        return new_position if current_position != new_position else None
+        if current_position != new_position:
+            return new_position
 
     def on_value_changed(self, value):
         self._relative_value = 0.0

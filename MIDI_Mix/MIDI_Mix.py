@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/MIDI_Mix/MIDI_Mix.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MIDI_Mix/MIDI_Mix.py
 from __future__ import with_statement
 from itertools import chain
 from _Framework.Util import const

@@ -1,9 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/parameter_mapping_sensitivities.py
-from pushbase import consts
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/parameter_mapping_sensitivities.py
+from __future__ import absolute_import, print_function
 DEFAULT_SENSITIVITY_KEY = 'normal_sensitivity'
 FINE_GRAINED_SENSITIVITY_KEY = 'fine_grained_sensitivity'
-DEFAULT_SENSITIVITY = consts.CONTINUOUS_MAPPING_SENSITIVITY
-DEFAULT_FG_SENSITIVITY = consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+CONTINUOUS_MAPPING_SENSITIVITY = 1.0
+FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01
+QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
 PARAMETER_SENSITIVITIES = {'Analog': {'OSC1 Octave': {DEFAULT_SENSITIVITY_KEY: 0.1},
             'OSC2 Octave': {DEFAULT_SENSITIVITY_KEY: 0.1},
             'OSC1 Semi': {DEFAULT_SENSITIVITY_KEY: 0.5},

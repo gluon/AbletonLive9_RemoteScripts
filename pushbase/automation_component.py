@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/automation_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/automation_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, task, liveobj_valid
 from ableton.v2.control_surface.control import EncoderControl, control_list
@@ -43,14 +44,14 @@ class AutomationComponent(DeviceParameterComponent):
 
     @property
     def parameters(self):
-        return map(lambda info: info.parameter if info else None, self._parameter_infos_to_use())
+        return map(lambda info: (info.parameter if info else None), self._parameter_infos_to_use())
 
     @property
     def parameter_infos(self):
         return self._parameter_infos_to_use()
 
     def _parameter_infos_to_use(self):
-        return map(lambda info: info if self.parameter_is_automateable(info.parameter if info else None) else None, self._parameter_provider.parameters)
+        return map(lambda info: (info if self.parameter_is_automateable(info.parameter if info else None) else None), self._parameter_provider.parameters)
 
     @property
     def can_automate_parameters(self):
@@ -72,7 +73,7 @@ class AutomationComponent(DeviceParameterComponent):
     def parameter_to_string(self, parameter):
         if not parameter:
             return ''
-        elif len(self._selected_time) == 0:
+        if len(self._selected_time) == 0:
             return '-'
         return parameter.str_for_value(self.parameter_to_value(parameter))
 

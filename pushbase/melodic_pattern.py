@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/melodic_pattern.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/melodic_pattern.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import NamedTuple, lazy_attribute, memoize, find_if
 from . import consts
 from .matrix_maps import FEEDBACK_CHANNELS

@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/note_editor_paginator.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_editor_paginator.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import forward_property, SlotManager, listens, listens_group
 from .loop_selector_component import Paginator
 

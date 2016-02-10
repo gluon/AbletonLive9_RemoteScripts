@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_MxDCore/MxDCore.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_MxDCore/MxDCore.py
 import Live.Base
 from functools import partial, wraps
 import _Framework
@@ -6,7 +6,7 @@ from _Framework.Disconnectable import Disconnectable
 from _Framework.Debug import debug_print
 from MxDUtils import TupleWrapper, StringHandler
 from LomUtils import LomInformation, LomIntrospection, LomPathCalculator, LomPathResolver
-from LomTypes import ENUM_TYPES, PROPERTY_TYPES, CONTROL_SURFACES, ROOT_KEYS, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, verify_object_property
+from LomTypes import ENUM_TYPES, EXPOSED_TYPE_PROPERTIES, CONTROL_SURFACES, PROPERTY_TYPES, ROOT_KEYS, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable, LomNoteOperationWarning, LomNoteOperationError, LomAttributeError, LomObjectError, verify_object_property, is_property_hidden
 
 def get_current_max_device(device_id):
     raise MxDCore.instance != None and MxDCore.instance.manager != None or AssertionError
@@ -27,6 +27,8 @@ NOTE_REPLACE_KEY = 'NOTE_REPLACE'
 NOTE_SET_KEY = 'NOTE_SET'
 CONTAINS_CS_ID_KEY = 'CONTAINS_CS_ID_KEY'
 LAST_SENT_ID_KEY = 'LAST_SENT_ID'
+PRIVATE_PROP_WARNING = 'Warning: Calling private property. This property might change or be removed in the future.'
+HIDDEN_PROP_WARNING = 'Warning: Calling hidden property. This property might change or be removed in the future.'
 
 def concatenate_strings(string_list, string_format = '%s %s'):
     return unicode(reduce(lambda s1, s2: string_format % (s1, s2), string_list) if len(string_list) > 0 else '')
@@ -52,8 +54,8 @@ class MxDCore(object):
     """ Central class for the Max-integration """
     instance = None
 
-    def __init__(self):
-        object.__init__(self)
+    def __init__(self, *a, **k):
+        super(MxDCore, self).__init__(*a, **k)
         self.device_contexts = {}
         self.manager = None
         self.lom_classes = []
@@ -65,8 +67,7 @@ class MxDCore(object):
          'note': self._object_note_handler,
          'done': self._object_done_handler,
          'get_control_names': self._object_get_control_names_handler}
-        excluded = (Live.Base, Live.Song.BeatTime, Live.Song.SmptTime) + ENUM_TYPES
-        self.lom_classes += LomIntrospection(Live, exclude=excluded).lom_classes
+        self.lom_classes = EXPOSED_TYPE_PROPERTIES.keys()
         self.lom_classes += LomIntrospection(_Framework).lom_classes
         self.appointed_lom_ids = {0: None}
 
@@ -402,6 +403,13 @@ class MxDCore(object):
             raise LomAttributeError('set: unsupported property type')
         setattr(lom_object, property_name, value)
 
+    def _warn_if_using_private_property(self, device_id, object_id, property_name):
+        if property_name.startswith('_'):
+            self._warn(device_id, object_id, PRIVATE_PROP_WARNING)
+        lom_object = self._get_current_lom_object(device_id, object_id)
+        if is_property_hidden(lom_object, property_name):
+            self._warn(device_id, object_id, HIDDEN_PROP_WARNING)
+
     def obj_set(self, device_id, object_id, parameters):
         if not isinstance(parameters, (str, unicode)):
             raise AssertionError
@@ -412,6 +420,7 @@ class MxDCore(object):
             value = property_values[0]
             try:
                 self._set_property_value(current_object, property_name, value)
+                self._warn_if_using_private_property(device_id, object_id, property_name)
             except LomAttributeError as e:
                 self._raise(device_id, object_id, e.message)
 
@@ -430,6 +439,7 @@ class MxDCore(object):
                     result_value = current_object[int(parameters)]
                 else:
                     verify_object_property(current_object, parameters)
+                    self._warn_if_using_private_property(device_id, object_id, parameters)
                     result_value = getattr(current_object, parameters)
                     if isinstance(result_value, ENUM_TYPES):
                         result_value = int(result_value)
@@ -618,6 +628,7 @@ class MxDCore(object):
 
     def _object_default_call_handler(self, device_id, object_id, lom_object, parameters):
         verify_object_property(lom_object, parameters[0])
+        self._warn_if_using_private_property(device_id, object_id, parameters[0])
         function = getattr(lom_object, parameters[0])
         result = function(*parameters[1:])
         result_str = self._str_representation_for_object(result)
@@ -672,7 +683,9 @@ class MxDCore(object):
     def _selector_for_note_operation(self, note_operation):
         if note_operation not in (NOTE_REPLACE_KEY, NOTE_SET_KEY):
             raise LomNoteOperationWarning('invalid note operation')
-        return 'set_notes' if note_operation == NOTE_SET_KEY else 'replace_selected_notes'
+        if note_operation == NOTE_SET_KEY:
+            return 'set_notes'
+        return 'replace_selected_notes'
 
     def _object_done_handler(self, device_id, object_id, lom_object, parameters):
         if not (isinstance(lom_object, Live.Clip.Clip) and lom_object.is_midi_clip):
@@ -755,6 +768,7 @@ class MxDCore(object):
             raise AssertionError
             current_object = self._get_current_lom_object(device_id, object_id)
             property_name = self._get_current_property(device_id, object_id)
+            self._warn_if_using_private_property(device_id, object_id, property_name)
             property_name == u'id' and self._observer_id_callback(device_id, object_id)
         else:
             object_context = current_object != None and property_name != '' and self.device_contexts[device_id][object_id]
@@ -858,7 +872,9 @@ class MxDCore(object):
         return result
 
     def _listenable_property_for(self, prop_name):
-        return 'has_clip' if prop_name == 'clip' else prop_name
+        if prop_name == 'clip':
+            return 'has_clip'
+        return prop_name
 
     def _parse(self, device_id, object_id, string):
         return StringHandler.parse(string, self._object_for_id(device_id))

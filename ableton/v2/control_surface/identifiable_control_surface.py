@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/identifiable_control_surface.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/identifiable_control_surface.py
+from __future__ import absolute_import, print_function
 import logging
 from ..base import task
-from .control_surface import ControlSurface, midi
+from . import midi
+from .control_surface import ControlSurface
 logger = logging.getLogger(__name__)
 
 class IdentifiableControlSurface(ControlSurface):

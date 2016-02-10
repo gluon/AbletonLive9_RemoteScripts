@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/drum_group_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/drum_group_component.py
+from __future__ import absolute_import, print_function
 from pushbase.drum_group_component import DrumGroupComponent as DrumGroupComponentBase
 
 class DrumGroupComponent(DrumGroupComponentBase):

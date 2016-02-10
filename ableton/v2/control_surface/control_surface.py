@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control_surface.py
-from __future__ import absolute_import, with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control_surface.py
+from __future__ import absolute_import, print_function
+from collections import OrderedDict
 from functools import partial
 from itertools import chain, ifilter, imap
 from contextlib import contextmanager
@@ -9,10 +10,12 @@ ascii
 import logging
 import traceback
 import Live
-from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task, collection
+from ..base import BooleanContext, const, find_if, first, in_range, inject, lazy_attribute, liveobj_valid, SlotManager, task
 from . import defaults
 from . import midi
+from .components.device import DeviceProvider
 from .control_element import OptimizedOwnershipHandler
+from .device_bank_registry import DeviceBankRegistry
 from .elements import PhysicalDisplayElement
 from .input_control_element import InputControlElement, MIDI_CC_TYPE, MIDI_NOTE_TYPE, MIDI_PB_TYPE, MIDI_SYSEX_TYPE
 from .profile import profile
@@ -34,16 +37,19 @@ def get_control_surfaces():
         return getattr(__builtins__, CS_LIST_KEY)
 
 
-class ControlSurface(SlotManager):
+class SimpleControlSurface(SlotManager):
     """
     Central base class for scripts based on the new Framework. New
     scripts need to subclass this class and add special behavior.
+    
+    This class does not support device control/locking etc. Use ControlSurface if
+    you need device support.
     """
     preferences_key = None
 
     def __init__(self, c_instance = None, publish_self = True, *a, **k):
         """ Define and Initialize standard behavior """
-        super(ControlSurface, self).__init__(*a, **k)
+        super(SimpleControlSurface, self).__init__(*a, **k)
         if not c_instance:
             raise AssertionError
             self.canonical_parent = None
@@ -55,7 +61,6 @@ class ControlSurface(SlotManager):
         self._components = []
         self._displays = []
         self.controls = []
-        self._device_component = None
         self._forwarding_long_identifier_registry = {}
         self._forwarding_registry = {}
         self._is_sending_scheduled_messages = BooleanContext()
@@ -109,13 +114,12 @@ class ControlSurface(SlotManager):
         self._forwarding_registry = None
         self.controls = None
         self._displays = None
-        self._device_component = None
         self._pad_translations = None
         cs_list = self._control_surfaces()
         if self in cs_list:
             cs_list.remove(self)
         self._task_group.clear()
-        super(ControlSurface, self).disconnect()
+        super(SimpleControlSurface, self).disconnect()
 
     def _control_surfaces(self):
         """ Returns list of registered control surfaces """
@@ -125,42 +129,7 @@ class ControlSurface(SlotManager):
         """
         Live -> Script
         """
-        return self._device_component is not None
-
-    def lock_to_device(self, device):
-        """
-        Live -> Script
-        Live tells the script which device to control
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.set_lock_to_device(True, device)
-
-    def unlock_from_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.set_lock_to_device(False, device)
-
-    def restore_bank(self, bank_index):
-        """
-        Live -> Script
-        Live tells the script which bank to use.
-        """
-        raise self._device_component is not None or AssertionError
-        with self.component_guard():
-            self._device_component.restore_bank(bank_index)
-
-    def set_appointed_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        with self.component_guard():
-            self._device_component.set_device(device)
+        return False
 
     def suggest_input_port(self):
         """ Live -> Script: Live can ask for the name of the script's
@@ -246,12 +215,6 @@ class ControlSurface(SlotManager):
             if self._pad_translations is not None:
                 self._c_instance.set_pad_translation(self._pad_translations)
 
-    def toggle_lock(self):
-        """ Script -> Live
-            Use this function to toggle the script's lock on devices
-        """
-        self._c_instance.toggle_lock()
-
     def port_settings_changed(self):
         """ Live -> Script
             Is called when either the user changes the MIDI ports that are assigned
@@ -332,7 +295,7 @@ class ControlSurface(SlotManager):
             recipients allow receiving MIDI in chunks.
             This would lead to an ordered chunk: [r1.m1, r1.m2], [r2.m1, r2.m2], [r3.m1]
         """
-        midi_data_for_recipient = collection.OrderedDict()
+        midi_data_for_recipient = OrderedDict()
         for midi_bytes in midi_chunk:
             self.process_midi_bytes(midi_bytes, partial(self._merge_midi_data, midi_data=midi_data_for_recipient))
 
@@ -368,16 +331,6 @@ class ControlSurface(SlotManager):
 
     def get_registry_entry_for_sysex_midi_message(self, midi_bytes):
         return find_if(lambda (identifier, _): midi_bytes[:len(identifier)] == identifier, self._forwarding_long_identifier_registry.iteritems())
-
-    def set_device_component(self, device_component):
-        if self._device_component is not None:
-            self._device_component.set_lock_callback(None)
-        self._device_component = device_component
-        self._c_instance.update_locks()
-        if device_component is not None:
-            device_component.set_lock_callback(self._toggle_lock)
-            if self._device_component.device_selection_follows_track_selection:
-                self.schedule_message(1, self._device_component.update_device_selection)
 
     @contextmanager
     def suppressing_rebuild_requests(self):
@@ -468,7 +421,7 @@ class ControlSurface(SlotManager):
         if not control != None:
             raise AssertionError
             if not control not in self.controls:
-                raise AssertionError, 'Control registered twice'
+                raise AssertionError('Control registered twice')
                 self.controls.append(control)
                 control.canonical_parent = self
                 isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
@@ -477,7 +430,7 @@ class ControlSurface(SlotManager):
     def _register_component(self, component):
         """ puts component into the list of controls for triggering updates """
         raise component != None or AssertionError
-        raise component not in self._components or AssertionError, 'Component registered twice'
+        raise component not in self._components or AssertionError('Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
 
@@ -488,7 +441,6 @@ class ControlSurface(SlotManager):
                 component.disconnect()
 
         self._components = []
-        self.set_device_component(None)
 
     @contextmanager
     def component_guard(self):
@@ -589,24 +541,24 @@ class ControlSurface(SlotManager):
                 raise AssertionError
                 success = False
                 feedback_rule = None
-                feedback_rule = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.NoteFeedbackRule()
+                feedback_rule = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.NoteFeedbackRule()
                 feedback_rule.note_no = control.message_identifier()
                 feedback_rule.vel_map = feedback_map
-            elif control.message_type() is MIDI_CC_TYPE:
+            elif control.message_type() == MIDI_CC_TYPE:
                 feedback_rule = Live.MidiMap.CCFeedbackRule()
                 feedback_rule.cc_no = control.message_identifier()
                 feedback_rule.cc_value_map = feedback_map
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 feedback_rule = Live.MidiMap.PitchBendFeedbackRule()
                 feedback_rule.value_pair_map = feedback_map
             if not feedback_rule != None:
                 raise AssertionError
                 feedback_rule.channel = control.message_channel()
                 feedback_rule.delay_in_ms = feedback_delay
-                success = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
-            elif control.message_type() is MIDI_CC_TYPE:
+                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.map_midi_note_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), feedback_rule)
+            elif control.message_type() == MIDI_CC_TYPE:
                 success = Live.MidiMap.map_midi_cc_with_feedback_map(midi_map_handle, parameter, control.message_channel(), control.message_identifier(), control.message_map_mode(), feedback_rule, not control.needs_takeover(), control.mapping_sensitivity)
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 success = Live.MidiMap.map_midi_pitchbend_with_feedback_map(midi_map_handle, parameter, control.message_channel(), feedback_rule, not control.needs_takeover())
             success and Live.MidiMap.send_feedback_for_parameter(midi_map_handle, parameter)
         return success
@@ -618,10 +570,10 @@ class ControlSurface(SlotManager):
             if not isinstance(control, InputControlElement):
                 raise AssertionError
                 success = False
-                success = control.message_type() is MIDI_NOTE_TYPE and Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
-            elif control.message_type() is MIDI_CC_TYPE:
+                success = control.message_type() == MIDI_NOTE_TYPE and Live.MidiMap.forward_midi_note(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
+            elif control.message_type() == MIDI_CC_TYPE:
                 success = Live.MidiMap.forward_midi_cc(self._c_instance.handle(), midi_map_handle, control.message_channel(), control.message_identifier())
-            elif control.message_type() is MIDI_PB_TYPE:
+            elif control.message_type() == MIDI_PB_TYPE:
                 success = Live.MidiMap.forward_midi_pitchbend(self._c_instance.handle(), midi_map_handle, control.message_channel())
             else:
                 raise control.message_type() == MIDI_SYSEX_TYPE or AssertionError
@@ -629,7 +581,7 @@ class ControlSurface(SlotManager):
             forwarding_keys = success and control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError, 'Registry key %s registered twice. Check Midi messages!' % str(key)
+                raise key not in registry.keys() or AssertionError('Registry key %s registered twice. Check Midi messages!' % str(key))
                 registry[key] = control
 
         return success
@@ -646,10 +598,6 @@ class ControlSurface(SlotManager):
             self._c_instance.set_note_translation(from_identifier, from_channel, to_identifier, to_channel)
         else:
             raise False or AssertionError
-
-    def _toggle_lock(self):
-        raise self._device_component is not None or AssertionError
-        self._c_instance.toggle_lock()
 
     def _refresh_displays(self):
         """
@@ -688,3 +636,82 @@ class ControlSurface(SlotManager):
             preferences = self._c_instance.preferences(self.preferences_key)
             dump = dumps(self.preferences)
             preferences.set_serializer(lambda : dump)
+
+
+class ControlSurface(SimpleControlSurface):
+    """
+    Central base class for scripts based on the new Framework. New
+    scripts need to subclass this class and add special behavior.
+    
+    This class supports device control, i.e. it supports locking to a device, and
+    appoints devices when the selected track/device changes etc. The appointing behavior
+    can be customized by overriding device_provider_class.
+    """
+    device_provider_class = DeviceProvider
+
+    def __init__(self, *a, **k):
+        super(ControlSurface, self).__init__(*a, **k)
+        self._device_provider = None
+        self._device_bank_registry = None
+        if self.device_provider_class:
+            self._init_device_provider()
+        self._device_support_injector = inject(device_provider=const(self.device_provider), device_bank_registry=const(self._device_bank_registry)).everywhere()
+
+    def _init_device_provider(self):
+        self._device_provider = self.register_disconnectable(self.device_provider_class(song=self.song))
+        self._device_bank_registry = self.register_disconnectable(DeviceBankRegistry())
+        self._c_instance.update_locks()
+        self._device_provider.update_device_selection()
+
+    @property
+    def device_provider(self):
+        return self._device_provider
+
+    def disconnect(self):
+        self._device_provider = None
+        self._device_bank_registry = None
+        super(ControlSurface, self).disconnect()
+
+    def can_lock_to_devices(self):
+        return True
+
+    def lock_to_device(self, device):
+        """
+        Live -> Script
+        Live tells the script which device to control
+        """
+        raise self._device_provider is not None or AssertionError
+        with self.component_guard():
+            self._device_provider.locked_device = device
+
+    def unlock_from_device(self, device):
+        """
+        Live -> Script
+        Live tells the script to unlock from a certain device
+        """
+        raise self._device_provider is not None or AssertionError
+        with self.component_guard():
+            self._device_provider.locked_device = None
+
+    def restore_bank(self, bank_index):
+        """
+        Live -> Script
+        Live tells the script which bank to use.
+        """
+        if not self._device_provider is not None:
+            raise AssertionError
+            device = self._device_provider.device
+            with self._device_provider.is_locked_to_device and liveobj_valid(device) and self.component_guard():
+                self._device_bank_registry.set_device_bank(device, bank_index)
+
+    def toggle_lock(self):
+        """ Script -> Live
+            Use this function to toggle the script's lock on devices
+        """
+        self._c_instance.toggle_lock()
+
+    @contextmanager
+    def _component_guard(self):
+        with super(ControlSurface, self)._component_guard():
+            with self._device_support_injector:
+                yield

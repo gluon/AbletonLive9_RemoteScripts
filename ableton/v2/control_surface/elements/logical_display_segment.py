@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/logical_display_segment.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/logical_display_segment.py
+from __future__ import absolute_import, print_function
 
 class LogicalDisplaySegment(object):
     """
@@ -50,10 +50,10 @@ class LogicalDisplaySegment(object):
             self._update_callback()
 
     def _get_display_string(self):
-        separator = self._data_source != None and self._data_source.separator + self.separator
-        width = self._width - len(separator)
-        if not width >= 0:
-            raise AssertionError
+        if self._data_source != None:
+            separator = self._data_source.separator + self.separator
+            width = self._width - len(separator)
+            raise width >= 0 or AssertionError
             return self._data_source.adjust_string(width) + separator
         else:
             return ' ' * self._width

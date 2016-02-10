@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/BackgroundComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/BackgroundComponent.py
 from _Framework.BackgroundComponent import BackgroundComponent as BackgroundComponentBase
 
 class BackgroundComponent(BackgroundComponentBase):

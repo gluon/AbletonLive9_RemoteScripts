@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/auto_arm_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/auto_arm_component.py
 """
 Component that automatically arms the selected track.
 """
+from __future__ import absolute_import, print_function
 from functools import partial
 from itertools import ifilter
 from ableton.v2.base import mixin, nop, listens, listens_group
@@ -105,14 +106,14 @@ class AutoArmComponent(Component, Messenger):
     def update(self):
         super(AutoArmComponent, self).update()
         song = self.song
-        if self.is_enabled():
-            enabled = not self.needs_restore_auto_arm
-            selected_track = song.view.selected_track
-            for track in song.tracks:
-                if self.track_can_be_armed(track):
-                    track.implicit_arm = enabled and selected_track == track and self.can_auto_arm_track(track)
+        enabled = self.is_enabled() and not self.needs_restore_auto_arm
+        selected_track = song.view.selected_track
+        for track in song.tracks:
+            if self.track_can_be_armed(track):
+                track.implicit_arm = enabled and selected_track == track and self.can_auto_arm_track(track)
 
-            self._auto_arm_restore_behaviour and self._auto_arm_restore_behaviour.update()
+        if self._auto_arm_restore_behaviour:
+            self._auto_arm_restore_behaviour.update()
         self._update_notification()
 
     def restore_auto_arm(self):

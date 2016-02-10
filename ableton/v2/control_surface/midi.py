@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/midi.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/midi.py
+from __future__ import absolute_import, print_function
 from itertools import imap
 NOTE_ON_STATUS = 144
 NOTE_OFF_STATUS = 128
@@ -42,7 +43,9 @@ def is_pitchbend(midi_bytes):
 
 
 def extract_value(midi_bytes):
-    return midi_bytes[1] + (midi_bytes[2] << 7) if is_pitchbend(midi_bytes) else midi_bytes[2]
+    if is_pitchbend(midi_bytes):
+        return midi_bytes[1] + (midi_bytes[2] << 7)
+    return midi_bytes[2]
 
 
 def pretty_print_bytes(midi_bytes):

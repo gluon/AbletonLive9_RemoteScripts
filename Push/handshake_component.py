@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/handshake_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/handshake_component.py
 """
 Component for handling the initialization process of Push.
 """
+from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import NamedTuple, listens, task

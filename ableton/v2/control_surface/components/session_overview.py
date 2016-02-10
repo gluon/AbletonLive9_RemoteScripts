@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/session_overview.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/session_overview.py
+from __future__ import absolute_import, print_function
 from ...base import in_range, listens, liveobj_valid
 from ..component import Component
 
@@ -83,12 +83,12 @@ class SessionOverviewComponent(Component):
                             playing = False
                             for track in xrange(track_offset, track_offset + width):
                                 for scene in xrange(scene_offset, scene_offset + height):
-                                    if track in xrange(len(tracks)):
-                                        if scene in xrange(len(scenes)):
-                                            if not liveobj_valid(slots_registry[scene]):
-                                                slots_registry[scene] = scenes[scene].clip_slots
-                                            slot = slots_registry[scene][track] if len(slots_registry[scene]) > track else None
-                                            value_to_send = liveobj_valid(slot) and slot.has_clip and slot.clip.is_playing and self._playing_value
+                                    if track in xrange(len(tracks)) and scene in xrange(len(scenes)):
+                                        if not liveobj_valid(slots_registry[scene]):
+                                            slots_registry[scene] = scenes[scene].clip_slots
+                                        slot = slots_registry[scene][track] if len(slots_registry[scene]) > track else None
+                                        if liveobj_valid(slot) and slot.has_clip and slot.clip.is_playing:
+                                            value_to_send = self._playing_value
                                             playing = True
                                             break
 

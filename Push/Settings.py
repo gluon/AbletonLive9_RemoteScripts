@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/settings.py
-from ableton.v2.base.collection import OrderedDict
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/settings.py
+from __future__ import absolute_import, print_function
+from collections import OrderedDict
 from pushbase.setting import OnOffSetting, EnumerableSetting
 from .pad_sensitivity import PadParameters
 MIN_OFF_THRESHOLD = 10
@@ -33,7 +34,9 @@ def _create_pad_settings():
 
 
 def _threshold_formatter(value):
-    return str(value) if value != 0 else '0 (Default)'
+    if value != 0:
+        return str(value)
+    return '0 (Default)'
 
 
 def create_settings(preferences = None):

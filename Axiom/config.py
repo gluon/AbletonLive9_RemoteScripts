@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Axiom/config.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom/config.py
 from consts import *
 from _Axiom.consts import PAD_TRANSLATION
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,

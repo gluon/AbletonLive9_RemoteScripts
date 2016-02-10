@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/RemoteSL/MixerController.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/RemoteSL/MixerController.py
 import Live
 from RemoteSLComponent import RemoteSLComponent
 from consts import *
@@ -70,7 +70,7 @@ class MixerController(RemoteSLComponent):
         elif cc_no in ts_ccs:
             self.__handle_transport_ccs(cc_no, cc_value)
         else:
-            raise False or AssertionError, 'unknown FX midi message'
+            raise False or AssertionError('unknown FX midi message')
 
     def build_midi_map(self, script_handle, midi_map_handle):
         needs_takeover = True
@@ -155,7 +155,7 @@ class MixerController(RemoteSLComponent):
                     self.__validate_strip_offset()
                     self.__reassign_strips()
         else:
-            raise False or AssertionError, 'unknown Display midi message'
+            raise False or AssertionError('unknown Display midi message')
 
     def __handle_select_button_ccs(self, cc_no, cc_value):
         if cc_no == MX_SELECT_SLIDER_ROW:
@@ -168,7 +168,7 @@ class MixerController(RemoteSLComponent):
             if cc_value == CC_VAL_BUTTON_PRESSED:
                 self.__set_slider_mode(SLIDER_MODE_SEND)
         else:
-            raise False or AssertionError, 'unknown select row midi message'
+            raise False or AssertionError('unknown select row midi message')
 
     def __handle_transport_ccs(self, cc_no, cc_value):
         if cc_no == TS_REWIND_CC:
@@ -199,7 +199,7 @@ class MixerController(RemoteSLComponent):
             self.__transport_locked = cc_value != CC_VAL_BUTTON_RELEASED
             self.__on_transport_lock_changed()
         else:
-            raise False or AssertionError, 'unknown Transport CC ' + str(cc_no)
+            raise False or AssertionError('unknown Transport CC ' + str(cc_no))
 
     def __on_transport_lock_changed(self):
         for strip in self.__strips:
@@ -331,9 +331,9 @@ class MixerChannelStrip():
         if self.__assigned_track:
             if slider_mode == SLIDER_MODE_VOLUME:
                 return self.__assigned_track.mixer_device.volume
-            elif slider_mode == SLIDER_MODE_PAN:
+            if slider_mode == SLIDER_MODE_PAN:
                 return self.__assigned_track.mixer_device.panning
-            elif slider_mode >= SLIDER_MODE_SEND:
+            if slider_mode >= SLIDER_MODE_SEND:
                 send_index = slider_mode - SLIDER_MODE_SEND
                 if send_index < len(self.__assigned_track.mixer_device.sends):
                     return self.__assigned_track.mixer_device.sends[send_index]
@@ -343,7 +343,7 @@ class MixerChannelStrip():
             return None
 
     def slider_moved(self, cc_value):
-        raise self.__assigned_track == None or self.slider_parameter() == None or AssertionError, 'should only be reached when the slider was not realtime mapped '
+        raise self.__assigned_track == None or self.slider_parameter() == None or AssertionError('should only be reached when the slider was not realtime mapped ')
 
     def take_control_of_second_button(self, take_control):
         if self.__mixer_controller.support_mkII():
@@ -358,12 +358,12 @@ class MixerChannelStrip():
                 self.__assigned_track.mute = not self.__assigned_track.mute
 
     def second_button_pressed(self):
-        if self.__assigned_track in self.song().visible_tracks:
-            if self.__assigned_track.can_be_armed:
-                self.__mixer_controller.track_about_to_arm(self.__assigned_track)
-                self.__assigned_track.arm = not self.__assigned_track.arm
-                if self.__assigned_track.arm:
-                    self.__assigned_track.view.select_instrument() and self.__mixer_controller.set_selected_track(self.__assigned_track)
+        if self.__assigned_track in self.song().visible_tracks and self.__assigned_track.can_be_armed:
+            self.__mixer_controller.track_about_to_arm(self.__assigned_track)
+            self.__assigned_track.arm = not self.__assigned_track.arm
+            if self.__assigned_track.arm:
+                if self.__assigned_track.view.select_instrument():
+                    self.__mixer_controller.set_selected_track(self.__assigned_track)
 
     def _on_mute_changed(self):
         if self.__mixer_controller.support_mkII():

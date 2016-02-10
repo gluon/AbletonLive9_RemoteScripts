@@ -1,4 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/special_mixer_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/special_mixer_component.py
+from __future__ import absolute_import, print_function
+from itertools import izip_longest
 from ableton.v2.base import listens
 from ableton.v2.control_surface import components
 from ableton.v2.control_surface.elements import DisplayDataSource
@@ -45,19 +47,19 @@ class SpecialMixerComponent(components.MixerComponent):
             display.set_data_sources(self._selected_track_data_sources)
 
     def set_track_select_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Option.Selected', 'Option.Unselected')
             strip.set_select_button(button)
 
     def set_solo_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.MuteOff', 'Mixer.MuteOn')
             strip.set_mute_button(button)
@@ -77,7 +79,7 @@ class SpecialMixerComponent(components.MixerComponent):
         self._set_parameter_graphics_display(display, 0)
 
     def set_volume_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_volume_control(control)
 
     def set_pan_send_names_display(self, display):
@@ -111,11 +113,11 @@ class SpecialMixerComponent(components.MixerComponent):
         self._update_pan_sends()
 
     def set_pan_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_pan_control(control)
 
     def set_send_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_send_controls(control)
 
     def _set_parameter_names_display(self, display, parameter):

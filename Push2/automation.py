@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/automation.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/automation.py
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import liveobj_valid, listenable_property
 from pushbase.automation_component import AutomationComponent as AutomationComponentBase
+from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import ParameterInfo
-from .internal_parameter import InternalParameterBase
 
 class StepAutomationParameter(InternalParameterBase):
 
@@ -82,7 +82,7 @@ class AutomationComponent(AutomationComponentBase):
 
     @property
     def parameters(self):
-        return map(lambda info: info.parameter if info else None, self._parameter_infos)
+        return map(lambda info: (info.parameter if info else None), self._parameter_infos)
 
     @property
     def parameter_infos(self):
@@ -122,4 +122,5 @@ class AutomationComponent(AutomationComponentBase):
         self.notify_parameters()
 
     def _parameter_for_index(self, parameters, index):
-        return parameters[index].original_parameter if parameters[index] else None
+        if parameters[index]:
+            return parameters[index].original_parameter

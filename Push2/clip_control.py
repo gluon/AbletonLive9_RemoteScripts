@@ -1,12 +1,13 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/clip_control.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/clip_control.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, liveobj_valid, listenable_property
 from ableton.v2.control_surface import CompoundComponent
-from ableton.v2.control_surface.control import ToggleButtonControl
+from ableton.v2.control_surface.control import EncoderControl, ToggleButtonControl
 from pushbase.clip_control_component import convert_length_to_bars_beats_sixteenths, convert_time_to_bars_beats_sixteenths, LoopSettingsControllerComponent as LoopSettingsControllerComponentBase, AudioClipSettingsControllerComponent as AudioClipSettingsControllerComponentBase, ONE_YEAR_AT_120BPM_IN_BEATS, WARP_MODE_NAMES
+from pushbase.internal_parameter import WrappingParameter
+from pushbase.mapped_control import MappedControl
 from .clip_decoration import ClipDecoratorFactory
 from .decoration import find_decorated_object
-from .internal_parameter import WrappingParameter
-from .mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .simpler_zoom import ZoomHandling
 PARAMETERS_LOOPED = ('Loop position', 'Loop length', 'Start offset')
@@ -21,10 +22,13 @@ class LoopSetting(WrappingParameter):
         super(LoopSetting, self).__init__(*a, **k)
         self._conversion = convert_length_to_bars_beats_sixteenths if use_length_conversion else convert_time_to_bars_beats_sixteenths
         self.recording = False
+        self.set_property_host(self._parent)
 
     @property
     def display_value(self):
-        return unicode(self._conversion(self._get_property_value())) if not self.recording else unicode('...')
+        if not self.recording:
+            return unicode(self._conversion(self._get_property_value()))
+        return unicode('...')
 
 
 class ClipZoomHandling(ZoomHandling):
@@ -49,6 +53,7 @@ class ClipZoomHandling(ZoomHandling):
 class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
     __events__ = ('looping', 'loop_parameters', 'zoom')
     zoom_encoder = MappedControl()
+    zoom_touch_encoder = EncoderControl()
     loop_button = ToggleButtonControl(toggled_color='Clip.Option', untoggled_color='Clip.OptionDisabled')
 
     def __init__(self, zoom_handler = None, *a, **k):
@@ -62,6 +67,11 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
         self._processed_zoom_requests = 0
         self.__on_looping_changed.subject = self._loop_model
         self.__on_looping_changed()
+        self.__on_loop_position_value_changed.subject = self._looping_settings[0]
+        self.__on_loop_length_value_changed.subject = self._looping_settings[1]
+        self.__on_start_offset_value_changed.subject = self._looping_settings[2]
+        self.__on_start_value_changed.subject = self._non_looping_settings[0]
+        self.__on_end_value_changed.subject = self._non_looping_settings[1]
 
     @loop_button.toggled
     def loop_button(self, toggled, button):
@@ -69,22 +79,32 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
     @property
     def looping(self):
-        return self._loop_model.looping if self.clip else False
+        if self.clip:
+            return self._loop_model.looping
+        return False
 
     @property
     def loop_parameters(self):
         if not liveobj_valid(self.clip):
             return []
         parameters = self._looping_settings if self.looping else self._non_looping_settings
-        return [self.zoom] + parameters if self.zoom else parameters
+        if self.zoom:
+            return [self.zoom] + parameters
+        return parameters
 
     @property
     def zoom(self):
-        return getattr(self.clip, 'zoom', None) if liveobj_valid(self.clip) else None
+        if liveobj_valid(self.clip):
+            return getattr(self.clip, 'zoom', None)
 
     @listenable_property
     def processed_zoom_requests(self):
         return self._processed_zoom_requests
+
+    @listenable_property
+    def waveform_navigation(self):
+        if liveobj_valid(self.clip):
+            return getattr(self.clip, 'waveform_navigation', None)
 
     @listens('is_recording')
     def __on_is_recording_changed(self):
@@ -104,11 +124,73 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
             self.loop_button.is_toggled = self._loop_model.looping
 
     def _on_clip_changed(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.reset_focus_and_animation()
         self._update_and_notify()
         self.__on_is_recording_changed.subject = self._loop_model.clip
         self.__on_is_recording_changed()
         self._zoom_handler.set_parameter_host(self._loop_model.clip)
         self._connect_encoder()
+        self.notify_waveform_navigation()
+
+    @listens('value')
+    def __on_loop_position_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_start_focus)
+
+    @listens('value')
+    def __on_loop_length_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
+
+    @listens('value')
+    def __on_start_offset_value_changed(self):
+        if self.waveform_navigation is not None and self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
+
+    @listens('value')
+    def __on_start_value_changed(self):
+        if self.waveform_navigation is not None and not self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.start_marker_focus)
+
+    @listens('value')
+    def __on_end_value_changed(self):
+        if self.waveform_navigation is not None and not self._loop_model.looping:
+            self.waveform_navigation.change_object(self.waveform_navigation.loop_end_focus)
+
+    def _on_clip_start_marker_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.start_marker_focus)
+
+    def _on_clip_position_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.loop_start_focus)
+
+    def _on_clip_end_touched(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.loop_end_focus)
+
+    def _on_clip_start_marker_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.start_marker_focus)
+
+    def _on_clip_position_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.loop_start_focus)
+
+    def _on_clip_end_released(self):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.loop_end_focus)
+
+    @zoom_touch_encoder.touched
+    def zoom_touch_encoder(self, encoder):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.touch_object(self.waveform_navigation.zoom_focus)
+
+    @zoom_touch_encoder.released
+    def zoom_touch_encoder(self, encoder):
+        if self.waveform_navigation is not None:
+            self.waveform_navigation.release_object(self.waveform_navigation.zoom_focus)
 
     def _update_and_notify(self):
         self._update_loop_button()
@@ -121,6 +203,7 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
     def set_zoom_encoder(self, encoder):
         self.zoom_encoder.set_control_element(encoder)
+        self.zoom_touch_encoder.set_control_element(encoder)
         self._connect_encoder()
 
     def request_zoom(self, zoom_factor):
@@ -131,9 +214,13 @@ class LoopSettingsControllerComponent(LoopSettingsControllerComponentBase):
 
 class GainSetting(WrappingParameter):
 
+    def __init__(self, *a, **k):
+        super(GainSetting, self).__init__(*a, **k)
+        self.set_property_host(self._parent)
+
     @property
     def display_value(self):
-        return unicode(self._parent.clip.gain_display_string if self._parent.clip else '')
+        return unicode(self._property_host.clip.gain_display_string if self._property_host.clip else '')
 
 
 class PitchSetting(WrappingParameter):
@@ -143,6 +230,7 @@ class PitchSetting(WrappingParameter):
         self._min = min_value
         self._max = max_value
         self._unit = unit
+        self.set_property_host(self._parent)
 
     @property
     def min(self):
@@ -161,9 +249,13 @@ class PitchSetting(WrappingParameter):
 
 class WarpSetting(WrappingParameter):
 
+    def __init__(self, *a, **k):
+        super(WarpSetting, self).__init__(*a, **k)
+        self.set_property_host(self._parent)
+
     @property
     def max(self):
-        return len(self._parent.available_warp_modes) - 1
+        return len(self._property_host.available_warp_modes) - 1
 
     @property
     def is_quantized(self):
@@ -171,10 +263,10 @@ class WarpSetting(WrappingParameter):
 
     @property
     def value_items(self):
-        return map(lambda x: unicode(WARP_MODE_NAMES[x]), self._parent.available_warp_modes)
+        return map(lambda x: unicode(WARP_MODE_NAMES[x]), self._property_host.available_warp_modes)
 
     def _get_property_value(self):
-        return self._parent.available_warp_modes.index(getattr(self._parent, self._source_property))
+        return self._property_host.available_warp_modes.index(getattr(self._property_host, self._source_property))
 
 
 class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentBase, CompoundComponent):
@@ -203,15 +295,21 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
 
     @property
     def audio_parameters(self):
-        return self._audio_clip_parameters if liveobj_valid(self.clip) else []
+        if liveobj_valid(self.clip):
+            return self._audio_clip_parameters
+        return []
 
     @property
     def warping(self):
-        return self._audio_clip_model.warping if liveobj_valid(self.clip) else False
+        if liveobj_valid(self.clip):
+            return self._audio_clip_model.warping
+        return False
 
     @property
     def gain(self):
-        return self._audio_clip_model.gain if liveobj_valid(self.clip) else 0.0
+        if liveobj_valid(self.clip):
+            return self._audio_clip_model.gain
+        return 0.0
 
     @property
     def waveform_real_time_channel_id(self):
@@ -224,6 +322,7 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
     def _on_clip_changed(self):
         self._playhead_real_time_data.set_data(self.clip)
         self._waveform_real_time_data.set_data(self.clip)
+        self.__on_file_path_changed.subject = self.clip
         self.notify_audio_parameters()
         self.notify_warping()
         self.notify_gain()
@@ -241,6 +340,10 @@ class AudioClipSettingsControllerComponent(AudioClipSettingsControllerComponentB
     @listens('gain')
     def __on_gain_changed(self):
         self.notify_gain()
+
+    @listens('file_path')
+    def __on_file_path_changed(self):
+        self._waveform_real_time_data.invalidate()
 
 
 class ClipControlComponent(CompoundComponent):

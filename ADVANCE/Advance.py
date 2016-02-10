@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ADVANCE/Advance.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ADVANCE/Advance.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

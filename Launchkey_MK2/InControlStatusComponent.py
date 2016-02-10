@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchkey_MK2/InControlStatusComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchkey_MK2/InControlStatusComponent.py
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 

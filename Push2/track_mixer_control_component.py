@@ -1,8 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/track_mixer_control_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/track_mixer_control_component.py
+from __future__ import absolute_import, print_function
+from itertools import izip_longest
 from ableton.v2.base import clamp, depends, listens, liveobj_valid
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl
-from .mapped_control import MappedControl
+from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
 MAX_RETURN_TRACKS = 6
@@ -49,7 +51,7 @@ class TrackMixerControlComponent(CompoundComponent):
 
     def _update_controls(self):
         if self.is_enabled():
-            for control, parameter in map(None, self.controls, self.parameters[self.scroll_offset:]):
+            for control, parameter in izip_longest(self.controls, self.parameters[self.scroll_offset:]):
                 if control:
                     control.mapped_parameter = parameter
 
@@ -70,7 +72,9 @@ class TrackMixerControlComponent(CompoundComponent):
 
     def _number_sends(self):
         mixable = self._tracks_provider.selected_item
-        return len(mixable.mixer_device.sends) if mixable != self.song.master_track else 0
+        if mixable != self.song.master_track:
+            return len(mixable.mixer_device.sends)
+        return 0
 
     def _update_scroll_offset(self):
         new_number_return_tracks = self._number_sends()

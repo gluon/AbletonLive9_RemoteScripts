@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/session_recording_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/session_recording_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import listens
 from ableton.v2.control_surface.control import ButtonControl
@@ -13,16 +14,42 @@ def track_can_overdub(track):
 
 class FixedLengthSessionRecordingComponent(SessionRecordingComponent, Messenger):
     foot_switch_button = ButtonControl()
+    arrangement_record_button = ButtonControl()
 
     def __init__(self, fixed_length_setting = None, *a, **k):
         raise fixed_length_setting is not None or AssertionError
         super(FixedLengthSessionRecordingComponent, self).__init__(*a, **k)
         self._fixed_length_setting = fixed_length_setting
         self.__on_setting_selected_index_changes.subject = self._fixed_length_setting
+        self.__on_record_mode_changed.subject = self.song
+        self.__on_record_mode_changed()
 
     @foot_switch_button.pressed
     def foot_switch_button(self, button):
         self._trigger_recording()
+
+    @arrangement_record_button.pressed
+    def arrangement_record_button(self, button):
+        self.song.record_mode = not self.song.record_mode
+
+    def _trigger_recording(self):
+        if self.is_enabled():
+            if self.song.record_mode:
+                self.song.record_mode = False
+            else:
+                super(FixedLengthSessionRecordingComponent, self)._trigger_recording()
+
+    def _update_record_button(self):
+        if self.is_enabled():
+            if self.song.record_mode:
+                self._record_button.color = 'Recording.ArrangementRecordingOn'
+            else:
+                super(FixedLengthSessionRecordingComponent, self)._update_record_button()
+            self.arrangement_record_button.color = self._record_button.color
+
+    @listens('record_mode')
+    def __on_record_mode_changed(self):
+        self._update_record_button()
 
     def _start_recording(self):
         song = self.song

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/MackieControl_Classic/Transport.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MackieControl_Classic/Transport.py
 from MackieControlComponent import *
 
 class Transport(MackieControlComponent):
@@ -92,36 +92,36 @@ class Transport(MackieControlComponent):
                 base_acceleration = self.song().signature_numerator
             if self.song().is_playing:
                 base_acceleration *= 4
-            if self.__forward_button_down:
-                if not self.____rewind_button_down:
-                    if self.__forward_button_down:
-                        self.____fast_forward_counter += 1
-                        self.__fast___rewind_counter -= 4
-                        if not self.alt_is_pressed():
-                            self.__fast_forward(base_acceleration + max(1, self.____fast_forward_counter / 4))
-                        else:
-                            self.__fast_forward(base_acceleration)
-                    if self.____rewind_button_down:
-                        self.__fast___rewind_counter += 1
-                        self.____fast_forward_counter -= 4
-                        if not self.alt_is_pressed():
-                            self.__rewind(base_acceleration + max(1, self.__fast___rewind_counter / 4))
-                        else:
-                            self.__rewind(base_acceleration)
-            else:
-                self.__transport_repeat_delay += 1
-            if self.__cursor_repeat_delay > 2:
-                if self.__cursor_left_is_down:
-                    self.__on_cursor_left_pressed()
-                if self.__cursor_right_is_down:
-                    self.__on_cursor_right_pressed()
-                if self.__cursor_up_is_down:
-                    self.__on_cursor_up_pressed()
-                if self.__cursor_down_is_down:
-                    self.__on_cursor_down_pressed()
-            else:
-                self.__cursor_repeat_delay += 1
-            self.session_is_visible() and self.__update_zoom_led_in_session()
+            if not (self.__forward_button_down and self.____rewind_button_down):
+                if self.__forward_button_down:
+                    self.____fast_forward_counter += 1
+                    self.__fast___rewind_counter -= 4
+                    if not self.alt_is_pressed():
+                        self.__fast_forward(base_acceleration + max(1, self.____fast_forward_counter / 4))
+                    else:
+                        self.__fast_forward(base_acceleration)
+                if self.____rewind_button_down:
+                    self.__fast___rewind_counter += 1
+                    self.____fast_forward_counter -= 4
+                    if not self.alt_is_pressed():
+                        self.__rewind(base_acceleration + max(1, self.__fast___rewind_counter / 4))
+                    else:
+                        self.__rewind(base_acceleration)
+        else:
+            self.__transport_repeat_delay += 1
+        if self.__cursor_repeat_delay > 2:
+            if self.__cursor_left_is_down:
+                self.__on_cursor_left_pressed()
+            if self.__cursor_right_is_down:
+                self.__on_cursor_right_pressed()
+            if self.__cursor_up_is_down:
+                self.__on_cursor_up_pressed()
+            if self.__cursor_down_is_down:
+                self.__on_cursor_down_pressed()
+        else:
+            self.__cursor_repeat_delay += 1
+        if self.session_is_visible():
+            self.__update_zoom_led_in_session()
 
     def handle_marker_switch_ids(self, switch_id, value):
         if switch_id == SID_MARKER_FROM_PREV:

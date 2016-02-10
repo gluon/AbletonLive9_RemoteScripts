@@ -1,13 +1,13 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/mixer_control_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mixer_control_component.py
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
-from itertools import izip
+from itertools import izip, izip_longest
 from math import ceil
 from ableton.v2.base import clamp, depends, listens, liveobj_valid, NamedTuple
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent
-from .mapped_control import MappedControl
+from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
 MIXER_SECTIONS = ('Volumes', 'Pans')
@@ -69,7 +69,7 @@ class MixerControlComponent(ModesComponent):
         self._add_mode('panning', view_model.panControlListView, lambda mixer: mixer.panning)
 
         def add_send_mode(index):
-            self._add_mode(SEND_MODE_NAMES[index], view_model.sendControlListView, lambda mixer: mixer.sends[self._send_offset + index] if len(mixer.sends) > self._send_offset + index else None)
+            self._add_mode(SEND_MODE_NAMES[index], view_model.sendControlListView, lambda mixer: (mixer.sends[self._send_offset + index] if len(mixer.sends) > self._send_offset + index else None))
 
         for i in xrange(SEND_LIST_LENGTH):
             add_send_mode(i)
@@ -170,7 +170,7 @@ class MixerControlComponent(ModesComponent):
         parameters = self._get_parameter_for_tracks(parameter_getter)
         control_view.parameters = parameters
         self._update_realtime_ids()
-        for control, parameter in map(None, self.controls, parameters):
+        for control, parameter in izip_longest(self.controls, parameters):
             control.mapped_parameter = parameter
 
     def _update_realtime_ids(self):
@@ -181,7 +181,7 @@ class MixerControlComponent(ModesComponent):
     def _get_parameter_for_tracks(self, parameter_getter):
         tracks = self._track_provider.items
         self.controls.control_count = len(tracks)
-        return map(lambda t: parameter_getter(t.mixer_device) if t else None, tracks)
+        return map(lambda t: (parameter_getter(t.mixer_device) if t else None), tracks)
 
     def mode_can_be_used(self, mode):
         return mode not in SEND_MODE_NAMES or SEND_MODE_NAMES.index(mode) + self._send_offset < self.number_sends

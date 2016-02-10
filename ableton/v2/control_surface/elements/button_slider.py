@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/button_slider.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/button_slider.py
+from __future__ import absolute_import, print_function
 from ...base import SlotManager
 from ..input_control_element import InputControlElement, MIDI_INVALID_TYPE
 from .button import ButtonElement

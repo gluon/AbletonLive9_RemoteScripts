@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/colors.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/colors.py
 """
 Module for the color interfaces defining all posible ways of turning
 on buttons on Push.
 """
+from __future__ import absolute_import, print_function
 from itertools import izip, repeat
 from ableton.v2.control_surface.elements import Color, to_midi_value
 

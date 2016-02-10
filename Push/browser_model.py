@@ -1,10 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/browser_model.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/browser_model.py
+from __future__ import absolute_import, print_function
 import os
 from functools import partial
-from itertools import imap
+from itertools import imap, chain
 import Live
-from ableton.v2.base import chain_from_iterable, first, nop, find_if, index_if, in_range, lazy_attribute, BooleanContext, SlotManager, Subject
+from ableton.v2.base import first, nop, find_if, index_if, in_range, lazy_attribute, BooleanContext, SlotManager, Subject
 from pushbase.scrollable_list import ActionList, ActionListItem
 from pushbase.browser_util import filter_type_for_hotswap_target
 
@@ -46,7 +46,9 @@ class BrowserListItem(ActionListItem):
     """
 
     def __str__(self):
-        return os.path.splitext(self.content.name)[0] if self.content else ''
+        if self.content:
+            return os.path.splitext(self.content.name)[0]
+        return ''
 
     def action(self):
         if self.container and self.container.browser:
@@ -266,10 +268,10 @@ class FullBrowserModel(BrowserModel):
         with self._inside_item_activated_notification():
             contents, _ = self._contents[level]
             selected = contents.selected_item
-            if selected != None:
-                is_folder = selected.content.is_folder
-                children = self.get_children(selected.content, level) if selected != None else []
-                (children or is_folder or level < 1) and self._fit_content_lists(level + 2)
+            is_folder = selected != None and selected.content.is_folder
+            children = self.get_children(selected.content, level) if selected != None else []
+            if children or is_folder or level < 1:
+                self._fit_content_lists(level + 2)
                 child_contents, _ = self._contents[level + 1]
                 child_contents.assign_items(children)
             else:
@@ -295,7 +297,7 @@ class QueryingBrowserModel(FullBrowserModel):
 
     def get_root_children(self):
         browser = self.browser
-        return chain_from_iterable(imap(lambda q: q(browser), self.queries))
+        return chain.from_iterable(imap(lambda q: q(browser), self.queries))
 
     def can_be_exchanged(self, model):
         return isinstance(model, QueryingBrowserModel) and super(QueryingBrowserModel, self).can_be_exchanged(model)

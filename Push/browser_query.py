@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/browser_query.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/browser_query.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.base import first, find_if, const
 from .browser_model import VirtualBrowserItem
@@ -41,7 +42,9 @@ class PathBrowserQuery(BrowserQuery):
         name = path[0]
         elem = find_if(lambda x: x.name == name, items)
         if elem:
-            return [elem] if len(path) == 1 else self._find_item(path[1:], elem.children)
+            if len(path) == 1:
+                return [elem]
+            return self._find_item(path[1:], elem.children)
 
 
 class TagBrowserQuery(BrowserQuery):

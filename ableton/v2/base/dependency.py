@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/base/dependency.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/base/dependency.py
 """
 Dependency injection framework.
 
@@ -9,7 +9,7 @@ Dependencies are identified by keys, that are valid Python
 identifiers.  Dependencies are provided via accessor functions, that
 in general will be called whenever they are needed.
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 from functools import wraps
 from .util import union
 __all__ = ('inject', 'depends', 'dependency')
@@ -48,8 +48,7 @@ def get_dependency_for(name, default = None):
     accessor = _global_injection_registry.get(name, default)
     if accessor is not None:
         return accessor()
-    else:
-        raise DependencyError('Required dependency %s not provided' % name)
+    raise DependencyError('Required dependency %s not provided' % name)
 
 
 class dependency(object):

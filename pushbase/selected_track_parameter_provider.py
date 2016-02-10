@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/selected_track_parameter_provider.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/selected_track_parameter_provider.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, listens, SlotManager
 from .special_chan_strip_component import TRACK_PARAMETER_NAMES
 from .parameter_provider import ParameterProvider, generate_info

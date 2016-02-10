@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/skin_default.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/skin_default.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ableton.v2.control_surface import Skin
 from ableton.v2.control_surface.elements import SelectedTrackColorFactory, SelectedClipColorFactory
@@ -113,6 +114,8 @@ class Colors(ColorsBase):
         MuteOff = Rgb.YELLOW
         SoloOn = TRACK_SOLOED_COLOR
         SoloOff = Rgb.DEEP_OCEAN
+        LockedMuteMode = Pulse(Rgb.BLACK, Rgb.YELLOW, 48)
+        LockedSoloMode = Pulse(Rgb.BLACK, TRACK_SOLOED_COLOR, 48)
 
     class MixerControlView:
         SectionSelected = Rgb.WHITE
@@ -135,6 +138,8 @@ class Colors(ColorsBase):
         OptionDisabled = Rgb.DARK_GREY
 
     class Scales:
+        Navigation = FallbackColor(Rgb.WHITE, Basic.ON)
+        NavigationDisabled = FallbackColor(Rgb.DARK_GREY, Basic.OFF)
         OptionOn = Rgb.WHITE
         OptionOff = Rgb.DARK_GREY
         NoOption = Rgb.BLACK
@@ -152,6 +157,7 @@ class Colors(ColorsBase):
         On = RECORDING_COLOR
         Off = Rgb.WHITE
         Transition = Blink(RECORDING_COLOR, Rgb.BLACK, 48)
+        ArrangementRecordingOn = Pulse(RECORDING_COLOR, Rgb.BLACK, 48)
         FixedLengthRecordingOn = Rgb.WHITE
         FixedLengthRecordingOff = Rgb.DARK_GREY
 
@@ -177,6 +183,7 @@ class Colors(ColorsBase):
     class StopClips:
         SoloedTrack = Pulse(Rgb.BLACK, TRACK_SOLOED_COLOR, 48)
         MutedTrack = Pulse(Rgb.BLACK, Rgb.DARK_GREY, 48)
+        LockedStopMode = Pulse(Rgb.BLACK, Rgb.RED, 48)
 
     class Zooming:
         Selected = Rgb.WHITE

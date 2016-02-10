@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/colors.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/colors.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base.util import in_range
 from pushbase.colors import Blink, FallbackColor, Pulse, PushColor
 WHITE_MIDI_VALUE = 122
@@ -40,7 +41,9 @@ class IndexedColor(PushColor):
 
 def translate_color_index(index):
     try:
-        return COLOR_INDEX_TO_PUSH_INDEX[index] if index > -1 else TRANSLATED_WHITE_INDEX
+        if index > -1:
+            return COLOR_INDEX_TO_PUSH_INDEX[index]
+        return TRANSLATED_WHITE_INDEX
     except:
         return TRANSLATED_WHITE_INDEX
 

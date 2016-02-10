@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_UserScript/__init__.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_UserScript/__init__.py
+from ConfigParser import ConfigParser
 from _Generic.GenericScript import GenericScript
 import Live
-from _Tools.ConfigParser import ConfigParser
 HIDE_SCRIPT = True
 
 def interpret_map_mode(map_mode_name):

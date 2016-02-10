@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/track_frozen_mode.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/track_frozen_mode.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens
 from ableton.v2.control_surface.mode import ModesComponent
 

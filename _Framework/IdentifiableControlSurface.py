@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/IdentifiableControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/IdentifiableControlSurface.py
 from __future__ import absolute_import
 from .ControlSurface import ControlSurface
 from . import Task

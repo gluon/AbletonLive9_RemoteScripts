@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/firmware_handling.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/firmware_handling.py
+from __future__ import absolute_import, print_function
 from os import path
 VERSION_PREFIX = '10F4000041444139204E69636F6C6C73'
 NUM_VERSION_BYTES = 8

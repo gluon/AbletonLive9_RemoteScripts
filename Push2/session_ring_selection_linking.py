@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/session_ring_selection_linking.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/session_ring_selection_linking.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base.slot import SlotManager, listens
 from ableton.v2.base.dependency import depends
 from ableton.v2.base.util import index_if

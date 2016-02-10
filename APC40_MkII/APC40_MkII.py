@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC40_MkII/APC40_MkII.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC40_MkII/APC40_MkII.py
 from __future__ import with_statement
 from functools import partial
 from _Framework.ButtonMatrixElement import ButtonMatrixElement

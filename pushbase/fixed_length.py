@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/fixed_length.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/fixed_length.py
+from __future__ import absolute_import, print_function
 from functools import partial
 import Live
 from ableton.v2.base import Subject, listens, listenable_property, task

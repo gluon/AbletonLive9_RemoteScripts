@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/touch_strip_element.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/touch_strip_element.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import SlotManager, in_range, nop, NamedTuple, clamp
 from ableton.v2.control_surface import InputControlElement, MIDI_PB_TYPE
@@ -119,7 +120,8 @@ class TouchStripElement(InputControlElement, SlotManager):
         return self._touch_button
 
     def _get_mode(self):
-        return self._behaviour.mode if self._behaviour != None else None
+        if self._behaviour != None:
+            return self._behaviour.mode
 
     def set_mode(self, mode):
         if not in_range(mode, 0, TouchStripModes.COUNT):
@@ -129,9 +131,9 @@ class TouchStripElement(InputControlElement, SlotManager):
     mode = property(_get_mode, set_mode)
 
     def _set_behaviour(self, behaviour):
-        if not behaviour:
-            behaviour = DEFAULT_BEHAVIOUR
-            self._behaviour = behaviour != self._behaviour and behaviour
+        behaviour = behaviour or DEFAULT_BEHAVIOUR
+        if behaviour != self._behaviour:
+            self._behaviour = behaviour
             self._touch_slot.listener = behaviour.handle_touch
             self._mode_element.send_value(behaviour.mode)
 

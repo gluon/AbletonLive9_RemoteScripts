@@ -1,89 +1,198 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/device.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/device.py
+from __future__ import absolute_import, print_function
 import Live
 from _Generic.Devices import best_of_parameter_bank, device_parameters_to_map, number_of_parameter_banks, parameter_bank_names, parameter_banks
-from ...base import listens, listens_group, liveobj_changed, liveobj_valid, Subject
+from ...base import depends, listenable_property, listens, listens_group, liveobj_changed, liveobj_valid, SlotManager, Subject
 from ..component import Component
-from ..device_bank_registry import DeviceBankRegistry
-from ..elements import ButtonElement, DisplayDataSource
+from ..elements import DisplayDataSource
 
-class DeviceComponent(Component, Subject):
-    """ Class representing a device in Live """
-    __events__ = ('device',)
+def device_to_appoint(device):
+    appointed_device = device
+    if liveobj_valid(device) and device.can_have_drum_pads and not device.has_macro_mappings and len(device.chains) > 0 and liveobj_valid(device.view.selected_chain) and len(device.view.selected_chain.devices) > 0:
+        appointed_device = device_to_appoint(device.view.selected_chain.devices[0])
+    return appointed_device
 
-    def __init__(self, device_bank_registry = None, *a, **k):
-        super(DeviceComponent, self).__init__(*a, **k)
-        self._device_bank_registry = device_bank_registry or DeviceBankRegistry()
+
+def select_and_appoint_device(song, device_to_select, ignore_unmapped_macros = True):
+    """
+    Convenience function for selecting a device for a control surface to control.
+    
+    This takes care of selecting the device and appointing it for remote control, which
+    is important, because these are two concepts, that are not exactly the same.
+    
+    The device component always controls the appointed device. It's possible to select
+    another device, but not appoint it for control. The behaviour in this function
+    appoints a drum rack's selected chain's first device if none of the macros are mapped
+    for the drum rack. Though, it's still possible to select the drum rack, we just do
+    not display its controls in this scenario.
+    """
+    appointed_device = device_to_select
+    if ignore_unmapped_macros:
+        appointed_device = device_to_appoint(device_to_select)
+    song.view.select_device(device_to_select, False)
+    song.appointed_device = appointed_device
+
+
+class DeviceProvider(Subject, SlotManager):
+    """
+    Provide "controlled device" to device component
+    
+    This class abstracts the logic required to provide a controlled device to be used
+    by the device component. In most cases, this is the same as the appointed device, but
+    not always, e.g. when a surface is locked to a device (there is only one global
+    appointed device per Song).
+    
+    This class also takes care of appointing the right device when switching between
+    tracks etc.
+    """
+    device_selection_follows_track_selection = True
+
+    def __init__(self, song = None, *a, **k):
+        super(DeviceProvider, self).__init__(*a, **k)
         self._device = None
+        self._locked_to_device = False
+        self.song = song
+        self.__on_appointed_device_changed.subject = song
+        self.__on_selected_track_changed.subject = song.view
+        self.__on_selected_device_changed.subject = song.view.selected_track.view
+
+    @listenable_property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, device):
+        if liveobj_changed(self._device, device) and not self.is_locked_to_device:
+            self._device = device
+            self.notify_device()
+
+    @listenable_property
+    def is_locked_to_device(self):
+        """
+        Indicates whether the provider is currently locked to a device.
+        """
+        return self._locked_to_device
+
+    def lock_to_device(self, device):
+        self.device = device
+        self._locked_to_device = True
+        self.notify_is_locked_to_device()
+
+    def unlock_from_device(self):
+        self._locked_to_device = False
+        self.notify_is_locked_to_device()
+
+    def update_device_selection(self):
+        view = self.song.view
+        track_or_chain = view.selected_chain if view.selected_chain else view.selected_track
+        device_to_select = None
+        if isinstance(track_or_chain, Live.Track.Track):
+            device_to_select = track_or_chain.view.selected_device
+        if device_to_select == None and len(track_or_chain.devices) > 0:
+            device_to_select = track_or_chain.devices[0]
+        if liveobj_valid(device_to_select):
+            appointed_device = device_to_appoint(device_to_select)
+            self.song.view.select_device(device_to_select, False)
+            self.song.appointed_device = appointed_device
+            self.device = appointed_device
+        else:
+            self.song.appointed_device = None
+            self.device = None
+
+    @listens('appointed_device')
+    def __on_appointed_device_changed(self):
+        self.device = device_to_appoint(self.song.appointed_device)
+
+    @listens('has_macro_mappings')
+    def __on_has_macro_mappings_changed(self):
+        self.song.appointed_device = device_to_appoint(self.song.view.selected_track.view.selected_device)
+
+    @listens('selected_track')
+    def __on_selected_track_changed(self):
+        self.__on_selected_device_changed.subject = self.song.view.selected_track.view
+        if self.device_selection_follows_track_selection:
+            self.update_device_selection()
+
+    @listens('selected_device')
+    def __on_selected_device_changed(self):
+        self._update_appointed_device()
+
+    @listens('chains')
+    def __on_chains_changed(self):
+        self._update_appointed_device()
+
+    def _update_appointed_device(self):
+        song = self.song
+        device = song.view.selected_track.view.selected_device
+        if liveobj_valid(device):
+            self.song.appointed_device = device_to_appoint(device)
+        rack_device = device if isinstance(device, Live.RackDevice.RackDevice) else None
+        self.__on_has_macro_mappings_changed.subject = rack_device
+        self.__on_chains_changed.subject = rack_device
+
+
+class DeviceComponent(Component):
+    """ Class representing a device in Live """
+
+    @depends(device_bank_registry=None)
+    @depends(device_provider=None)
+    def __init__(self, device_provider = None, device_bank_registry = None, *a, **k):
+        raise device_bank_registry is not None or AssertionError
+        super(DeviceComponent, self).__init__(*a, **k)
+        self._device_bank_registry = device_bank_registry
+        self._device_provider = device_provider
         self._parameter_controls = None
         self._bank_up_button = None
         self._bank_down_button = None
         self._bank_buttons = None
         self._on_off_button = None
-        self._lock_button = None
-        self._lock_callback = None
         self._device_name_data_source = None
         self._bank_index = 0
         self._bank_name = '<No Bank>'
-        self._locked_to_device = False
-
-        def make_property_slot(name, alias = None):
-            alias = alias or name
-            return self.register_slot(None, getattr(self, '_on_%s_changed' % alias), name)
-
-        self._on_off_property_slot = make_property_slot('value', alias='device_on_off')
-        self._name_property_slot = make_property_slot('name', alias='device_name')
-        self._parameters_property_slot = make_property_slot('parameters')
-        self._device_bank_property_slot = make_property_slot('device_bank')
 
         def make_button_slot(name):
             return self.register_slot(None, getattr(self, '_%s_value' % name), 'value')
 
         self._bank_up_button_slot = make_button_slot('bank_up')
         self._bank_down_button_slot = make_button_slot('bank_down')
-        self._lock_button_slot = make_button_slot('lock')
         self._on_off_button_slot = make_button_slot('on_off')
-        self._device_bank_property_slot.subject = self._device_bank_registry
-        self._device_selection_follows_track_selection = False
-        self.__on_selected_track_changed.subject = self.song.view
+        self.__on_device_bank_changed.subject = self._device_bank_registry
+        self.__on_provided_device_changed.subject = self._device_provider
+        self.__on_provided_device_changed()
 
     def disconnect(self):
         self._device_bank_registry = None
-        self._lock_callback = None
         self._release_parameters(self._parameter_controls)
         self._parameter_controls = None
         self._bank_up_button = None
         self._bank_down_button = None
         self._bank_buttons = None
         self._on_off_button = None
-        self._lock_button = None
-        self._device = None
+        self._device_provider = None
         super(DeviceComponent, self).disconnect()
+
+    def _get_device(self):
+        return self._device_provider.device
 
     def on_enabled_changed(self):
         self.update()
 
-    def device(self):
-        return self._device
+    @listens('device')
+    def __on_provided_device_changed(self):
+        self._on_device_changed(self._get_device())
 
-    def set_device(self, device):
-        if self._device_changed(device):
-            if liveobj_valid(device):
-                self._release_parameters(self._parameter_controls)
-            self._device = device
-            self._name_property_slot.subject = device
-            self._parameters_property_slot.subject = device
-            self._on_off_property_slot.subject = self._on_off_parameter()
-            if liveobj_valid(self._device):
-                self._bank_index = 0
-            self._bank_index = self._device_bank_registry.get_device_bank(self._device)
-            self._bank_name = '<No Bank>'
-            self._on_device_name_changed()
-            self.update()
-            self.notify_device()
-
-    def _device_changed(self, device):
-        return not self._locked_to_device and liveobj_changed(self._device, device)
+    def _on_device_changed(self, device):
+        if liveobj_valid(device):
+            self._release_parameters(self._parameter_controls)
+        self.__on_device_name_changed.subject = device
+        self.__on_parameters_changed.subject = device
+        self.__on_device_on_off_changed.subject = self._on_off_parameter()
+        if liveobj_valid(device):
+            self._bank_index = 0
+        self._bank_index = self._device_bank_registry.get_device_bank(device)
+        self._bank_name = '<No Bank>'
+        self.__on_device_name_changed()
+        self.update()
 
     def set_bank_prev_button(self, button):
         if button != self._bank_down_button:
@@ -111,51 +220,30 @@ class DeviceComponent(Component, Subject):
         self._parameter_controls = controls
         self.update()
 
-    def set_lock_to_device(self, lock, device):
-        if lock:
-            self.set_device(device)
-        self._locked_to_device = lock
-        self._update_lock_button()
-
-    def set_lock_button(self, button):
-        raise button == None or isinstance(button, ButtonElement) or AssertionError
-        self._lock_button = button
-        self._lock_button_slot.subject = button
-        self._update_lock_button()
-
     def set_on_off_button(self, button):
         self._on_off_button = button
         self._on_off_button_slot.subject = button
         self._update_on_off_button()
 
-    def set_lock_callback(self, callback):
-        self._lock_callback = callback
-
-    def restore_bank(self, bank_index):
-        if liveobj_valid(self._device) and self._is_banking_enabled() and self._locked_to_device and self._number_of_parameter_banks() > bank_index and self._bank_index != bank_index:
-            self._bank_index = bank_index
-            self.update()
-
     def device_name_data_source(self):
         if self._device_name_data_source == None:
             self._device_name_data_source = DisplayDataSource()
-            self._on_device_name_changed()
+            self.__on_device_name_changed()
         return self._device_name_data_source
 
     def update(self):
         super(DeviceComponent, self).update()
-        if self.is_enabled() and liveobj_valid(self._device):
-            self._device_bank_registry.set_device_bank(self._device, self._bank_index)
+        if self.is_enabled() and liveobj_valid(self._get_device()):
+            self._device_bank_registry.set_device_bank(self._get_device(), self._bank_index)
             if self._parameter_controls != None:
                 old_bank_name = self._bank_name
                 self._assign_parameters()
                 if self._bank_name != old_bank_name:
-                    self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    self._show_msg_callback(self._get_device().name + ' Bank: ' + self._bank_name)
         elif self._parameter_controls != None:
             self._release_parameters(self._parameter_controls)
         if self.is_enabled():
             self._update_on_off_button()
-            self._update_lock_button()
             self._update_device_bank_buttons()
             self._update_device_bank_nav_buttons()
 
@@ -165,7 +253,7 @@ class DeviceComponent(Component, Subject):
         raise isinstance(value, int) or AssertionError
         if self.is_enabled():
             if not self._bank_up_button.is_momentary() or value is not 0:
-                if liveobj_valid(self._device):
+                if liveobj_valid(self._get_device()):
                     num_banks = self._number_of_parameter_banks()
                     if self._bank_down_button == None:
                         self._bank_name = ''
@@ -183,17 +271,9 @@ class DeviceComponent(Component, Subject):
             if not isinstance(value, int):
                 raise AssertionError
                 if self.is_enabled():
-                    self._bank_name = (not self._bank_down_button.is_momentary() or value is not 0) and liveobj_valid(self._device) and (self._bank_index == None or self._bank_index > 0) and ''
+                    self._bank_name = (not self._bank_down_button.is_momentary() or value is not 0) and liveobj_valid(self._get_device()) and (self._bank_index == None or self._bank_index > 0) and ''
                     self._bank_index = self._bank_index - 1 if self._bank_index != None else max(0, self._number_of_parameter_banks() - 1)
                     self.update()
-
-    def _lock_value(self, value):
-        if not self._lock_button != None:
-            raise AssertionError
-            raise self._lock_callback != None or AssertionError
-            raise value != None or AssertionError
-            raise isinstance(value, int) or AssertionError
-            (not self._lock_button.is_momentary() or value is not 0) and self._lock_callback()
 
     def _on_off_value(self, value):
         if not self._on_off_button != None:
@@ -208,7 +288,7 @@ class DeviceComponent(Component, Subject):
         self._bank_value(value, button)
 
     def _bank_value(self, value, button):
-        if self.is_enabled() and liveobj_valid(self._device):
+        if self.is_enabled() and liveobj_valid(self._get_device()):
             if not button.is_momentary() or value is not 0:
                 bank = list(self._bank_buttons).index(button)
                 if bank != self._bank_index:
@@ -217,7 +297,7 @@ class DeviceComponent(Component, Subject):
                         self._bank_index = bank
                         self.update()
                 else:
-                    self._show_msg_callback(self._device.name + ' Bank: ' + self._bank_name)
+                    self._show_msg_callback(self._get_device().name + ' Bank: ' + self._bank_name)
 
     def _is_banking_enabled(self):
         direct_banking = self._bank_buttons != None
@@ -227,7 +307,7 @@ class DeviceComponent(Component, Subject):
 
     def _assign_parameters(self):
         raise self.is_enabled() or AssertionError
-        raise liveobj_valid(self._device) or AssertionError
+        raise liveobj_valid(self._get_device()) or AssertionError
         raise self._parameter_controls != None or AssertionError
         self._bank_name, bank = self._current_bank_details()
         for control, parameter in zip(self._parameter_controls, bank):
@@ -239,20 +319,23 @@ class DeviceComponent(Component, Subject):
 
         self._release_parameters(self._parameter_controls[len(bank):])
 
-    def _on_device_on_off_changed(self):
+    @listens('value')
+    def __on_device_on_off_changed(self):
         self._update_on_off_button()
 
-    def _on_device_name_changed(self):
+    @listens('name')
+    def __on_device_name_changed(self):
         if self._device_name_data_source != None:
-            self._device_name_data_source.set_display_string(self._device.name if self.is_enabled() and liveobj_valid(self._device) else 'No Device')
+            self._device_name_data_source.set_display_string(self._get_device().name if self.is_enabled() and liveobj_valid(self._get_device()) else 'No Device')
 
-    def _on_parameters_changed(self):
+    @listens('parameters')
+    def __on_parameters_changed(self):
         self.update()
 
     def _on_off_parameter(self):
         result = None
-        if liveobj_valid(self._device):
-            for parameter in self._device.parameters:
+        if liveobj_valid(self._get_device()):
+            for parameter in self._get_device().parameters:
                 if str(parameter.name).startswith('Device On'):
                     result = parameter
                     break
@@ -262,70 +345,39 @@ class DeviceComponent(Component, Subject):
     def _update_on_off_button(self):
         if self.is_enabled() and self._on_off_button != None:
             turn_on = False
-            if liveobj_valid(self._device):
+            if liveobj_valid(self._get_device()):
                 parameter = self._on_off_parameter()
                 turn_on = parameter != None and parameter.value > 0.0
             self._on_off_button.set_light(turn_on)
-
-    def _update_lock_button(self):
-        if self.is_enabled() and self._lock_button != None:
-            self._lock_button.set_light(self._locked_to_device)
 
     def _update_device_bank_buttons(self):
         if self.is_enabled():
             for index, button in enumerate(self._bank_buttons or []):
                 if button:
-                    button.set_light(index == self._bank_index and self._device)
+                    button.set_light(index == self._bank_index and self._get_device())
 
     def _update_device_bank_nav_buttons(self):
         if self.is_enabled():
             if self._bank_up_button != None and self._bank_down_button != None:
                 can_bank_up = self._bank_index == None or self._number_of_parameter_banks() > self._bank_index + 1
                 can_bank_down = self._bank_index == None or self._bank_index > 0
-                self._bank_up_button.set_light(self._device and can_bank_up)
-                self._bank_down_button.set_light(self._device and can_bank_down)
-
-    def _get_follow_track_selection(self):
-        return self._device_selection_follows_track_selection
-
-    def _set_follow_track_selection(self, value):
-        self._device_selection_follows_track_selection = value
-
-    device_selection_follows_track_selection = property(_get_follow_track_selection, _set_follow_track_selection)
-
-    @listens('selected_track')
-    def __on_selected_track_changed(self):
-        if self._device_selection_follows_track_selection:
-            self.update_device_selection()
-
-    def update_device_selection(self):
-        view = self.song.view
-        track_or_chain = view.selected_chain if view.selected_chain else view.selected_track
-        device_to_select = None
-        if isinstance(track_or_chain, Live.Track.Track):
-            device_to_select = track_or_chain.view.selected_device
-        if device_to_select == None and len(track_or_chain.devices) > 0:
-            device_to_select = track_or_chain.devices[0]
-        if liveobj_valid(device_to_select):
-            self.song.view.select_device(device_to_select)
-            self.set_device(self.song.appointed_device)
-        else:
-            self.set_device(None)
+                self._bank_up_button.set_light(self._get_device() and can_bank_up)
+                self._bank_down_button.set_light(self._get_device() and can_bank_down)
 
     def _best_of_parameter_bank(self):
-        return best_of_parameter_bank(self._device)
+        return best_of_parameter_bank(self._get_device())
 
     def _parameter_banks(self):
-        return parameter_banks(self._device)
+        return parameter_banks(self._get_device())
 
     def _parameter_bank_names(self):
-        return parameter_bank_names(self._device)
+        return parameter_bank_names(self._get_device())
 
     def _device_parameters_to_map(self):
-        return device_parameters_to_map(self._device)
+        return device_parameters_to_map(self._get_device())
 
     def _number_of_parameter_banks(self):
-        return number_of_parameter_banks(self._device)
+        return number_of_parameter_banks(self._get_device())
 
     def _current_bank_details(self):
         bank_name = self._bank_name
@@ -342,9 +394,10 @@ class DeviceComponent(Component, Subject):
                 bank_name = 'Best of Parameters'
         return (bank_name, bank)
 
-    def _on_device_bank_changed(self, device, bank):
-        if device == self._device:
-            self._bank_index = bank
+    @listens('device_bank')
+    def __on_device_bank_changed(self, device, new_bank_index):
+        if device == self._get_device() and new_bank_index != self._bank_index and self._number_of_parameter_banks() > new_bank_index:
+            self._bank_index = new_bank_index
             self.update()
 
     def _release_parameters(self, controls):

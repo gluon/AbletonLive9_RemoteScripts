@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launch_Control_XL/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launch_Control_XL/MixerComponent.py
+from itertools import izip_longest
 from _Framework.Control import control_list, ButtonControl
 from _Framework.ChannelStripComponent import ChannelStripComponent as ChannelStripComponentBase
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
@@ -44,7 +45,7 @@ class MixerComponent(MixerComponentBase):
             channel_strip.send_lights.set_control_element(elements)
 
     def set_pan_lights(self, lights):
-        for strip, light in map(None, self._channel_strips, lights or []):
+        for strip, light in izip_longest(self._channel_strips, lights or []):
             strip.pan_light.set_control_element(light)
 
     def _get_send_index(self):
@@ -71,25 +72,25 @@ class MixerComponent(MixerComponentBase):
         self.send_index = max(self.send_index - 2, 0)
 
     def set_track_select_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.TrackSelected', 'Mixer.TrackUnselected')
             strip.set_select_button(button)
 
     def set_solo_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.SoloOn', 'Mixer.SoloOff')
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.MuteOn', 'Mixer.MuteOff')
             strip.set_mute_button(button)
 
     def set_arm_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             if button:
                 button.set_on_off_values('Mixer.ArmSelected', 'Mixer.ArmUnselected')
             strip.set_arm_button(button)

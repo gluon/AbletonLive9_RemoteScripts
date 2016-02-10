@@ -1,6 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/item_lister_component.py
-from __future__ import absolute_import
-from ableton.v2.base import forward_property, index_if, listens, SlotManager, Subject
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/item_lister_component.py
+from __future__ import absolute_import, print_function
+from itertools import izip
+from ableton.v2.base import forward_property, listens, SlotManager, Subject
 from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl, RadioButtonControl
 
@@ -207,7 +208,7 @@ class ScrollOverlayComponent(CompoundComponent):
 
 
 class ItemListerComponent(ItemListerComponentBase):
-    select_buttons = control_list(RadioButtonControl, checked_color='ItemNavigation.ItemSelected', unchecked_color='ItemNavigation.ItemNotSelected', unavailable_color='ItemNavigation.NoItem')
+    select_buttons = control_list(ButtonControl, unavailable_color='ItemNavigation.NoItem')
 
     def __init__(self, *a, **k):
         super(ItemListerComponent, self).__init__(*a, **k)
@@ -225,17 +226,48 @@ class ItemListerComponent(ItemListerComponentBase):
     @listens('items')
     def __on_items_changed(self):
         self.select_buttons.control_count = len(self.items)
-        self._update_button_selection()
+        self._update_button_colors()
         self._scroll_overlay.update_scroll_buttons()
 
     @listens('selected_item')
     def __on_selection_changed(self):
-        self._update_button_selection()
+        self._update_button_colors()
 
-    def _update_button_selection(self):
+    def _update_button_colors(self):
         selected_item = self._item_provider.selected_item
-        items = self.items
-        selected_index = index_if(lambda item: item == selected_item, items)
-        if selected_index >= len(items):
-            selected_index = -1
-        self.select_buttons.checked_index = selected_index
+        for button, item in izip(self.select_buttons, self.items):
+            is_selected = item == selected_item
+            button.color = self._color_for_button(button.index, is_selected)
+
+    def _color_for_button(self, button_index, is_selected):
+        if is_selected:
+            return 'ItemNavigation.ItemSelected'
+        return 'ItemNavigation.ItemNotSelected'
+
+    @select_buttons.pressed
+    def select_buttons(self, button):
+        self._on_select_button_pressed(button)
+
+    @select_buttons.pressed_delayed
+    def select_buttons(self, button):
+        self._on_select_button_pressed_delayed(button)
+
+    @select_buttons.released
+    def select_buttons(self, button):
+        self._on_select_button_released(button)
+
+    @select_buttons.released_immediately
+    def select_buttons(self, button):
+        self._on_select_button_released_immediately(button)
+
+    def _on_select_button_pressed(self, button):
+        pass
+
+    def _on_select_button_pressed_delayed(self, button):
+        pass
+
+    def _on_select_button_released(self, button):
+        pass
+
+    def _on_select_button_released_immediately(self, button):
+        pass

@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/drum_group.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/drum_group.py
+from __future__ import absolute_import, print_function
 from itertools import imap
 from ...base import depends, find_if, first, clamp, listens_group, listens, liveobj_valid
 from ..control import ButtonControl
@@ -39,17 +39,17 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
             return any(imap(lambda pad: pad.chains, drum.drum_pads[index * 4:index * 4 + 4]))
         return False
 
-    def _get_position(self):
+    @property
+    def position(self):
         if liveobj_valid(self._drum_group_device):
             return self._drum_group_device.view.drum_pads_scroll_position
         return 0
 
-    def _set_position(self, index):
+    @position.setter
+    def position(self, index):
         if not 0 <= index <= 28:
             raise AssertionError
             self._drum_group_device.view.drum_pads_scroll_position = liveobj_valid(self._drum_group_device) and index
-
-    position = property(_get_position, _set_position)
 
     @property
     def assigned_drum_pads(self):
@@ -216,7 +216,9 @@ class DrumGroupComponent(PlayableComponent, SlideComponent, Slideable):
     def _pad_for_button(self, button):
         if self.has_assigned_pads:
             index = self._button_coordinates_to_pad_index(first(self._assigned_drum_pads).note, button.coordinate)
-            return self._all_drum_pads[index] if index < 128 else None
+            if index < 128:
+                return self._all_drum_pads[index]
+            return None
 
     def _note_translation_for_button(self, button):
         identifier = None

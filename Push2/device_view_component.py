@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/device_view_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_view_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import const, listens, liveobj_valid
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.mode import ModesComponent
@@ -12,6 +13,7 @@ class DeviceViewConnector(Component):
         self._parameter_provider = parameter_provider
         self._view = view
         self._parameters = None
+        self._parameter_names = []
         self._device_type_provider = device_type_provider
 
     def update(self):
@@ -19,9 +21,10 @@ class DeviceViewConnector(Component):
         if self.is_enabled():
             self._view.deviceType = self._device_type_provider()
         parameters = self._value_for_state(map(lambda p: p and p.parameter, self._parameter_provider.parameters), [])
-        if parameters != self._parameters:
+        if self._parameters_changed(parameters):
             self._view.parameters = parameters
             self._parameters = parameters
+            self._parameter_names = self._extract_names(parameters)
 
     def on_enabled_changed(self):
         self._view.visible = self.is_enabled()
@@ -32,8 +35,16 @@ class DeviceViewConnector(Component):
     def _on_parameters_changed(self):
         self.update()
 
+    def _extract_names(self, parameters):
+        return [ (p.name if p else None) for p in parameters ]
+
+    def _parameters_changed(self, new_parameters):
+        return new_parameters != self._parameters or self._extract_names(new_parameters) != self._parameter_names
+
     def _value_for_state(self, enabled_value, disabled_value):
-        return enabled_value if self.is_enabled() else disabled_value
+        if self.is_enabled():
+            return enabled_value
+        return disabled_value
 
 
 class SimplerDeviceViewConnector(DeviceViewConnector):
@@ -72,17 +83,21 @@ class DeviceViewComponent(ModesComponent):
 
         self.add_mode('default', DeviceViewConnector(parameter_provider=device_component, device_type_provider=self._device_type, view=view_model.deviceParameterView, is_enabled=False))
         self.add_mode('OriginalSimpler', SimplerDeviceViewConnector(parameter_provider=device_component, device_component=device_component, device_type_provider=self._device_type, view=view_model.simplerDeviceView, is_enabled=False))
-        self.selected_mode = 'default'
         self._on_parameters_changed.subject = device_component
+        self._on_parameters_changed()
 
     def _device_type(self):
         device = self._get_device()
-        return device.class_name if liveobj_valid(device) else ''
+        if liveobj_valid(device):
+            return device.class_name
+        return ''
 
     def _mode_to_select(self):
         device = self._get_device()
         device_type = device and device.class_name
-        return device_type if self.get_mode(device_type) != None else 'default'
+        if self.get_mode(device_type) != None:
+            return device_type
+        return 'default'
 
     @listens('parameters')
     def _on_parameters_changed(self):

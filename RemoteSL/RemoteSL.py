@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/RemoteSL/RemoteSL.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/RemoteSL/RemoteSL.py
 import Live
 import MidiRemoteScript
 from EffectController import EffectController
 from MixerController import MixerController
 from DisplayController import DisplayController
 from consts import *
+from _Generic.util import DeviceAppointer
 
 class RemoteSL:
     """ Automap script for the Novation Remote SL.
@@ -19,6 +20,7 @@ class RemoteSL:
         self.__mixer_controller = MixerController(self, self.__display_controller)
         self.__components = [self.__effect_controller, self.__mixer_controller, self.__display_controller]
         self.__update_hardware_delay = -1
+        self._device_appointer = DeviceAppointer(song=self.song(), appointed_device_setter=self._set_appointed_device)
 
     def disconnect(self):
         """Called right before we get disconnected from Live
@@ -26,6 +28,7 @@ class RemoteSL:
         for c in self.__components:
             c.disconnect()
 
+        self._device_appointer.disconnect()
         self.send_midi(ALL_LEDS_OFF_MESSAGE)
         self.send_midi(GOOD_BYE_SYSEX_MESSAGE)
 
@@ -69,7 +72,7 @@ class RemoteSL:
         """
         self.__effect_controller.unlock_from_device(device)
 
-    def set_appointed_device(self, device):
+    def _set_appointed_device(self, device):
         """Live -> Script
         Live can tell the script which device to use if it is not locked
         This is a substitute mechanism for the listeners used by older scripts

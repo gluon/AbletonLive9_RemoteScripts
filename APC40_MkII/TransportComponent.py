@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/APC40_MkII/TransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC40_MkII/TransportComponent.py
 import Live
 from _Framework.Control import ButtonControl
 from _Framework.SubjectSlot import subject_slot
@@ -11,7 +11,9 @@ class TransportComponent(TransportComponentBase):
     def __init__(self, *a, **k):
 
         def play_toggle_model_transform(val):
-            return False if self.shift_button.is_pressed else val
+            if self.shift_button.is_pressed:
+                return False
+            return val
 
         k['play_toggle_model_transform'] = play_toggle_model_transform
         super(TransportComponent, self).__init__(*a, **k)

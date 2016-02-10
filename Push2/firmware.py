@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/firmware.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/firmware.py
+from __future__ import absolute_import, print_function
 import fnmatch
 import logging
 import os
@@ -18,10 +19,11 @@ class FirmwareVersion(object):
         self.build = build
 
     def __cmp__(self, other):
-        if self.major == other.major and self.minor == other.minor:
-            if self.build == other.build:
-                return 0
-        return 1 if self.major > other.major or self.major == other.major and self.minor > other.minor or self.major == other.major and self.minor == other.minor and self.build > other.build else -1
+        if self.major == other.major and self.minor == other.minor and self.build == other.build:
+            return 0
+        if self.major > other.major or self.major == other.major and self.minor > other.minor or self.major == other.major and self.minor == other.minor and self.build > other.build:
+            return 1
+        return -1
 
     def __repr__(self):
         return '<FirmwareVersion %i.%i.%i>' % (self.major, self.minor, self.build)

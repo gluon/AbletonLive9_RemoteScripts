@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/note_repeat_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_repeat_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import CompoundComponent
 from .action_with_options_component import OptionsComponent
@@ -58,9 +59,9 @@ class NoteRepeatComponent(CompoundComponent):
         self._options.select_buttons.set_control_element(buttons)
 
     def set_note_repeat(self, note_repeat):
-        if not note_repeat:
-            note_repeat = DummyNoteRepeat()
-            self._note_repeat.enabled = self._note_repeat != None and False
+        note_repeat = note_repeat or DummyNoteRepeat()
+        if self._note_repeat != None:
+            self._note_repeat.enabled = False
         self._note_repeat = note_repeat
         self._update_note_repeat(enabled=self.is_enabled())
 

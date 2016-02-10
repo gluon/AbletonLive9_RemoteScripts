@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/drum_pad_parameter_component.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/drum_pad_parameter_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listenable_property, listens, liveobj_valid, SlotManager
 from ableton.v2.control_surface import CompoundComponent
 from ableton.v2.control_surface.control import StepEncoderControl
+from pushbase.internal_parameter import InternalParameterBase
 from pushbase.parameter_provider import generate_info, ParameterProvider
 from .device_view_component import DeviceViewConnector
-from .internal_parameter import InternalParameterBase
 NO_CHOKE_GROUP = u'None'
 MAX_CHOKE_GROUP = 16
 NUM_CHOKE_GROUPS = MAX_CHOKE_GROUP + 1
@@ -28,7 +28,9 @@ class ChokeParameter(SlotManager, InternalParameterBase):
 
     @listenable_property
     def value(self):
-        return self._pad.choke_group if len(self._pad.chains) > 0 else 0
+        if len(self._pad.chains) > 0:
+            return self._pad.choke_group
+        return 0
 
     @value.setter
     def value(self, value):

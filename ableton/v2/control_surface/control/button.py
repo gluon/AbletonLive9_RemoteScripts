@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/button.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/button.py
+from __future__ import absolute_import, print_function
 from ...base import lazy_attribute, partial, task
 from ..defaults import MOMENTARY_DELAY, DOUBLE_CLICK_DELAY
 from .control import InputControl, control_event, control_color
@@ -33,7 +33,7 @@ class ButtonControlBase(InputControl):
         disabled_color = control_color('DefaultButton.Disabled')
         pressed_color = control_color(None)
 
-        def __init__(self, pressed_color = None, disabled_color = None, repeat = False, enabled = True, double_click_context = None, *a, **k):
+        def __init__(self, pressed_color = None, disabled_color = None, repeat = False, enabled = True, double_click_context = None, delay_time = None, *a, **k):
             super(ButtonControlBase.State, self).__init__(*a, **k)
             if disabled_color is not None:
                 self.disabled_color = disabled_color
@@ -42,18 +42,19 @@ class ButtonControlBase(InputControl):
             self._is_pressed = False
             self._enabled = enabled
             self._double_click_context = double_click_context or DoubleClickContext()
+            self._delay_time = delay_time if delay_time is not None else ButtonControlBase.DELAY_TIME
 
-        def _get_enabled(self):
+        @property
+        def enabled(self):
             return self._enabled
 
-        def _set_enabled(self, enabled):
+        @enabled.setter
+        def enabled(self, enabled):
             if self._enabled != enabled:
                 if not enabled:
                     self._release_button()
                 self._enabled = enabled
                 self._send_current_color()
-
-        enabled = property(_get_enabled, _set_enabled)
 
         @property
         def is_momentary(self):
@@ -137,10 +138,10 @@ class ButtonControlBase(InputControl):
                 self._double_click_context.set_new_context(self)
 
         def _check_double_click_release(self):
-            if self._has_listener('double_clicked') and self._double_click_task.is_running:
-                if self._double_click_context.control_state == self:
-                    self._double_click_context.click_count += 1
-                    self._double_click_context.click_count == 2 and self._call_listener('double_clicked')
+            if self._has_listener('double_clicked') and self._double_click_task.is_running and self._double_click_context.control_state == self:
+                self._double_click_context.click_count += 1
+                if self._double_click_context.click_count == 2:
+                    self._call_listener('double_clicked')
                     self._double_click_task.kill()
 
         def set_double_click_context(self, context):
@@ -148,12 +149,12 @@ class ButtonControlBase(InputControl):
 
         @lazy_attribute
         def _delay_task(self):
-            return self.tasks.add(task.sequence(task.wait(ButtonControlBase.DELAY_TIME), task.run(self._on_pressed_delayed)))
+            return self.tasks.add(task.sequence(task.wait(self._delay_time), task.run(self._on_pressed_delayed)))
 
         @lazy_attribute
         def _repeat_task(self):
             notify_pressed = partial(self._call_listener, 'pressed')
-            return self.tasks.add(task.sequence(task.wait(ButtonControlBase.DELAY_TIME), task.loop(task.wait(ButtonControlBase.REPEAT_RATE), task.run(notify_pressed))))
+            return self.tasks.add(task.sequence(task.wait(self._delay_time), task.loop(task.wait(ButtonControlBase.REPEAT_RATE), task.run(notify_pressed))))
 
         def _kill_all_tasks(self):
             if self._repeat:
@@ -213,18 +214,18 @@ class PlayableControl(ButtonControl):
             if self._control_element and self._enabled:
                 self._control_element.suppress_script_forwarding = self._playable
 
-        def _get_enabled(self):
+        @property
+        def enabled(self):
             return self._enabled
 
-        def _set_enabled(self, enabled):
-            super(PlayableControl.State, self)._set_enabled(enabled)
+        @enabled.setter
+        def enabled(self, enabled):
+            super(PlayableControl.State, PlayableControl.State).enabled.fset(self, enabled)
             if not enabled and self._control_element:
                 self._control_element.reset_state()
                 self._send_current_color()
             else:
                 self.set_control_element(self._control_element)
-
-        enabled = property(_get_enabled, _set_enabled)
 
         def set_playable(self, value):
             self._playable = value

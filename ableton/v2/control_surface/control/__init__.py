@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/__init__.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/__init__.py
+from __future__ import absolute_import, print_function
 from .control import Control, ControlManager, control_color, control_event, forward_control
 from .mapped import MappedControl
 from .button import ButtonControl, ButtonControlBase, DoubleClickContext, PlayableControl

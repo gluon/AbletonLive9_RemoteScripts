@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/hardware_settings_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/hardware_settings_component.py
+from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, task
 from ableton.v2.control_surface import Component

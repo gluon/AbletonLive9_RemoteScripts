@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchkey_MK2/Colors.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchkey_MK2/Colors.py
 from _Framework.ButtonElement import Color
 from .consts import BLINK_LED_CHANNEL, PULSE_LED_CHANNEL
 

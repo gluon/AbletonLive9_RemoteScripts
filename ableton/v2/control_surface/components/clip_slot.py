@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/clip_slot.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/clip_slot.py
+from __future__ import absolute_import, print_function
 import Live
 from ...base import in_range, listens, liveobj_valid
 from ..component import Component
@@ -134,16 +134,19 @@ class ClipSlotComponent(Component):
             track = self._clip_slot.canonical_parent
             slot_or_clip = self._clip_slot.clip if self.has_clip() else self._clip_slot
             if slot_or_clip.is_triggered:
-                return self._triggered_to_record_value if slot_or_clip.will_record_on_start else self._triggered_to_play_value
-            elif slot_or_clip.is_playing:
-                return self._recording_value if slot_or_clip.is_recording else self._started_value
-            elif slot_or_clip.color != None:
+                if slot_or_clip.will_record_on_start:
+                    return self._triggered_to_record_value
+                return self._triggered_to_play_value
+            if slot_or_clip.is_playing:
+                if slot_or_clip.is_recording:
+                    return self._recording_value
+                return self._started_value
+            if slot_or_clip.color != None:
                 return self._color_value(slot_or_clip)
-            elif getattr(slot_or_clip, 'controls_other_clips', True) and self._stopped_value != None:
+            if getattr(slot_or_clip, 'controls_other_clips', True) and self._stopped_value != None:
                 return self._stopped_value
-            elif self._track_is_armed(track) and self._clip_slot.has_stop_button:
-                if self._record_button_value != None:
-                    return self._record_button_value
+            if self._track_is_armed(track) and self._clip_slot.has_stop_button and self._record_button_value != None:
+                return self._record_button_value
 
     def _update_clip_property_slots(self):
         clip = self._clip_slot.clip if self._clip_slot else None
@@ -239,14 +242,14 @@ class ClipSlotComponent(Component):
     def _do_launch_clip(self, value):
         button = self.__launch_button_value.subject
         object_to_launch = self._clip_slot
-        if not value:
-            launch_pressed = not button.is_momentary()
-            if self.has_clip():
-                object_to_launch = self._clip_slot.clip
-            else:
-                self._has_fired_slot = True
-            if button.is_momentary():
-                object_to_launch.set_fire_button_state(value != 0)
-            elif launch_pressed:
-                object_to_launch.fire()
-            self.song.view.highlighted_clip_slot = launch_pressed and self.has_clip() and self.song.select_on_launch and self._clip_slot
+        launch_pressed = value or not button.is_momentary()
+        if self.has_clip():
+            object_to_launch = self._clip_slot.clip
+        else:
+            self._has_fired_slot = True
+        if button.is_momentary():
+            object_to_launch.set_fire_button_state(value != 0)
+        elif launch_pressed:
+            object_to_launch.fire()
+        if launch_pressed and self.has_clip() and self.song.select_on_launch:
+            self.song.view.highlighted_clip_slot = self._clip_slot

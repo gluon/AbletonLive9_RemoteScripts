@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/display_data_source.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/display_data_source.py
+from __future__ import absolute_import, print_function
 from functools import partial
 
 def adjust_string_crop(original, length):
@@ -16,9 +16,9 @@ def adjust_string(original, length):
         raise AssertionError
         resulting_string = original
         if len(resulting_string) > length:
-            if resulting_string.endswith('dB'):
-                unit_db = resulting_string.find('.') != -1
-                resulting_string = len(resulting_string.strip()) > length and unit_db and resulting_string[:-2]
+            unit_db = resulting_string.endswith('dB') and resulting_string.find('.') != -1
+            if len(resulting_string.strip()) > length and unit_db:
+                resulting_string = resulting_string[:-2]
             if len(resulting_string) > length:
                 for char in (' ', '_', 'i', 'o', 'u', 'e', 'a'):
                     offset = 0 if char == ' ' else 1
@@ -49,15 +49,15 @@ class DisplayDataSource(object):
         self._update_callback = None
         self._in_update = False
 
-    def _get_separator(self):
+    @property
+    def separator(self):
         return self._separator
 
-    def _set_separator(self, separator):
+    @separator.setter
+    def separator(self, separator):
         if separator != self._separator:
             self._separator = separator
             self.update()
-
-    separator = property(_get_separator, _set_separator)
 
     def set_update_callback(self, update_callback):
         if not (not update_callback or callable(update_callback)):

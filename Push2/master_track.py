@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/master_track.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/master_track.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import listens
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import ToggleButtonControl

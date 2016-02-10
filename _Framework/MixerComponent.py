@@ -1,5 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/MixerComponent.py
 from __future__ import absolute_import
+from itertools import izip_longest
 from .ChannelStripComponent import ChannelStripComponent, release_control
 from .CompoundComponent import CompoundComponent
 from .SubjectSlot import subject_slot
@@ -120,35 +121,35 @@ class MixerComponent(CompoundComponent):
         self.update()
 
     def set_volume_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_volume_control(control)
 
     def set_pan_controls(self, controls):
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             strip.set_pan_control(control)
 
     def set_send_controls(self, controls):
         self._send_controls = controls
-        for strip, control in map(None, self._channel_strips, controls or []):
+        for strip, control in izip_longest(self._channel_strips, controls or []):
             if self._send_index is None:
                 strip.set_send_controls(None)
             else:
                 strip.set_send_controls((None,) * self._send_index + (control,))
 
     def set_arm_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_arm_button(button)
 
     def set_solo_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_solo_button(button)
 
     def set_mute_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_mute_button(button)
 
     def set_track_select_buttons(self, buttons):
-        for strip, button in map(None, self._channel_strips, buttons or []):
+        for strip, button in izip_longest(self._channel_strips, buttons or []):
             strip.set_select_button(button)
 
     def set_shift_button(self, button):

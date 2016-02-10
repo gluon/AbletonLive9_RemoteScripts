@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/device_options.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_options.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, listenable_property, listens, const, Subject, Slot, SlotManager
 
 class DeviceTriggerOption(Subject):
@@ -51,7 +51,9 @@ class DeviceSwitchOption(SlotManager, DeviceTriggerOption):
 
     @listenable_property
     def active_index(self):
-        return int(bool(self._parameter.value)) if liveobj_valid(self._parameter) else 0
+        if liveobj_valid(self._parameter):
+            return int(bool(self._parameter.value))
+        return 0
 
     @listens('value')
     def __on_value_changed(self):
@@ -82,7 +84,9 @@ class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
         self._property_slot = self.register_slot(Slot(subject=property_host, event=property_name, listener=notify_index_and_default_label))
 
     def _property_value(self):
-        return getattr(self._property_host, self._property_name, False) if liveobj_valid(self._property_host) else False
+        if liveobj_valid(self._property_host):
+            return getattr(self._property_host, self._property_name, False)
+        return False
 
     def _is_active(self):
         return super(DeviceOnOffOption, self)._is_active() and liveobj_valid(self._property_host)

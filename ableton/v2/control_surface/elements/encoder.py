@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/elements/encoder.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/elements/encoder.py
+from __future__ import absolute_import, print_function
 import Live
 from ...base import Event, nop, const, clamp, listens
 from ..input_control_element import InputControlElement, MIDI_CC_TYPE, InputSignal
@@ -12,8 +12,9 @@ def _not_implemented(value):
     raise NotImplementedError
 
 
-ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: v if v <= 64 else v - 128,
- _map_modes.relative_smooth_signed_bit: lambda v: v if v <= 64 else 64 - v}
+ENCODER_VALUE_NORMALIZER = {_map_modes.relative_smooth_two_compliment: lambda v: (v if v <= 64 else v - 128),
+ _map_modes.relative_smooth_signed_bit: lambda v: (v if v <= 64 else 64 - v),
+ _map_modes.relative_smooth_binary_offset: lambda v: v - 64}
 
 def accumulate_relative_two_compliment_chunk(chunk):
     right = 0
@@ -25,7 +26,9 @@ def accumulate_relative_two_compliment_chunk(chunk):
             left += 128 - value
 
     result = clamp(right - left, -63, 64)
-    return result if result >= 0 else 128 + result
+    if result >= 0:
+        return result
+    return 128 + result
 
 
 ENCODER_VALUE_ACCUMULATOR = {_map_modes.relative_smooth_two_compliment: accumulate_relative_two_compliment_chunk}
@@ -117,7 +120,8 @@ class TouchEncoderElement(CompoundElement, TouchEncoderElementBase):
 
     @property
     def touch_element(self):
-        return self._touch_element if self.owns_control_element(self._touch_element) else None
+        if self.owns_control_element(self._touch_element):
+            return self._touch_element
 
     def is_pressed(self):
         return self.owns_control_element(self._touch_element) and self._touch_element.is_pressed()

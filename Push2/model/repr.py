@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/model/repr.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/repr.py
+from __future__ import absolute_import, print_function
 import re
 from functools import partial
 from ableton.v2.base import Slot, SlotError, SlotManager, Subject, find_if, listenable_property, listens, liveobj_valid
@@ -52,18 +53,9 @@ def get_parameter_display_value(parameter):
 def get_parameter_unit(parameter):
     parameter_string = unicode(parameter)
     value = unit_pattern.findall(parameter_string)
-    return ''.join(string_pattern.findall(value[0])) if value else ''
-
-
-def get_file_url(path_provider):
-    path = path_provider.sample_file_path
-    url = ''
-    if path != '':
-        normalized_path = path.replace('\\', '/')
-        if not normalized_path.startswith('/'):
-            normalized_path = '/' + normalized_path
-        url = 'file://' + normalized_path
-    return url
+    if value:
+        return ''.join(string_pattern.findall(value[0]))
+    return ''
 
 
 def strip_formatted_string(str):
@@ -85,11 +77,15 @@ class ModelAdapter(Subject, SlotManager):
         return liveobj_valid(self._adaptee)
 
     def __getattr__(self, name):
-        return object.__getattribute__(self, name) if name in self.__dict__ else getattr(self._adaptee, name)
+        if name in self.__dict__:
+            return object.__getattribute__(self, name)
+        return getattr(self._adaptee, name)
 
     @property
     def _live_ptr(self):
-        return self._adaptee._live_ptr if hasattr(self._adaptee, '_live_ptr') else id(self._adaptee)
+        if hasattr(self._adaptee, '_live_ptr'):
+            return self._adaptee._live_ptr
+        return id(self._adaptee)
 
     def _alias_observable_property(self, prop_name, alias_name, getter = None):
         default_getter = lambda self_: getattr(self_._adaptee, prop_name)
@@ -130,7 +126,9 @@ class DeviceParameterAdapter(ModelAdapter):
 
     @listenable_property
     def valueItems(self):
-        return self._adaptee.value_items if self._adaptee.is_quantized else []
+        if self._adaptee.is_quantized:
+            return self._adaptee.value_items
+        return []
 
     @listenable_property
     def displayValue(self):
@@ -189,34 +187,31 @@ class SimplerDeviceAdapter(ModelAdapter):
         self.loop_length = get_parameter('S Loop Length')
         self.loop_on = get_parameter('S Loop On')
         self.zoom = get_parameter('Zoom')
-
-        def get_raising_property(self_, name, default_value):
-            try:
-                return getattr(self_._adaptee, name)
-            except RuntimeError:
-                return default_value
-
-        for prop, value in [('start_marker', 0),
-         ('end_marker', 0),
-         ('slicing_sensitivity', 0.0),
-         ('gain', 0.0)]:
-            getter = partial(get_raising_property, name=prop, default_value=value)
-            setattr(self.__class__, prop, property(getter))
+        self.__on_sample_changed.subject = self._adaptee
+        self.__on_sample_changed()
 
     def _is_slicing(self):
         return self._adaptee.playback_mode == 2
 
     def _get_slice_times(self):
         slice_times = []
-        if self._is_slicing():
+        if self._is_slicing() and liveobj_valid(self._adaptee.sample):
             try:
-                slice_times = self._adaptee.slices
+                slice_times = self._adaptee.sample.slices
             except RuntimeError:
                 pass
 
         return slice_times
 
-    @property
+    @listens('sample')
+    def __on_sample_changed(self):
+        self.register_slot(self._adaptee.sample, self.notify_start_marker, 'start_marker')
+        self.register_slot(self._adaptee.sample, self.notify_end_marker, 'end_marker')
+        self.register_slot(self._adaptee.sample, self.notify_slices, 'slices')
+        self.register_slot(self._adaptee.sample, self.notify_slicing_sensitivity, 'slicing_sensitivity')
+        self.register_slot(self._adaptee.sample, self.notify_gain, 'gain')
+
+    @listenable_property
     def slices(self):
 
         def unique_id(id_, existing = set()):
@@ -234,13 +229,33 @@ class SimplerDeviceAdapter(ModelAdapter):
 
         return [ SlicePoint(unique_id(time), time) for time in self._get_slice_times() ]
 
-    @property
-    def sample_file_path(self):
-        return get_file_url(self._adaptee)
-
     @listenable_property
     def selected_slice(self):
         return find_if(lambda s: s.time == self.view.selected_slice, self.slices)
+
+    @listenable_property
+    def start_marker(self):
+        if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
+            return self._adaptee.sample.start_marker
+        return 0
+
+    @listenable_property
+    def end_marker(self):
+        if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
+            return self._adaptee.sample.end_marker
+        return 0
+
+    @listenable_property
+    def slicing_sensitivity(self):
+        if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
+            return self._adaptee.sample.slicing_sensitivity
+        return 0.0
+
+    @listenable_property
+    def gain(self):
+        if liveobj_valid(self._adaptee) and liveobj_valid(self._adaptee.sample):
+            return self._adaptee.sample.gain
+        return 0.0
 
 
 class VisibleAdapter(ModelAdapter):
@@ -410,7 +425,7 @@ class TrackAdapter(ModelAdapter):
     @property
     def activated(self):
         try:
-            return self._adaptee.muted_via_solo or self._adaptee.mute and not not self._adaptee.solo
+            return not (self._adaptee.muted_via_solo or self._adaptee.mute and not self._adaptee.solo)
         except RuntimeError:
             return True
 
@@ -424,7 +439,9 @@ class TrackAdapter(ModelAdapter):
     @listenable_property
     def arm(self):
         try:
-            return self._adaptee.arm if self._adaptee.can_be_armed else False
+            if self._adaptee.can_be_armed:
+                return self._adaptee.arm
+            return False
         except AttributeError:
             return False
 
@@ -443,7 +460,9 @@ class TrackAdapter(ModelAdapter):
     @staticmethod
     def _convert_color_index(color_index):
         from ..colors import UNCOLORED_INDEX
-        return UNCOLORED_INDEX if color_index is None else color_index
+        if color_index is None:
+            return UNCOLORED_INDEX
+        return color_index
 
     @listenable_property
     def colorIndex(self):
@@ -463,6 +482,13 @@ class TrackAdapter(ModelAdapter):
     def isMaster(self):
         try:
             return self._adaptee == self._adaptee.canonical_parent.master_track
+        except AttributeError:
+            return False
+
+    @property
+    def isAudio(self):
+        try:
+            return not self._adaptee.has_midi_input
         except AttributeError:
             return False
 
@@ -520,4 +546,6 @@ class LiveDialogAdapter(VisibleAdapter):
     @property
     def text(self):
         text = self._adaptee.text
-        return strip_formatted_string(text) if text is not None else ''
+        if text is not None:
+            return strip_formatted_string(text)
+        return ''

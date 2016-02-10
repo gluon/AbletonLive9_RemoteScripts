@@ -1,8 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/touch_strip_controller.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/touch_strip_controller.py
+from __future__ import absolute_import, print_function
 from ableton.v2.control_surface import Component
+from ableton.v2.control_surface.control import ToggleButtonControl
 from . import consts
+from .message_box_component import Messenger
 from .touch_encoder_element import TouchEncoderObserver
-from .touch_strip_element import TouchStripModes, SimpleBehaviour
+from .touch_strip_element import DEFAULT_BEHAVIOUR, MODWHEEL_BEHAVIOUR, SimpleBehaviour, TouchStripModes, TouchStripStates
 
 class TouchStripControllerComponent(Component):
 
@@ -68,3 +71,41 @@ class TouchStripEncoderConnection(Component, TouchEncoderObserver):
         parameter = encoder.mapped_parameter() if encoder != None else None
         self._strip_controller.set_parameter(parameter)
         self._strip_controller.set_enabled(parameter != None)
+
+
+class TouchStripPitchModComponent(Component, Messenger):
+    touch_strip_toggle = ToggleButtonControl()
+
+    def __init__(self, *a, **k):
+        super(TouchStripPitchModComponent, self).__init__(*a, **k)
+        self._touch_strip = None
+        self._touch_strip_indication = None
+
+    def set_touch_strip(self, control):
+        self._touch_strip = control
+        self._update_touch_strip()
+
+    def _update_touch_strip(self):
+        if self._touch_strip:
+            self._touch_strip.behaviour = MODWHEEL_BEHAVIOUR if self.touch_strip_toggle.is_toggled else DEFAULT_BEHAVIOUR
+
+    @touch_strip_toggle.toggled
+    def touch_strip_toggle(self, toggled, button):
+        self._update_touch_strip()
+        self._update_touch_strip_indication()
+        self.show_notification(consts.MessageBoxText.TOUCHSTRIP_MODWHEEL_MODE if toggled else consts.MessageBoxText.TOUCHSTRIP_PITCHBEND_MODE)
+
+    def set_touch_strip_indication(self, control):
+        self._touch_strip_indication = control
+        self._update_touch_strip_indication()
+
+    def _update_touch_strip_indication(self):
+        if self._touch_strip_indication:
+            self._touch_strip_indication.set_mode(TouchStripModes.CUSTOM_FREE)
+            self._touch_strip_indication.send_state([ (TouchStripStates.STATE_FULL if self.touch_strip_toggle.is_toggled else TouchStripStates.STATE_HALF) for _ in xrange(self._touch_strip_indication.state_count) ])
+
+    def update(self):
+        super(TouchStripPitchModComponent, self).update()
+        if self.is_enabled():
+            self._update_touch_strip()
+            self._update_touch_strip_indication()

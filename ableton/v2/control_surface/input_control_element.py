@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/input_control_element.py
-from __future__ import absolute_import, with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/input_control_element.py
+from __future__ import absolute_import, print_function
 import contextlib
 import logging
 from ..base import const, depends, Disconnectable, in_range, nop, Signal, Event, task
@@ -34,27 +34,27 @@ class ParameterSlot(Disconnectable):
         self.parameter = parameter
         self.control = control
 
-    def _get_control(self):
+    @property
+    def control(self):
         return self._control
 
-    def _set_control(self, control):
+    @control.setter
+    def control(self, control):
         if control != self._control:
             self.soft_disconnect()
             self._control = control
             self.connect()
 
-    control = property(_get_control, _set_control)
-
-    def _get_parameter(self):
+    @property
+    def parameter(self):
         return self._parameter
 
-    def _set_parameter(self, parameter):
+    @parameter.setter
+    def parameter(self, parameter):
         if parameter != self._parameter:
             self.soft_disconnect()
             self._parameter = parameter
             self.connect()
-
-    parameter = property(_get_parameter, _set_parameter)
 
     def connect(self):
         if self._control != None and self._parameter != None:
@@ -181,24 +181,24 @@ class InputControlElement(NotifyingControlElement):
     def message_map_mode(self):
         raise NotImplementedError
 
-    def _get_mapping_sensitivity(self):
+    @property
+    def mapping_sensitivity(self):
         return self._mapping_sensitivity
 
-    def _set_mapping_sensitivity(self, sensitivity):
+    @mapping_sensitivity.setter
+    def mapping_sensitivity(self, sensitivity):
         self._mapping_sensitivity = sensitivity
         self._request_rebuild()
 
-    mapping_sensitivity = property(_get_mapping_sensitivity, _set_mapping_sensitivity)
-
-    def _get_suppress_script_forwarding(self):
+    @property
+    def suppress_script_forwarding(self):
         return self._suppress_script_forwarding
 
-    def _set_suppress_script_forwarding(self, value):
+    @suppress_script_forwarding.setter
+    def suppress_script_forwarding(self, value):
         if self._suppress_script_forwarding != value:
             self._suppress_script_forwarding = value
             self._request_rebuild()
-
-    suppress_script_forwarding = property(_get_suppress_script_forwarding, _set_suppress_script_forwarding)
 
     def force_next_send(self):
         """
@@ -430,4 +430,6 @@ class InputControlElement(NotifyingControlElement):
 
     @property
     def _last_sent_value(self):
-        return self._last_sent_message[0] if self._last_sent_message else -1
+        if self._last_sent_message:
+            return self._last_sent_message[0]
+        return -1

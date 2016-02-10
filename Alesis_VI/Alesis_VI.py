@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Alesis_VI/Alesis_VI.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Alesis_VI/Alesis_VI.py
 from __future__ import with_statement
 from _Framework.ControlSurface import ControlSurface
 from _Framework.MidiMap import make_encoder, MidiMap as MidiMapBase

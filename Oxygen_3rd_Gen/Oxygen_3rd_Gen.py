@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Oxygen_3rd_Gen/Oxygen_3rd_Gen.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Oxygen_3rd_Gen/Oxygen_3rd_Gen.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface

@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/scene.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/scene.py
+from __future__ import absolute_import, print_function
 from itertools import izip
 from ...base import in_range, listens, liveobj_valid, liveobj_changed
 from ..compound_component import CompoundComponent

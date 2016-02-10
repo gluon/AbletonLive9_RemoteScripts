@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/notification_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/notification_component.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from weakref import ref
 from ableton.v2.base import forward_property, maybe, task

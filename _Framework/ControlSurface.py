@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ControlSurface.py
 from __future__ import absolute_import, with_statement
 from functools import partial, wraps
 from itertools import chain, ifilter, imap
@@ -177,15 +177,6 @@ class ControlSurface(SlotManager):
         raise self._device_component != None or AssertionError
         with self.component_guard():
             self._device_component.restore_bank(bank_index)
-
-    @_scheduled_method
-    def set_appointed_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        with self.component_guard():
-            self._device_component.set_device(device)
 
     def suggest_input_port(self):
         """ Live -> Script: Live can ask for the name of the script's
@@ -473,7 +464,7 @@ class ControlSurface(SlotManager):
         """ puts control into the list of controls for triggering updates """
         if not control != None:
             raise AssertionError
-            raise control not in self.controls or AssertionError, 'Control registered twice'
+            raise control not in self.controls or AssertionError('Control registered twice')
             self.controls.append(control)
             control.canonical_parent = self
             isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
@@ -481,7 +472,7 @@ class ControlSurface(SlotManager):
     def _register_component(self, component):
         """ puts component into the list of controls for triggering updates """
         raise component != None or AssertionError
-        raise component not in self._components or AssertionError, 'Component registered twice'
+        raise component not in self._components or AssertionError('Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
 
@@ -629,7 +620,7 @@ class ControlSurface(SlotManager):
             forwarding_keys = success and control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError, 'Registry key %s registered twice. Check Midi messages!' % str(key)
+                raise key not in registry.keys() or AssertionError('Registry key %s registered twice. Check Midi messages!' % str(key))
                 registry[key] = control
 
         return success

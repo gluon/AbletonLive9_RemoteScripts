@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/scroll.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/scroll.py
+from __future__ import absolute_import, print_function
 from ...base import task
 from .. import defaults
 from ..control import ButtonControl
@@ -50,14 +50,14 @@ class ScrollComponent(Component, Scrollable):
         t.kill()
         return t
 
-    def _get_scrollable(self):
+    @property
+    def scrollable(self):
         return self._scrollable
 
-    def _set_scrollable(self, scrollable):
+    @scrollable.setter
+    def scrollable(self, scrollable):
         self._scrollable = scrollable
         self._update_scroll_buttons()
-
-    scrollable = property(_get_scrollable, _set_scrollable)
 
     def can_scroll_up(self):
         return self._scrollable.can_scroll_up()
@@ -112,11 +112,11 @@ class ScrollComponent(Component, Scrollable):
         self._update_scroll_buttons()
 
     def _on_scroll_pressed(self, button, scroll_step, scroll_task):
-        if not not self._scroll_task_up.is_killed:
-            is_scrolling = not self._scroll_task_down.is_killed
-            if not is_scrolling:
-                scroll_step()
-            button.enabled and scroll_task.restart()
+        is_scrolling = not self._scroll_task_up.is_killed or not self._scroll_task_down.is_killed
+        if not is_scrolling:
+            scroll_step()
+        if button.enabled:
+            scroll_task.restart()
         self._ensure_scroll_one_direction()
 
     def _on_scroll_released(self, scroll_task):

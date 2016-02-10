@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/compound_element.py
-from __future__ import absolute_import, with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/compound_element.py
+from __future__ import absolute_import, print_function
 from itertools import ifilter
 from .control_element import ControlElementClient, NotifyingControlElement
 from ..base import BooleanContext, first, second, SlotManager, listens_group

@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/control/control.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/control/control.py
+from __future__ import absolute_import, print_function
 from functools import partial
 from ...base import lazy_attribute, mixin, nop, task, Disconnectable, NamedTuple, SlotManager
 
@@ -181,25 +181,25 @@ class InputControl(Control):
         def _on_value(self, value, *a, **k):
             self._call_listener('value', value)
 
-        def _get_channel(self):
+        @property
+        def channel(self):
             return self._channel
 
-        def _set_channel(self, channel):
+        @channel.setter
+        def channel(self, channel):
             self._channel = channel
             if self._control_element:
                 self._control_element.set_channel(self._channel)
 
-        channel = property(_get_channel, _set_channel)
-
-        def _get_identifier(self):
+        @property
+        def identifier(self):
             return self._identifier
 
-        def _set_identifier(self, value):
+        @identifier.setter
+        def identifier(self, value):
             self._identifier = value
             if self._control_element:
                 self._control_element.set_identifier(self._identifier)
-
-        identifier = property(_get_identifier, _set_identifier)
 
 
 class ProxyControl(object):
@@ -211,7 +211,7 @@ class ProxyControl(object):
     def __init__(self, control = None, *a, **k):
         super(ProxyControl, self).__init__(*a, **k)
         self._control = control
-        raise not self._control._event_listeners or AssertionError, 'Cannot forward control that already has events.'
+        raise not self._control._event_listeners or AssertionError('Cannot forward control that already has events.')
 
     def _make_control_state(self, manager):
         """
@@ -261,13 +261,13 @@ class Connectable(SlotManager):
         else:
             return NullSlot()
 
-    def _set_connected_property_value(self, value):
-        self._connection.setter(self._connection.transform(value))
-
-    def _get_connected_property_value(self):
+    @property
+    def connected_property_value(self):
         return self._connection.getter()
 
-    connected_property_value = property(_get_connected_property_value, _set_connected_property_value)
+    @connected_property_value.setter
+    def connected_property_value(self, value):
+        self._connection.setter(self._connection.transform(value))
 
     def on_connected_property_changed(self, value):
         """

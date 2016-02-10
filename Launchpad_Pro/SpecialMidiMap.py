@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_Pro/SpecialMidiMap.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_Pro/SpecialMidiMap.py
 from __future__ import absolute_import
 from _Framework.MidiMap import MidiMap
 from _Framework.ButtonMatrixElement import ButtonMatrixElement

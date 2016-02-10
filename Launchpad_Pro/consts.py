@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_Pro/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_Pro/consts.py
 SYSEX_IDENTITY_REQUEST = (240, 126, 127, 6, 1, 247)
 DEVICE_CODE = (81, 0)
 MANUFACTURER_ID = (0, 32, 41)

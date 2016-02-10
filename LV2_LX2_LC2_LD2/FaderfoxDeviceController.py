@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/LV2_LX2_LC2_LD2/FaderfoxDeviceController.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/LV2_LX2_LC2_LD2/FaderfoxDeviceController.py
 import Live
 from FaderfoxComponent import FaderfoxComponent
 from consts import *

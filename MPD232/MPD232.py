@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/MPD232/MPD232.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MPD232/MPD232.py
 from __future__ import with_statement
 from _Framework.ButtonMatrixElement import ButtonMatrixElement
 from _MPDMkIIBase.MPDMkIIBase import MPDMkIIBase

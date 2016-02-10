@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/setup_component.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/setup_component.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import CompoundDisconnectable, SerializableListenableProperties, Subject, clamp, listenable_property
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.control import RadioButtonControl, StepEncoderControl, ToggleButtonControl, control_list
@@ -36,6 +37,10 @@ class ProfilingSettings(SerializableListenableProperties):
     show_realtime_ipc_stats = listenable_property.managed(False)
 
 
+class ExperimentalSettings(SerializableListenableProperties):
+    new_waveform_navigation = listenable_property.managed(False)
+
+
 class Settings(CompoundDisconnectable):
 
     def __init__(self, preferences = None, *a, **k):
@@ -46,6 +51,7 @@ class Settings(CompoundDisconnectable):
         self._hardware = self.register_disconnectable(preferences.setdefault('settings_hardware', HardwareSettings()))
         self._display_debug = self.register_disconnectable(preferences.setdefault('settings_display_debug', DisplayDebugSettings()))
         self._profiling = self.register_disconnectable(preferences.setdefault('settings_profiling', ProfilingSettings()))
+        self._experimental = self.register_disconnectable(preferences.setdefault('experimental', ExperimentalSettings()))
 
     @property
     def general(self):
@@ -67,6 +73,10 @@ class Settings(CompoundDisconnectable):
     def profiling(self):
         return self._profiling
 
+    @property
+    def experimental(self):
+        return self._experimental
+
 
 class GeneralSettingsComponent(Component):
     workflow_encoder = StepEncoderControl()
@@ -79,7 +89,7 @@ class GeneralSettingsComponent(Component):
         super(GeneralSettingsComponent, self).__init__(*a, **k)
         self._settings = settings
         self._hardware_settings = hardware_settings
-        self.workflow_encoder.connect_property(settings, 'workflow', lambda v: 'clip' if v > 0 else 'scene')
+        self.workflow_encoder.connect_property(settings, 'workflow', lambda v: ('clip' if v > 0 else 'scene'))
 
     @led_brightness_encoder.value
     def led_brightness_encoder(self, value, encoder):
@@ -145,6 +155,15 @@ class ProfilingSettingsComponent(Component):
         self.show_realtime_ipc_stats_button.connect_property(settings, 'show_realtime_ipc_stats')
 
 
+class ExperimentalSettingsComponent(Component):
+    new_waveform_navigation_button = ToggleButtonControl()
+
+    def __init__(self, settings = None, *a, **k):
+        raise settings is not None or AssertionError
+        super(ExperimentalSettingsComponent, self).__init__(*a, **k)
+        self.new_waveform_navigation_button.connect_property(settings, 'new_waveform_navigation')
+
+
 class SetupComponent(ModesComponent):
     category_radio_buttons = control_list(RadioButtonControl, checked_color='Option.Selected', unchecked_color='Option.Unselected')
 
@@ -158,10 +177,12 @@ class SetupComponent(ModesComponent):
             self._pad_settings = self.register_component(PadSettingsComponent(pad_settings=settings.pad_settings, is_enabled=False))
             self._display_debug = self.register_component(DisplayDebugSettingsComponent(settings=settings.display_debug, is_enabled=False))
             self._profiling = self.register_component(ProfilingSettingsComponent(settings=settings.profiling, is_enabled=False))
+            self._experimental = self.register_component(ExperimentalSettingsComponent(settings=settings.experimental, is_enabled=False))
             self.add_mode('Settings', [self._general, self._pad_settings])
             self.add_mode('Info', [])
             in_developer_mode and self.add_mode('Display Debug', [self._display_debug])
             self.add_mode('Profiling', [self._profiling])
+            self.add_mode('Experimental', [self._experimental])
         self.selected_mode = 'Settings'
         self.category_radio_buttons.control_count = len(self.modes)
         self.category_radio_buttons.checked_index = 0
@@ -181,6 +202,10 @@ class SetupComponent(ModesComponent):
     @property
     def profiling(self):
         return self._profiling
+
+    @property
+    def experimental(self):
+        return self._experimental
 
     @property
     def settings(self):

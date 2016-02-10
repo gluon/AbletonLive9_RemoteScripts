@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/_Framework/InputControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/InputControlElement.py
 from __future__ import absolute_import, with_statement
 import contextlib
 from . import Task
@@ -427,4 +427,6 @@ class InputControlElement(NotifyingControlElement):
 
     @property
     def _last_sent_value(self):
-        return self._last_sent_message[0] if self._last_sent_message else -1
+        if self._last_sent_message:
+            return self._last_sent_message[0]
+        return -1

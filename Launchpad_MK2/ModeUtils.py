@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/ModeUtils.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/ModeUtils.py
 from _Framework.Dependency import depends
 from _Framework.ModesComponent import ModesComponent, ModeButtonBehaviour, ImmediateBehaviour
 

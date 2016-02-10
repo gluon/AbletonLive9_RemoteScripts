@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/ableton/v2/control_surface/components/playable.py
-from __future__ import absolute_import
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/ableton/v2/control_surface/components/playable.py
+from __future__ import absolute_import, print_function
 from .. import Component
 from ..control import PlayableControl, ButtonControl, control_matrix
 
@@ -100,11 +100,15 @@ class PlayableComponent(Component):
 
     @property
     def width(self):
-        return self.matrix.width if self.matrix.width else 4
+        if self.matrix.width:
+            return self.matrix.width
+        return 4
 
     @property
     def height(self):
-        return self.matrix.height if self.matrix.height else 4
+        if self.matrix.height:
+            return self.matrix.height
+        return 4
 
     @property
     def pressed_pads(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/ControlElementUtils.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/ControlElementUtils.py
 from _Framework.Dependency import depends
 from _Framework.Resource import PrioritizedResource
 from _Framework.InputControlElement import MIDI_NOTE_TYPE

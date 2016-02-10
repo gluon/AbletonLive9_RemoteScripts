@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Launchpad_MK2/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad_MK2/MixerComponent.py
 from _Framework.Control import ButtonControl
 from _Framework.MixerComponent import MixerComponent as MixerComponentBase
 from .ChannelStripComponent import ChannelStripComponent

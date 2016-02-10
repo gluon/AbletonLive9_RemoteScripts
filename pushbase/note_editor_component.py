@@ -1,25 +1,24 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/note_editor_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_editor_component.py
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
 from itertools import chain, imap, ifilter
-from ableton.v2.base import clamp, first, in_range, listens, liveobj_valid, product, sign, Subject, task
+from ableton.v2.base import clamp, first, index_if, in_range, listens, liveobj_valid, product, sign, Subject, task
 from ableton.v2.control_surface import CompoundComponent, defaults
 from .loop_selector_component import create_clip_in_selected_slot
 from .matrix_maps import PLAYHEAD_FEEDBACK_CHANNELS
 DEFAULT_VELOCITY = 100
+DEFAULT_VELOCITY_RANGE_THRESHOLDS = [127, 100, 0]
+VELOCITY_RANGE_INDEX_TO_COLOR = ['Full', 'High', 'Low']
 BEAT_TIME_EPSILON = 1e-05
 
-def color_for_note(note):
+def color_for_note(note, velocity_range_thresholds = None):
+    thresholds = velocity_range_thresholds or DEFAULT_VELOCITY_RANGE_THRESHOLDS
     velocity = note[3]
     muted = note[4]
     if not muted:
-        if velocity == 127:
-            return 'Full'
-        elif velocity >= 100:
-            return 'High'
-        else:
-            return 'Low'
+        velocity_range_index = index_if(lambda threshold: velocity >= threshold, thresholds)
+        return VELOCITY_RANGE_INDEX_TO_COLOR[velocity_range_index]
     else:
         return 'Muted'
 
@@ -112,7 +111,7 @@ class LoopingTimeStep(TimeStep):
 class NoteEditorComponent(CompoundComponent, Subject):
     __events__ = ('page_length', 'active_steps', 'notes_changed', 'modify_all_notes')
 
-    def __init__(self, clip_creator = None, grid_resolution = None, skin_base_key = 'NoteEditor', *a, **k):
+    def __init__(self, clip_creator = None, grid_resolution = None, skin_base_key = 'NoteEditor', velocity_range_thresholds = None, *a, **k):
         raise skin_base_key is not None or AssertionError
         super(NoteEditorComponent, self).__init__(*a, **k)
         self._skin_base_key = skin_base_key
@@ -144,6 +143,7 @@ class NoteEditorComponent(CompoundComponent, Subject):
         self._triplet_factor = 1.0
         self._update_from_grid()
         self.background_color = self._skin_base_key + '.StepEmpty'
+        self._velocity_range_thresholds = velocity_range_thresholds or DEFAULT_VELOCITY_RANGE_THRESHOLDS
 
     @property
     def page_index(self):
@@ -262,11 +262,11 @@ class NoteEditorComponent(CompoundComponent, Subject):
                 if index in selected_indices:
                     color = self._skin_base_key + '.StepSelected'
                 elif index in editing_indices:
-                    note_color = color_for_note(most_significant_note(notes))
+                    note_color = self._determine_color(notes)
                     color = self._skin_base_key + '.StepEditing.' + note_color
                     last_editing_notes = notes
                 else:
-                    note_color = color_for_note(most_significant_note(notes))
+                    note_color = self._determine_color(notes)
                     color = self._skin_base_key + '.Step.' + note_color
             elif any(imap(time_step.overlaps_note, last_editing_notes)):
                 color = self._skin_base_key + '.StepEditing.' + note_color
@@ -280,6 +280,9 @@ class NoteEditorComponent(CompoundComponent, Subject):
 
         self._step_colors = step_colors
         self._update_editor_matrix_leds()
+
+    def _determine_color(self, notes):
+        return color_for_note(most_significant_note(notes), velocity_range_thresholds=self._velocity_range_thresholds)
 
     def _visible_steps(self):
         first_time = self.page_length * self._page_index
@@ -337,6 +340,9 @@ class NoteEditorComponent(CompoundComponent, Subject):
 
     @listens('value')
     def _on_matrix_value(self, value, x, y, is_momentary):
+        self._on_pad_pressed(value, x, y, is_momentary)
+
+    def _on_pad_pressed(self, value, x, y, is_momentary):
         if self.is_enabled():
             if self._sequencer_clip == None and value or not is_momentary:
                 clip = create_clip_in_selected_slot(self._clip_creator, self.song)
@@ -586,7 +592,7 @@ class NoteEditorComponent(CompoundComponent, Subject):
     def get_min_max_note_values(self):
         if self._modify_all_notes_enabled and len(self._clip_notes) > 0:
             return self._min_max_for_notes(self._clip_notes, 0.0)
-        elif len(self._pressed_steps) + len(self._modified_steps) > 0:
+        if len(self._pressed_steps) + len(self._modified_steps) > 0:
             min_max_values = None
             for x, y in chain(self._modified_steps, self._pressed_steps):
                 start_time = self._get_step_start_time(x, y)

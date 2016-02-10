@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/consts.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/consts.py
+from __future__ import absolute_import, print_function
 import sys
 import Live
 from ableton.v2.control_surface import DEFAULT_PRIORITY
@@ -18,7 +19,7 @@ DIALOG_PRIORITY = DEFAULT_PRIORITY + 2
 NOTIFICATION_PRIORITY = DEFAULT_PRIORITY + 1
 BACKGROUND_PRIORITY = DEFAULT_PRIORITY - 3
 ENCODER_SENSITIVITY = 0.5
-CONTINUOUS_MAPPING_SENSITIVITY = 1.0
+CONTINUOUS_MAPPING_SENSITIVITY = 2.0
 FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY = 0.01
 QUANTIZED_MAPPING_SENSITIVITY = 1.0 / 15.0
 GLOBAL_MAP_MODE = Live.MidiMap.MapMode.relative_smooth_two_compliment

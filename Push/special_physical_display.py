@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/special_physical_display.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push/special_physical_display.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import group, flatten
 from ableton.v2.control_surface.elements import PhysicalDisplayElement
 DISPLAY_BLOCK_LENGTH = 18

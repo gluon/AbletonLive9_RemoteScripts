@@ -1,16 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/simpler_zoom.py
-from __future__ import absolute_import, with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/simpler_zoom.py
+from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from ableton.v2.base import clamp, linear, SlotManager, Subject, listens, liveobj_valid, liveobj_changed
-
-def is_simpler(device):
-    return device and device.class_name == 'OriginalSimpler'
-
+from pushbase.device_chain_utils import is_simpler
 
 def get_zoom_parameter(parameter_host):
     parameters = parameter_host.parameters if liveobj_valid(parameter_host) else []
     results = filter(lambda p: p.name == 'Zoom', parameters)
-    return results[0] if len(results) > 0 else None
+    if len(results) > 0:
+        return results[0]
 
 
 class ZoomHandling(SlotManager, Subject):
@@ -23,7 +21,9 @@ class ZoomHandling(SlotManager, Subject):
 
     @property
     def zoom(self):
-        return self._zoom_parameter.value if self._zoom_parameter else 0.0
+        if self._zoom_parameter:
+            return self._zoom_parameter.value
+        return 0.0
 
     @property
     def max_zoom(self):
@@ -58,7 +58,9 @@ class ZoomHandling(SlotManager, Subject):
 
     def _internal_to_zoom(self, value, _parent):
         fudge = self._get_zoom_start_fudge() ** 10 ** (1.0 / self.ZOOM_EXP)
-        return (value * (1.0 - fudge) + fudge) ** self.ZOOM_EXP if value > 0.0 else 0.0
+        if value > 0.0:
+            return (value * (1.0 - fudge) + fudge) ** self.ZOOM_EXP
+        return 0.0
 
     def _zoom_to_internal(self, value, _parent):
         fudge = self._get_zoom_start_fudge() ** 10 ** (1.0 / self.ZOOM_EXP)
@@ -97,7 +99,7 @@ class SimplerZoomHandling(ZoomHandling):
     def _set_zoom_parameter(self):
         self._zoom_parameter = get_zoom_parameter(self._parameter_host)
 
-    @listens('sample_file_path')
+    @listens('sample')
     def _on_sample_changed(self):
         if self._zoom_parameter:
             self._zoom_parameter.value = self._zoom_parameter.default_value
@@ -112,13 +114,13 @@ class SimplerZoomHandling(ZoomHandling):
 
     @property
     def max_zoom(self):
-        has_sample = liveobj_valid(self._parameter_host) and self._parameter_host.sample_length > 0
-        length = float(self._parameter_host.sample_length if has_sample else self.SCREEN_WIDTH)
+        has_sample = liveobj_valid(self._parameter_host) and liveobj_valid(self._parameter_host.sample)
+        length = float(self._parameter_host.sample.length if has_sample else self.SCREEN_WIDTH)
         return float(length / self.SCREEN_WIDTH)
 
     def _get_zoom_start_fudge(self):
-        if liveobj_valid(self._parameter_host):
-            sample_length = self._parameter_host.sample_length
+        if liveobj_valid(self._parameter_host) and liveobj_valid(self._parameter_host.sample):
+            sample_length = self._parameter_host.sample.length
             fudge_length_a = 200000
             fudge_factor_a = 0.4
             fudge_length_b = 2500000

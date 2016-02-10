@@ -1,5 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/pushbase/percussion_instrument_finder_component.py
-from __future__ import with_statement
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/percussion_instrument_finder_component.py
+from __future__ import absolute_import, print_function
 import Live
 from itertools import chain
 from ableton.v2.base import Subject, listens_group, liveobj_changed, liveobj_valid
@@ -80,11 +80,11 @@ class PercussionInstrumentFinderComponent(Component, Subject):
     def _update_instruments(self):
         drum_group = find_drum_group_device(self.device_parent)
         simpler = find_sliced_simpler(self.device_parent)
-        if not liveobj_changed(drum_group, self._drum_group):
-            do_notify = liveobj_changed(simpler, self._simpler)
-            self._drum_group = drum_group
-            self._simpler = simpler
-            do_notify and self.notify_instrument()
+        do_notify = liveobj_changed(drum_group, self._drum_group) or liveobj_changed(simpler, self._simpler)
+        self._drum_group = drum_group
+        self._simpler = simpler
+        if do_notify:
+            self.notify_instrument()
 
 
 def find_drum_group_device(track_or_chain):

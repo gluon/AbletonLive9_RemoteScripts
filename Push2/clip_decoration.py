@@ -1,17 +1,31 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push2/clip_decoration.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/clip_decoration.py
+from __future__ import absolute_import, print_function
 from ableton.v2.base import liveobj_valid, SlotManager, Subject
-from .decoration import DecoratorFactory, find_decorated_object, LiveObjectDecorator
-from .internal_parameter import InternalParameter
+from pushbase.decoration import DecoratorFactory, LiveObjectDecorator
+from pushbase.internal_parameter import InternalParameter
+from .decoration import find_decorated_object
+from .waveform_navigation import AudioClipWaveformNavigation
+
+class ZoomParameter(AudioClipWaveformNavigation, InternalParameter):
+    pass
+
 
 class ClipDecoration(Subject, SlotManager, LiveObjectDecorator):
     __events__ = ('zoom',)
 
     def __init__(self, *a, **k):
         super(ClipDecoration, self).__init__(*a, **k)
-        self._zoom_parameter = InternalParameter(name='Zoom', parent=self._live_object)
+        waveform_length = max(self._live_object.view.sample_length, 1)
+        self._zoom_parameter = ZoomParameter(name='Zoom', parent=self._live_object, waveform_length=waveform_length, clip=self)
+        self._zoom_parameter.focus_object(self._zoom_parameter.start_marker_focus)
+        self.register_disconnectable(self._zoom_parameter)
 
     @property
     def zoom(self):
+        return self._zoom_parameter
+
+    @property
+    def waveform_navigation(self):
         return self._zoom_parameter
 
 
