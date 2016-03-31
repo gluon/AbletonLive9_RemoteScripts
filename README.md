@@ -7,7 +7,7 @@ You can find more informations on
 [this page](http://julienbayle.net/ableton-live-9-midi-remote-scripts "this page")
 
 
-**UPDATED on 30th March 2016 with Lemur Live Control v2.1.32**
+**UPDATED on 31th March 2016 with Lemur Live Control v2.1.31 (just in case)**
 
 (all files marked with older references didn't have changed since previous versions)
 
