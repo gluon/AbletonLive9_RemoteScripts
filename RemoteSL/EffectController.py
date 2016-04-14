@@ -157,13 +157,13 @@ class EffectController(RemoteSLComponent):
             else:
                 if not False:
                     raise AssertionError('unknown Display midi message')
-                if not self.__bank == new_bank:
-                    self.__show_bank = True
-                    if not self.__assigned_device_is_locked:
-                        self.__bank = new_bank
-                        self.__reassign_strips()
-                    else:
-                        self.__assigned_device.store_chosen_bank(self.__parent.instance_identifier(), new_bank)
+            if not self.__bank == new_bank:
+                self.__show_bank = True
+                if not self.__assigned_device_is_locked:
+                    self.__bank = new_bank
+                    self.__reassign_strips()
+                else:
+                    self.__assigned_device.store_chosen_bank(self.__parent.instance_identifier(), new_bank)
 
     def __handle_select_button_ccs(self, cc_no, cc_value):
         if cc_no == FX_SELECT_FIRST_BUTTON_ROW:
