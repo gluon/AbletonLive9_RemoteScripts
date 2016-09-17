@@ -17,7 +17,7 @@ PAD_IDS = ((81, 83, 84, 86),
  (60, 62, 64, 65))
 
 def make_encoder(identifier, name):
-    return EncoderElement(MIDI_CC_TYPE, 0, identifier, Live.MidiMap.MapMode.absolute, name=name)
+    return EncoderElement(MIDI_CC_TYPE, 0, identifier, Live.MidiMap.MapMode.relative_two_compliment, name=name)
 
 
 def make_button(identifier, name, msg_type = MIDI_NOTE_TYPE, channel = PAD_CHANNEL):
