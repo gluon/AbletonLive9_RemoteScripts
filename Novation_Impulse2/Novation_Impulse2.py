@@ -157,6 +157,7 @@ class Novation_Impulse2(ControlSurface):
                 self._show_current_track_name()
 
     def _setup_mixer(self):
+        self.log('setup mixer')
         mute_solo_flip_button = ButtonElement(not IS_MOMENTARY, MIDI_CC_TYPE, 0, 34)
         self._next_nav_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 37)
         self._prev_nav_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 38)
@@ -339,6 +340,28 @@ class Novation_Impulse2(ControlSurface):
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
         else:
             self._set_string_to_display(' - ')
+        if self._shift_pressed:
+            self.log_message("_mixer_button_value")
+            self.log_message(value)
+            if (value == 0):
+                self.select_armed_track_if_only_one()
+
+    def select_armed_track_if_only_one(self):
+        self.log_message("select_armed_track_if_only_one")
+        song = self.song()
+        armed_tracks = []
+        tracks = song.tracks
+        for track in tracks:
+            if track.can_be_armed and track.arm:
+                armed_tracks.append(track)
+        self.log_message(len(armed_tracks))
+        if (len(armed_tracks) == 1):
+            self.log_message("selecting the track")
+            sel_track = armed_tracks[0]
+            self.song().view.selected_track = sel_track
+            self._mixer._selected_tracks = []
+            self._mixer._selected_tracks.append(sel_track)
+            self._mixer.on_selected_track_changed()
 
     def _preview_value(self, value):
         if not value in range(128):

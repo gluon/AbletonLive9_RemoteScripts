@@ -7,6 +7,7 @@ class SpecialMixerComponent(MixerComponent):
 
     def __init__(self, num_tracks, c_instance):
         self.c_instance = c_instance
+        self.log("mixer.init")
         self._selected_mute_solo_button = None
         self._strip_mute_solo_buttons = None
         self._mute_solo_flip_button = None
@@ -92,6 +93,7 @@ class SpecialMixerComponent(MixerComponent):
                         strip.set_solo_button(None)
                         strip.set_mute_button(self._strip_mute_solo_buttons[index])
                         strip.set_arm_button(None)
+
 
     def _on_timer(self):
 #        self.log("_on_timer")
