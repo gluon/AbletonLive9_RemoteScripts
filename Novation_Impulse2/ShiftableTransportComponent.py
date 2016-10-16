@@ -11,7 +11,6 @@ class ShiftableTransportComponent(TransportComponent):
     def __init__(self, c_instance, session, parent, ffwd_button, rwd_button):
         TransportComponent.__init__(self)
         self.c_instance = c_instance
-        self._shift_pressed = False
         self._mixer9_button = None
         self._play_button = None
         self._record_button = None
@@ -62,7 +61,7 @@ class ShiftableTransportComponent(TransportComponent):
         self.log("_play_pressed " + str(value))
         if not value in range(128):
             raise AssertionError
-        if self._shift_pressed:
+        if self._parent.shift_pressed:
             if value != 0:
                 if self.song().can_undo:
                     #todo: add message
@@ -75,14 +74,13 @@ class ShiftableTransportComponent(TransportComponent):
                     self._parent._set_string_to_display('cannot undo')
 
 
-    def _shift_value(self, value):
+    def _shift_button_handler(self, value):
         self.log("shift handler transport component " + str(value))
         if not value in range(128):
             raise AssertionError
         self.log("shift handler 2")
-        self._shift_pressed = self.is_enabled() and value > 0
         self.log("shift handler 3")
-        if self._shift_pressed:
+        if self._parent.shift_pressed:
             self._play_toggle.set_toggle_button(None)
             self._session.set_stop_all_clips_button(self._stop_button)
             self.set_stop_button(None)
@@ -110,7 +108,7 @@ class ShiftableTransportComponent(TransportComponent):
         if not value in range(128):
             raise AssertionError
         else:
-            if self._shift_pressed:
+            if self._parent.shift_pressed:
                 self.log("ffwd shifted handler")
 #                    self.song().current_song_time = self.song().last_event_time
                 if value == 1:
@@ -126,7 +124,7 @@ class ShiftableTransportComponent(TransportComponent):
         if not value in range(128):
             raise AssertionError
         else:
-            if self._shift_pressed:
+            if self._parent.shift_pressed:
                 self.log("rwd shifted handler")
 #                    self.song().current_song_time = 0.0
                 if value == 1:

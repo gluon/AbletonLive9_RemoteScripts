@@ -24,7 +24,9 @@ Shift + Stop = Stop all clips
 Shift + Ffwd/Back  - next/previous device
 
 Shift + Loop now enters "alternative assignments" mode.
-For now the only difference is that mixer buttons are permanently armed (like the shift is pressed)
+Differences:
+  is that mixer buttons are permanently armed (like the shift is pressed)
+  if you press Shift and arm the track, it will NOT me selected automatically
 
 It is very good for perfomance when you need to quickly switch instruments and only have one left hand or right hand available as the other is ready to play
 

@@ -29,7 +29,7 @@ class TransportViewModeSelector(ModeSelectorComponent):
         self._loop_button = loop_button
         self._shift_pressed = False
         self.application().view.add_is_view_visible_listener('Session', self._on_view_changed)
-        self._loop_button.add_value_listener(self._loop_value)
+        self._loop_button.add_value_listener(self._loop_pressed)
         self.update()
 
     def disconnect(self):
@@ -38,8 +38,8 @@ class TransportViewModeSelector(ModeSelectorComponent):
         self._session = None
         self._ffwd_button = None
         self._rwd_button = None
-        self._loop_button = None
         self._loop_button.remove_value_listener(self._loop_pressed)
+        self._loop_button = None
         self.application().view.remove_is_view_visible_listener('Session', self._on_view_changed)
 
     def update(self):
@@ -72,16 +72,16 @@ class TransportViewModeSelector(ModeSelectorComponent):
         self.update()
 
 
-    def _shift_value(self, value):
+    def _shift_button_handler(self, value):
         self.log("shift handler transport component " + str(value))
         if not value in range(128):
             raise AssertionError
         self.log("shift handler 2")
-        self._shift_pressed = self.is_enabled() and value > 0
+        self._shift_pressed = self.is_enabled() and self._parent.shift_pressed
         self.update()
         self.log("shift handler 3")
 
-    def _loop_value(self, value):
+    def _loop_pressed(self, value):
         self.log("loop handler transport component " + str(value))
         if value == 1:
             self._parent.flipAlternativeButtonMode()

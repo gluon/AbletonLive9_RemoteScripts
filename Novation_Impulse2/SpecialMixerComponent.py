@@ -15,7 +15,6 @@ class SpecialMixerComponent(MixerComponent):
         MixerComponent.__init__(self, num_tracks)
         self._selected_tracks = []
         self._register_timer_callback(self._on_timer)
-        self._shift_pressed = False
         self._mute_solo_raw_value = 127
 
 
@@ -23,9 +22,6 @@ class SpecialMixerComponent(MixerComponent):
         self._unregister_timer_callback(self._on_timer)
         self._selected_tracks = None
         MixerComponent.disconnect(self)
-        #if self._shift_button != None:
-        #    self._shift_button.remove_value_listener(self._shift_value)
-        #    self._shift_button = None
         if self._mute_solo_flip_button != None:
             self._mute_solo_flip_button.remove_value_listener(self._mute_solo_flip_value)
             self._mute_solo_flip_button = None
@@ -55,12 +51,8 @@ class SpecialMixerComponent(MixerComponent):
     def tracks_to_use(self):
         return tuple(self.song().visible_tracks) + tuple(self.song().return_tracks)
 
-    def _shift_value(self, value):
+    def _shift_button_handler(self, value):
         self.log("calling mixer shift value " + str(value))
-        if (value > 0):
-            self._shift_pressed = True
-        else:
-            self._shift_pressed = False
         self.updateMixerButtons()
         pass
         return
@@ -76,12 +68,12 @@ class SpecialMixerComponent(MixerComponent):
 
 
     def updateMixerButtons(self):
-        self.log("updateMixerButtons" + str(self._shift_pressed) + " " +str(self.parent.alternative_buttons_mode))
+        self.log("updateMixerButtons" + str(self.parent.shift_pressed) + " " +str(self.parent.alternative_buttons_mode))
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)
                 self.log("setting strip")
-                if self._shift_pressed or self.parent.alternative_buttons_mode:
+                if self.parent.shift_pressed or self.parent.alternative_buttons_mode:
                         strip.set_mute_button(None)
                         strip.set_solo_button(None)
                         strip.set_arm_button(self._strip_mute_solo_buttons[index])
