@@ -5,7 +5,8 @@ from _Framework.ButtonElement import ButtonElement
 class SpecialMixerComponent(MixerComponent):
     """ Special mixer class that reassigns buttons to mute or solo based on a toggle """
 
-    def __init__(self, num_tracks, c_instance):
+    def __init__(self, parent, num_tracks, c_instance):
+        self.parent = parent
         self.c_instance = c_instance
         self.log("mixer.init")
         self._selected_mute_solo_button = None
@@ -75,12 +76,12 @@ class SpecialMixerComponent(MixerComponent):
 
 
     def updateMixerButtons(self):
-        self.log("updateMixerButtons")
+        self.log("updateMixerButtons" + str(self._shift_pressed) + " " +str(self.parent.alternative_buttons_mode))
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)
                 self.log("setting strip")
-                if self._shift_pressed:
+                if self._shift_pressed or self.parent.alternative_buttons_mode:
                         strip.set_mute_button(None)
                         strip.set_solo_button(None)
                         strip.set_arm_button(self._strip_mute_solo_buttons[index])

@@ -68,11 +68,20 @@ class Novation_Impulse2(ControlSurface):
             self._encoder_modes.set_device_mixer_buttons(device_button, mixer_button)
             self._string_to_display = None
             self._shift_pressed = False
+            # special alternative buttons mode. for now only mixer buttons become record buttons. later we will add something more
+            self.alternative_buttons_mode = False
             self._shift_button.add_value_listener(self._shift_value)
 
 
             for component in self.components:
                 component.set_enabled(False)
+
+    def alternative_buttons_mode(self):
+        return self.alternative_buttons_mode
+
+    def alternative_buttons_mode(self,value):
+        self.log ('alternative_buttons_mode_value ' + str(value))
+        self.alternative_buttons_mode = value
 
     def refresh_state(self):
         ControlSurface.refresh_state(self)
@@ -165,7 +174,7 @@ class Novation_Impulse2(ControlSurface):
         mute_solo_flip_button.name = 'Mute_Solo_Flip_Button'
         self._next_nav_button.name = 'Next_Track_Button'
         self._prev_nav_button.name = 'Prev_Track_Button'
-        self._mixer = SpecialMixerComponent(8, self.c_instance)
+        self._mixer = SpecialMixerComponent(self, 8, self.c_instance)
         self._mixer.name = 'Mixer'
         self._mixer.set_select_buttons(self._next_nav_button, self._prev_nav_button)
         self._mixer.selected_strip().name = 'Selected_Channel_Strip'
@@ -240,7 +249,7 @@ class Novation_Impulse2(ControlSurface):
         self._transport.set_record_buttonOnInit(rec_button)
 #        self._transport.set_shift_button(self._shift_button)
         self._transport.set_mixer9_button(self._button9)
-        self._transport_view_modes = TransportViewModeSelector(self.c_instance,self._transport, self._session, ffwd_button, rwd_button, loop_button)
+        self._transport_view_modes = TransportViewModeSelector(self,self.c_instance,self._transport, self._session, ffwd_button, rwd_button, loop_button)
         self._transport_view_modes.name = 'Transport_View_Modes'
 
     def _setup_device(self):
@@ -340,7 +349,7 @@ class Novation_Impulse2(ControlSurface):
             self._display_reset_delay = STANDARD_DISPLAY_DELAY
         else:
             self._set_string_to_display(' - ')
-        if self._shift_pressed:
+        if self._shift_pressed or self.alternative_buttons_mode:
             self.log_message("_mixer_button_value")
             self.log_message(value)
             if (value == 0):
@@ -435,6 +444,14 @@ class Novation_Impulse2(ControlSurface):
             self._session.set_stop_track_clip_buttons(None)
 
         self.log("root shift handler 4")
+
+    def flipAlternativeButtonMode(self):
+        self.alternative_buttons_mode   = not self.alternative_buttons_mode
+        self.updateAlternativeButtonMode()
+
+    def updateAlternativeButtonMode(self):
+        self._mixer.updateMixerButtons()
+        self._transport_view_modes.update()
 
     def log(self, message):
         pass
