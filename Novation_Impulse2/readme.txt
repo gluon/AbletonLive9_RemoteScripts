@@ -1,3 +1,8 @@
+Created by Marat Bakirov 2013-2016
+Marat branch is here:
+https://github.com/maratbakirov/AbletonLive9_RemoteScripts
+
+
 IMPORTANT!
 
 since Ableton 9.1.2 some API has been changed
@@ -26,6 +31,7 @@ Known issues that cannot be fixed
 1) After moving track with Shift+Track buttons are not returned to inital condition. 
     Also happens sometimes in other cases (like bank switching with Shift). 
    Workaround - press and release Shit again.
+  update : seems to work fine with Nocation Firmware 695 and higher
 2) Pressin shift + (mutes/solos) flip button leds to unpredictable results.
    Workaround - do not do that, if you have done that, just press and release shift.
 
@@ -38,7 +44,7 @@ FIXED  1.5) refactor shift - move it to main class.
 FIXED: 2)when track goes down, the bank is not changed. 
 3) on initialize mute/solo buttons do not light
   workaround - press shift button.
-4) when arming a single track make the track selected 
+FIXED: 4) when arming a single track make the track selected 
 
 
 Future things to implement. 

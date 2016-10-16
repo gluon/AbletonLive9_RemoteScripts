@@ -63,7 +63,7 @@ class SpecialMixerComponent(MixerComponent):
         self.updateMixerButtons()
         pass
         return
-    
+
     def _mute_solo_flip_value(self, value):
         #self.log(value)
         if not self._mute_solo_flip_button != None:
@@ -96,7 +96,6 @@ class SpecialMixerComponent(MixerComponent):
 
 
     def _on_timer(self):
-#        self.log("_on_timer")
         sel_track = None
         while len(self._selected_tracks) > 0:
             track = self._selected_tracks[-1]
@@ -109,22 +108,22 @@ class SpecialMixerComponent(MixerComponent):
             found_recording_clip = False
             song = self.song()
             tracks = song.tracks
-            if song.is_playing:
-                check_arrangement = song.record_mode
-                for track in tracks:
-                    if track.can_be_armed and track.arm:
-                        if check_arrangement:
-                            found_recording_clip = True
-                            break
-                        else:
-                            playing_slot_index = track.playing_slot_index
-                            if playing_slot_index in range(len(track.clip_slots)):
-                                slot = track.clip_slots[playing_slot_index]
-                                if slot.has_clip and slot.clip.is_recording:
-                                    found_recording_clip = True
-                                    break
+            check_arrangement = song.is_playing and song.record_mode
+            for track in tracks:
+                if track.can_be_armed and track.arm:
+                    if check_arrangement:
+                        found_recording_clip = True
+                        break
+                    else:
+                        playing_slot_index = track.playing_slot_index
+                        if playing_slot_index in range(len(track.clip_slots)):
+                            slot = track.clip_slots[playing_slot_index]
+                            if slot.has_clip and slot.clip.is_recording:
+                                found_recording_clip = True
+                                break
 
-                if found_recording_clip or song.exclusive_arm:
+            if not found_recording_clip:
+                if song.exclusive_arm:
                     for track in tracks:
                         if track.can_be_armed and track.arm and track != sel_track:
                             track.arm = False
@@ -132,7 +131,6 @@ class SpecialMixerComponent(MixerComponent):
                 sel_track.arm = True
                 sel_track.view.select_instrument()
         self._selected_tracks = []
-#        self.updateMixerButtons()
 
     def _next_track_value(self, value):
         self.log("_next_track_value "+ str(value))
