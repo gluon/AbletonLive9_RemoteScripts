@@ -2,6 +2,8 @@ Created by Marat Bakirov 2013-2016
 Marat branch is here:
 https://github.com/maratbakirov/AbletonLive9_RemoteScripts
 
+Discussion
+https://forum.ableton.com/viewtopic.php?f=1&t=197828
 
 IMPORTANT!
 
