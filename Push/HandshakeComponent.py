@@ -1,9 +1,10 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/HandshakeComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/HandshakeComponent.py
 """
 Component for handling the initialization process of Push.
 """
 import Live
 from _Framework import Task
+from _Framework.ComboElement import ToggleElement
 from _Framework.SubjectSlot import subject_slot
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent
 from _Framework.Util import NamedTuple
@@ -34,6 +35,16 @@ class HardwareIdentity(NamedTuple):
     firmware = None
     serial = None
     manufacturing = None
+
+    @property
+    def major_version(self):
+        raise len(self.firmware) == 4 or AssertionError
+        return self.firmware[0] * 10 + self.firmware[1]
+
+    @property
+    def minor_version(self):
+        raise len(self.firmware) == 4 or AssertionError
+        return self.firmware[2] * 10 + self.firmware[3]
 
 
 class HandshakeComponent(ControlSurfaceComponent):
@@ -73,6 +84,11 @@ class HandshakeComponent(ControlSurfaceComponent):
     def firmware_version(self):
         version_bytes = self._hardware_identity.firmware if self._hardware_identity != None else 4 * (0,)
         return get_version_number_from_string(' %d %d %d %d' % version_bytes)
+
+    def has_version_requirements(self, major_version, minor_version):
+        if self._hardware_identity is None:
+            return False
+        return self._hardware_identity.major_version > major_version or self._hardware_identity.major_version == major_version and self._hardware_identity.minor_version >= minor_version
 
     def on_enabled_changed(self):
         super(HandshakeComponent, self).on_enabled_changed()
@@ -119,3 +135,24 @@ class HandshakeComponent(ControlSurfaceComponent):
             self._handshake_succeeded = False
             self._identification_timeout_task.kill()
             self.notify_failure(bootloader_mode)
+
+
+class MinimumFirmwareVersionElement(ToggleElement):
+
+    def __init__(self, major_version = 0, minor_version = 0, wrapped_element = None, handshake_component = None, *a, **k):
+        raise wrapped_element is not None or AssertionError
+        raise handshake_component is not None or AssertionError
+        super(MinimumFirmwareVersionElement, self).__init__(on_control=wrapped_element, off_control=None, wrapped_control=wrapped_element, *a, **k)
+        self._major_version = major_version
+        self._minor_version = minor_version
+        self._handshake_component = handshake_component
+        self._on_handshake_success.subject = handshake_component
+        self._on_handshake_failure.subject = handshake_component
+
+    @subject_slot('success')
+    def _on_handshake_success(self):
+        self.set_toggled(self._handshake_component.has_version_requirements(self._major_version, self._minor_version))
+
+    @subject_slot('failure')
+    def _on_handshake_failure(self, _):
+        self.set_toggled(False)

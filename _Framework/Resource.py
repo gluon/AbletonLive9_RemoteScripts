@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Resource.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/Resource.py
 from __future__ import absolute_import
 from functools import partial
 from .Proxy import Proxy
@@ -78,7 +78,7 @@ class ExclusiveResource(Resource):
 
     def grab(self, client, *a, **k):
         if not client is not None:
-            raise AssertionError, 'Someone has to adquire resource'
+            raise AssertionError('Someone has to adquire resource')
             self._owner == None and self.on_received(client, *a, **k)
             self._owner = client
         return self._owner == client
@@ -115,7 +115,7 @@ class SharedResource(Resource):
         self._clients = set()
 
     def grab(self, client, *a, **k):
-        raise client is not None or AssertionError, 'Someone has to adquire resource'
+        raise client is not None or AssertionError('Someone has to adquire resource')
         self.on_received(client, *a, **k)
         self._clients.add(client)
         return True
@@ -132,7 +132,7 @@ class SharedResource(Resource):
         return False
 
     def get_owner(self):
-        raise False or AssertionError, 'Shared resource has no owner'
+        raise False or AssertionError('Shared resource has no owner')
 
     def on_received(self, client, *a, **k):
         raise NotImplemented, 'Override or pass callback'
@@ -222,11 +222,15 @@ class StackingResource(Resource):
             return True
 
     def _actual_owners(self):
-        return [self._clients[-1][0]] if self._clients else []
+        if self._clients:
+            return [self._clients[-1][0]]
+        return []
 
     @property
     def max_priority(self):
-        return self._clients[-1][1] if self._clients else DEFAULT_PRIORITY
+        if self._clients:
+            return self._clients[-1][1]
+        return DEFAULT_PRIORITY
 
     @property
     def stack_size(self):

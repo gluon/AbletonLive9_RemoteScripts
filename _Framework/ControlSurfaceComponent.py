@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ControlSurfaceComponent.py
 from __future__ import absolute_import
 import Live
 from . import Task
@@ -50,7 +50,7 @@ class ControlSurfaceComponent(ControlManager, Subject):
             if self.is_enabled():
                 grabbed = self._layer.grab(self)
                 if not grabbed:
-                    raise AssertionError, 'Only one component can use a layer at atime'
+                    raise AssertionError('Only one component can use a layer at atime')
                 else:
                     self._layer.release(self)
             if self._has_task_group:
@@ -73,9 +73,9 @@ class ControlSurfaceComponent(ControlManager, Subject):
         self._update_is_enabled()
 
     def _update_is_enabled(self):
-        if self._recursive_is_enabled:
-            is_enabled = self._explicit_is_enabled
-            self._is_enabled = is_enabled != self._is_enabled and is_enabled
+        is_enabled = self._recursive_is_enabled and self._explicit_is_enabled
+        if is_enabled != self._is_enabled:
+            self._is_enabled = is_enabled
             self._internal_on_enabled_changed()
             self.on_enabled_changed()
 
@@ -110,12 +110,12 @@ class ControlSurfaceComponent(ControlManager, Subject):
 
     def _set_layer(self, new_layer):
         if self._layer != new_layer:
-            self._layer and self._layer.release(self)
-        self._layer = new_layer
-        if new_layer and self.is_enabled():
-            grabbed = new_layer.grab(self)
-            if not grabbed:
-                raise AssertionError, 'Only one component can use a layer at atime'
+            if self._layer:
+                self._layer.release(self)
+            self._layer = new_layer
+            if new_layer and self.is_enabled():
+                grabbed = new_layer.grab(self)
+                raise grabbed or AssertionError('Only one component can use a layer at atime')
 
     layer = property(_get_layer, _set_layer)
 
@@ -124,7 +124,9 @@ class ControlSurfaceComponent(ControlManager, Subject):
         Returns whether the component is enabled.
         If 'explicit' is True the parent state is ignored.
         """
-        return self._is_enabled if not explicit else self._explicit_is_enabled
+        if not explicit:
+            return self._is_enabled
+        return self._explicit_is_enabled
 
     def on_track_list_changed(self):
         """

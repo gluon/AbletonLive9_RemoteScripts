@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/PhysicalDisplayElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/PhysicalDisplayElement.py
 from __future__ import absolute_import
 from itertools import ifilter, izip, starmap, chain, imap
 from functools import partial
@@ -59,6 +59,9 @@ class DisplayElement(ControlElement):
         self._width = width_in_chars
         self._logical_segments = []
         self.set_num_segments(num_segments)
+
+    def __repr__(self):
+        return '<%s %r>' % (self.__class__.__name__, self.display_string)
 
     @property
     def display_string(self):

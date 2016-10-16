@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MPK49/config.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MPK49/config.py
 from consts import *
 TRANSPORT_CONTROLS = {'STOP': GENERIC_STOP,
  'PLAY': GENERIC_PLAY,
@@ -62,5 +62,4 @@ CONTROLLER_DESCRIPTION = {'INPUTPORT': 'Akai MPK49',
 MIXER_OPTIONS = {'NUMSENDS': 2,
  'SEND1': (-1, -1, -1, -1, -1, -1, -1, -1),
  'SEND2': (-1, -1, -1, -1, -1, -1, -1, -1),
- 'MASTERVOLUME': -1,
- 'NOTOGGLE': 0}
+ 'MASTERVOLUME': -1}

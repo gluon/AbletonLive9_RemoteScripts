@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Layer.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/Layer.py
 """
 Module implementing a way to resource-based access to controls in an
 unified interface dynamic.
@@ -47,9 +47,9 @@ class LayerClient(ControlElementClient):
     def set_control_element(self, control_element, grabbed):
         layer = self.layer
         owner = self.layer_client
-        raise owner or AssertionError
-        if not control_element in layer._control_to_names:
-            raise AssertionError, 'Control not in layer: %s' % (control_element,)
+        if not owner:
+            raise AssertionError
+            raise control_element in layer._control_to_names or AssertionError('Control not in layer: %s' % (control_element,))
             names = layer._control_to_names[control_element]
             control_element = grabbed or None
         for name in names:
@@ -69,7 +69,11 @@ class LayerClient(ControlElementClient):
             layer._name_to_controls[name] = control_element
 
 
-class CompoundLayer(CompoundResource):
+class LayerBase(object):
+    pass
+
+
+class CompoundLayer(LayerBase, CompoundResource):
     """
     A compound resource takes two layers and makes them look like one,
     grabbing both of them.  Both can have different priorities
@@ -93,7 +97,7 @@ class CompoundLayer(CompoundResource):
             return getattr(self.second, key)
 
 
-class Layer(ExclusiveResource):
+class Layer(LayerBase, ExclusiveResource):
     """
     A layer provides a convenient interface to control resources. In a
     layer, you can group several controls by name.  The layer itself

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/CompoundElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/CompoundElement.py
 from __future__ import absolute_import, with_statement
 from itertools import ifilter
 from .ControlElement import ControlElementClient
@@ -121,6 +121,10 @@ class CompoundElement(NotifyingControlElement, SlotManager, ControlElementClient
     def reset(self):
         for element in self.owned_control_elements():
             element.reset()
+
+    def reset_state(self):
+        for element in self.owned_control_elements():
+            element.reset_state()
 
     def add_value_listener(self, *a, **k):
         if self.value_listener_count() == 0:

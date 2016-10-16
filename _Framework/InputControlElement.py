@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/InputControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/InputControlElement.py
 from __future__ import absolute_import, with_statement
 import contextlib
 from . import Task
@@ -125,6 +125,9 @@ class InputControlElement(NotifyingControlElement):
         use_default_message = nop
         set_channel = nop
         message_channel = const(None)
+        mapped_parameter = nop
+        mapping_sensitivity = const(None)
+        reset_state = nop
 
     __subject_events__ = (SubjectEvent(name='value', signal=InputSignal, override=True),)
     _input_signal_listener_count = 0
@@ -189,6 +192,7 @@ class InputControlElement(NotifyingControlElement):
 
     def _set_mapping_sensitivity(self, sensitivity):
         self._mapping_sensitivity = sensitivity
+        self._request_rebuild()
 
     mapping_sensitivity = property(_get_mapping_sensitivity, _set_mapping_sensitivity)
 
@@ -378,7 +382,11 @@ class InputControlElement(NotifyingControlElement):
     def reset(self):
         """ Send 0 to reset motorized faders and turn off LEDs """
         self.send_value(0)
+
+    def reset_state(self):
+        self.use_default_message()
         self.suppress_script_forwarding = False
+        self.release_parameter()
 
     def receive_value(self, value):
         value = getattr(value, 'midi_value', value)
@@ -419,4 +427,6 @@ class InputControlElement(NotifyingControlElement):
 
     @property
     def _last_sent_value(self):
-        return self._last_sent_message[0] if self._last_sent_message else -1
+        if self._last_sent_message:
+            return self._last_sent_message[0]
+        return -1

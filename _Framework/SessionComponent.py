@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/SessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/SessionComponent.py
 from __future__ import absolute_import
 from itertools import count
 import Live
@@ -57,15 +57,15 @@ class SessionComponent(CompoundComponent):
             self._stop_clip_triggered_value = 127
             self._stop_clip_value = None
             self._highlighting_callback = None
-            if num_tracks > 0:
-                self._show_highlight = num_scenes > 0
-                self._mixer = None
-                self._track_slots = self.register_slot_manager()
-                self._selected_scene = self.register_component(self._create_scene())
-                self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
-                if self._session_component_ends_initialisation:
-                    self._end_initialisation()
-                auto_name and self._auto_name()
+            self._show_highlight = num_tracks > 0 and num_scenes > 0
+            self._mixer = None
+            self._track_slots = self.register_slot_manager()
+            self._selected_scene = self.register_component(self._create_scene())
+            self._scenes = self.register_components(*[ self._create_scene() for _ in xrange(num_scenes) ])
+            if self._session_component_ends_initialisation:
+                self._end_initialisation()
+            if auto_name:
+                self._auto_name()
             enable_skinning and self._enable_skinning()
 
     def _end_initialisation(self):
@@ -373,10 +373,14 @@ class SessionComponent(CompoundComponent):
         return list_of_tracks
 
     def _get_minimal_track_offset(self):
-        return SessionComponent._minimal_track_offset if self._is_linked() else self.track_offset()
+        if self._is_linked():
+            return SessionComponent._minimal_track_offset
+        return self.track_offset()
 
     def _get_minimal_scene_offset(self):
-        return SessionComponent._minimal_scene_offset if self._is_linked() else self.scene_offset()
+        if self._is_linked():
+            return SessionComponent._minimal_scene_offset
+        return self.scene_offset()
 
     def _can_bank_down(self):
         return len(self.song().scenes) > self._get_minimal_scene_offset() + 1
@@ -423,19 +427,19 @@ class SessionComponent(CompoundComponent):
         return offset_corrected
 
     def _change_offsets(self, track_increment, scene_increment):
-        if not track_increment != 0:
-            offsets_changed = scene_increment != 0
-            offsets_changed and self._track_offset += track_increment
-            self._scene_offset += scene_increment
-            raise self._track_offset >= 0 or AssertionError
-            if not self._scene_offset >= 0:
-                raise AssertionError
-                if self._mixer != None:
-                    self._mixer.set_track_offset(self.track_offset())
-                self._reassign_tracks()
-                self._reassign_scenes()
-                self.notify_offset()
-                self.width() > 0 and self.height() > 0 and self._do_show_highlight()
+        offsets_changed = track_increment != 0 or scene_increment != 0
+        offsets_changed and self._track_offset += track_increment
+        self._scene_offset += scene_increment
+        raise self._track_offset >= 0 or AssertionError
+        if not self._scene_offset >= 0:
+            raise AssertionError
+            if self._mixer != None:
+                self._mixer.set_track_offset(self.track_offset())
+            self._reassign_tracks()
+            self._reassign_scenes()
+            self.notify_offset()
+            if self.width() > 0 and self.height() > 0:
+                self._do_show_highlight()
 
     def _reassign_scenes(self):
         scenes = self.song().scenes
@@ -503,9 +507,9 @@ class SessionComponent(CompoundComponent):
     def _do_show_highlight(self):
         if self._highlighting_callback != None:
             return_tracks = self.song().return_tracks
-            if len(return_tracks) > 0:
-                include_returns = return_tracks[0] in self.tracks_to_use()
-                self._show_highlight and self._highlighting_callback(self._track_offset, self._scene_offset, self.width(), self.height(), include_returns)
+            include_returns = len(return_tracks) > 0 and return_tracks[0] in self.tracks_to_use()
+            if self._show_highlight:
+                self._highlighting_callback(self._track_offset, self._scene_offset, self.width(), self.height(), include_returns)
             else:
                 self._highlighting_callback(-1, -1, -1, -1, include_returns)
 
@@ -522,11 +526,11 @@ class SessionComponent(CompoundComponent):
     def _update_stop_clips_led(self, index):
         tracks_to_use = self.tracks_to_use()
         track_index = index + self.track_offset()
-        button = self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons) and self._stop_track_clip_buttons[index]
-        if button != None:
-            value_to_send = None
-            if track_index < len(tracks_to_use):
-                if tracks_to_use[track_index].clip_slots:
+        if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):
+            button = self._stop_track_clip_buttons[index]
+            if button != None:
+                value_to_send = None
+                if track_index < len(tracks_to_use) and tracks_to_use[track_index].clip_slots:
                     track = tracks_to_use[track_index]
                     if track.fired_slot_index == -2:
                         value_to_send = self._stop_clip_triggered_value

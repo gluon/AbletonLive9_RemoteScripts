@@ -30,7 +30,7 @@ class Encoders:
     def __init__(self, parent, extended):
         self._Encoders__parent = parent
         self._Encoders__bank = 0
-        self._Encoders__selected_device = 0
+        self._Encoders__selected_device = None
         self._Encoders__extended = extended
         self._Encoders__modifier = False
         self._Encoders__device_locked = False

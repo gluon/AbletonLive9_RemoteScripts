@@ -1,7 +1,7 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ControlSurface.py
 from __future__ import absolute_import, with_statement
 from functools import partial, wraps
-from itertools import chain, imap
+from itertools import chain, ifilter, imap
 from contextlib import contextmanager
 import traceback
 import Live
@@ -15,14 +15,6 @@ from .PhysicalDisplayElement import PhysicalDisplayElement
 from .Profile import profile
 from .SubjectSlot import SlotManager
 from .Util import BooleanContext, first, find_if, const, in_range
-
-class _ModuleLoadedCheck(object):
-    """
-    This class is not to be instantiated.  We just use it to check
-    whether the modules have been unloaded (showing leaking listeners).
-    """
-    pass
-
 
 def _scheduled_method(method):
     """
@@ -99,11 +91,10 @@ class ControlSurface(SlotManager):
         self._midi_message_list = []
         self._midi_message_count = 0
         self._control_surface_injector = inject(parent_task_group=const(self._task_group), show_message=const(self.show_message), log_message=const(self.log_message), register_component=const(self._register_component), register_control=const(self._register_control), request_rebuild_midi_map=const(self.request_rebuild_midi_map), set_pad_translations=const(self.set_pad_translations), send_midi=const(self._send_midi), song=self.song).everywhere()
-        with self.setting_listener_caller():
-            self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
-            self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
-            self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
-            self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
+        self.register_slot(self.song(), self._on_track_list_changed, 'visible_tracks')
+        self.register_slot(self.song(), self._on_scene_list_changed, 'scenes')
+        self.register_slot(self.song().view, self._on_selected_track_changed, 'selected_track')
+        self.register_slot(self.song().view, self._on_selected_scene_changed, 'selected_scene')
 
     @property
     def components(self):
@@ -186,15 +177,6 @@ class ControlSurface(SlotManager):
         raise self._device_component != None or AssertionError
         with self.component_guard():
             self._device_component.restore_bank(bank_index)
-
-    @_scheduled_method
-    def set_appointed_device(self, device):
-        """
-        Live -> Script
-        Live tells the script to unlock from a certain device
-        """
-        with self.component_guard():
-            self._device_component.set_device(device)
 
     def suggest_input_port(self):
         """ Live -> Script: Live can ask for the name of the script's
@@ -482,7 +464,7 @@ class ControlSurface(SlotManager):
         """ puts control into the list of controls for triggering updates """
         if not control != None:
             raise AssertionError
-            raise control not in self.controls or AssertionError, 'Control registered twice'
+            raise control not in self.controls or AssertionError('Control registered twice')
             self.controls.append(control)
             control.canonical_parent = self
             isinstance(control, PhysicalDisplayElement) and self._displays.append(control)
@@ -490,7 +472,7 @@ class ControlSurface(SlotManager):
     def _register_component(self, component):
         """ puts component into the list of controls for triggering updates """
         raise component != None or AssertionError
-        raise component not in self._components or AssertionError, 'Component registered twice'
+        raise component not in self._components or AssertionError('Component registered twice')
         self._components.append(component)
         component.canonical_parent = self
 
@@ -513,11 +495,8 @@ class ControlSurface(SlotManager):
         """
         if not self._in_component_guard:
             with self._in_component_guard():
-                with self.setting_listener_caller():
-                    with self._control_surface_injector:
-                        with self.suppressing_rebuild_requests():
-                            with self.accumulating_midi_messages():
-                                yield
+                with self._component_guard():
+                    yield
         else:
             yield
 
@@ -526,25 +505,17 @@ class ControlSurface(SlotManager):
         return bool(self._in_component_guard)
 
     @contextmanager
-    def setting_listener_caller(self):
-        try:
-            self._c_instance.set_listener_caller(self._call_guarded_listener)
-            yield
-        finally:
-            self._c_instance.set_listener_caller(None)
+    def _component_guard(self):
+        with self._control_surface_injector:
+            with self.suppressing_rebuild_requests():
+                with self.accumulating_midi_messages():
+                    yield
 
     @profile
-    def _call_guarded_listener(self, listener):
-        if _ModuleLoadedCheck == None or self._c_instance == None:
-            self.log_message('Disconnecting leaked listener at:', listener.name)
-            listener.disconnect()
-        else:
-            try:
-                with self.component_guard():
-                    listener()
-            except:
-                self.log_message('Detected broken listener at:', listener.name)
-                raise 
+    def call_listeners(self, listeners):
+        with self.component_guard():
+            for listener in ifilter(lambda l: l != None, listeners):
+                listener()
 
     @contextmanager
     def accumulating_midi_messages(self):
@@ -649,7 +620,7 @@ class ControlSurface(SlotManager):
             forwarding_keys = success and control.identifier_bytes()
             for key in forwarding_keys:
                 registry = self._forwarding_registry if control.message_type() != MIDI_SYSEX_TYPE else self._forwarding_long_identifier_registry
-                raise key not in registry.keys() or AssertionError, 'Registry key %s registered twice. Check Midi messages!' % str(key)
+                raise key not in registry.keys() or AssertionError('Registry key %s registered twice. Check Midi messages!' % str(key))
                 registry[key] = control
 
         return success
@@ -734,8 +705,13 @@ class OptimizedControlSurface(ControlSurface):
         self._ownership_handler_injector = injecting.everywhere()
 
     @contextmanager
-    def component_guard(self):
-        with super(OptimizedControlSurface, self).component_guard():
+    def _component_guard(self):
+        with super(OptimizedControlSurface, self)._component_guard():
             with self._ownership_handler_injector:
                 yield
                 self._optimized_ownership_handler.commit_ownership_changes()
+
+    def _register_control(self, control):
+        super(OptimizedControlSurface, self)._register_control(control)
+        if hasattr(control, '_is_resource_based'):
+            control._is_resource_based = True

@@ -1,8 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Axiom_25_Classic/Axiom.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Axiom_25_Classic/Axiom.py
 from _Axiom.consts import *
 from _Axiom.Transport import Transport
 from _Axiom.Pads import Pads
 from _Axiom.Encoders import Encoders
+from _Generic.util import DeviceAppointer
 import Live
 import MidiRemoteScript
 
@@ -17,6 +18,7 @@ class Axiom:
         self.__transport_unit = Transport(self)
         self.__encoder_unit = Encoders(self, False)
         self.__pad_unit = Pads(self)
+        self._device_appointer = DeviceAppointer(song=self.song(), appointed_device_setter=self._set_appointed_device)
 
     def application(self):
         """returns a reference to the application that we are running in
@@ -33,6 +35,7 @@ class Axiom:
         Called right before we get disconnected from Live.
         """
         self.song().remove_visible_tracks_listener(self.__tracks_changed)
+        self._device_appointer.disconnect()
         self.__encoder_unit.disconnect()
 
     def can_lock_to_devices(self):
@@ -147,7 +150,7 @@ class Axiom:
     def unlock_from_device(self, device):
         self.__encoder_unit.unlock_from_device(device)
 
-    def set_appointed_device(self, device):
+    def _set_appointed_device(self, device):
         self.__encoder_unit.set_appointed_device(device)
 
     def __tracks_changed(self):

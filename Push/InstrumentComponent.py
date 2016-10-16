@@ -1,16 +1,19 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/InstrumentComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/InstrumentComponent.py
 from itertools import ifilter
 from functools import partial
+from _Framework.Control import ButtonControl, ToggleButtonControl
 from _Framework.CompoundComponent import CompoundComponent
 from _Framework.ModesComponent import DisplayingModesComponent, EnablingModesComponent
 from _Framework.DisplayDataSource import DisplayDataSource, adjust_string_crop
 from _Framework.Util import recursive_map, index_if, forward_property, first
-from _Framework.SubjectSlot import subject_slot
+from _Framework.SubjectSlot import subject_slot, subject_slot_group
+from _Framework.SlideComponent import SlideComponent, Slideable
 from MessageBoxComponent import Messenger
 from ScrollableList import ListComponent
-from SlideComponent import SlideComponent, Slideable
 from MelodicPattern import MelodicPattern, Modus, pitch_index_to_string
 from MatrixMaps import NON_FEEDBACK_CHANNEL
+from SlideableTouchStripComponent import SlideableTouchStripComponent
+from TouchStripElement import TouchStripElement, TouchStripModes, MODWHEEL_BEHAVIOUR, DEFAULT_BEHAVIOUR
 import Sysex
 import consts
 
@@ -80,13 +83,13 @@ KEY_CENTERS = CIRCLE_OF_FIFTHS[0:6] + CIRCLE_OF_FIFTHS[-1:5:-1]
 
 class InstrumentScalesComponent(CompoundComponent):
     __subject_events__ = ('scales_changed',)
+    presets_toggle_button = ButtonControl(color='DefaultButton.Off', pressed_color='DefaultButton.On')
     is_absolute = False
     is_diatonic = True
     key_center = 0
 
     def __init__(self, *a, **k):
         super(InstrumentScalesComponent, self).__init__(*a, **k)
-        self._key_center_slots = self.register_slot_manager()
         self._key_center_buttons = []
         self._encoder_touch_button_slots = self.register_slot_manager()
         self._encoder_touch_buttons = []
@@ -98,9 +101,7 @@ class InstrumentScalesComponent(CompoundComponent):
         self._info_sources = map(DisplayDataSource, ('Scale selection:', '', ''))
         self._line_sources = recursive_map(DisplayDataSource, (('', '', '', '', '', '', ''), ('', '', '', '', '', '', '')))
         self._modus_sources = map(partial(DisplayDataSource, adjust_string_fn=adjust_string_crop), ('', '', '', ''))
-        self._presets = self.register_component(InstrumentPresetsComponent())
-        self._presets_enabler = self.register_component(EnablingModesComponent(component=self._presets, toggle_value='Scales.PresetsEnabled'))
-        self._presets_enabler.momentary_toggle = True
+        self._presets = self.register_component(InstrumentPresetsComponent(is_enabled=False))
         self._presets.selected_mode = 'scale_p4_vertical'
         self._modus_list = self.register_component(ListComponent(data_sources=self._modus_sources))
         self._modus_list.scrollable_list.fixed_offset = 1
@@ -155,8 +156,17 @@ class InstrumentScalesComponent(CompoundComponent):
             display.set_data_sources(self._line_sources[line])
 
     def set_presets_toggle_button(self, button):
-        raise button is None or button.is_momentary() or AssertionError
-        self._presets_enabler.set_toggle_button(button)
+        self.presets_toggle_button.set_control_element(button)
+        if button is None:
+            self._presets.set_enabled(False)
+
+    @presets_toggle_button.pressed
+    def presets_toggle_button(self, button):
+        self._presets.set_enabled(True)
+
+    @presets_toggle_button.released
+    def presets_toggle_button(self, button):
+        self._presets.set_enabled(False)
 
     def set_top_buttons(self, buttons):
         if buttons:
@@ -198,28 +208,23 @@ class InstrumentScalesComponent(CompoundComponent):
         self._modus_list.encoders.set_control_element([encoders[0]] if encoders else [])
 
     def set_key_center_buttons(self, buttons):
-        if not (not buttons or len(buttons) == 12):
-            raise AssertionError
-            buttons = buttons or []
-            self._key_center_buttons = self._key_center_buttons != buttons and buttons
-            self._key_center_slots.disconnect()
-            for button in buttons:
-                self._key_center_slots.register_slot(button, self._on_key_center_button_value, 'value', extra_kws=dict(identify_sender=True))
-
-            self._update_key_center_buttons()
+        raise not buttons or len(buttons) == 12 or AssertionError
+        buttons = buttons or []
+        self._key_center_buttons = buttons
+        self._on_key_center_button_value.replace_subjects(buttons)
+        self._update_key_center_buttons()
 
     def set_absolute_relative_button(self, absolute_relative_button):
-        if absolute_relative_button != self._absolute_relative_button:
-            self._absolute_relative_button = absolute_relative_button
-            self._on_absolute_relative_value.subject = absolute_relative_button
-            self._update_absolute_relative_button()
+        self._absolute_relative_button = absolute_relative_button
+        self._on_absolute_relative_value.subject = absolute_relative_button
+        self._update_absolute_relative_button()
 
     def set_diatonic_chromatic_button(self, diatonic_chromatic_button):
-        if diatonic_chromatic_button != self._diatonic_chromatic_button:
-            self._diatonic_chromatic_button = diatonic_chromatic_button
-            self._on_diatonic_chromatic_value.subject = diatonic_chromatic_button
-            self._update_diatonic_chromatic_button()
+        self._diatonic_chromatic_button = diatonic_chromatic_button
+        self._on_diatonic_chromatic_value.subject = diatonic_chromatic_button
+        self._update_diatonic_chromatic_button()
 
+    @subject_slot_group('value')
     def _on_key_center_button_value(self, value, sender):
         if self.is_enabled() and (value or not sender.is_momentary()):
             index = list(self._key_center_buttons).index(sender)
@@ -292,6 +297,7 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
     Class that sets up the button matrix as a piano, using different
     selectable layouts for the notes.
     """
+    touch_strip_toggle = ToggleButtonControl()
     midi_channels = range(5, 13)
 
     def __init__(self, *a, **k):
@@ -303,13 +309,15 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
         self._last_page_length = self.page_length
         self._delete_button = None
         self._last_page_offset = self.page_offset
+        self._touch_strip = None
+        self._touch_strip_indication = None
         self._detail_clip = None
         self._has_notes = [False] * 128
         self._has_notes_pattern = self._get_pattern(0)
         self._takeover_pads = False
         self._aftertouch_control = None
         self._scales_menu = self.register_component(EnablingModesComponent(component=self._scales, toggle_value='DefaultButton.On'))
-        self._slider = self.register_component(SlideComponent(self))
+        self._slider, self._touch_slider = self.register_components(SlideComponent(self), SlideableTouchStripComponent(self))
         self._on_scales_changed.subject = self._scales
         self._on_scales_mode_changed.subject = self._scales._presets
         self._update_pattern()
@@ -430,22 +438,38 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
             matrix.reset()
         self._update_matrix()
 
+    @touch_strip_toggle.toggled
+    def touch_strip_toggle(self, toggled, button):
+        self._update_touch_strip()
+        self._update_touch_strip_indication()
+        self.show_notification(consts.MessageBoxText.TOUCHSTRIP_MODWHEEL_MODE if toggled else consts.MessageBoxText.TOUCHSTRIP_PITCHBEND_MODE)
+
     def set_touch_strip(self, control):
-        if control:
-            control.reset()
+        self._touch_strip = control
+        self._update_touch_strip()
+
+    def _update_touch_strip(self):
+        if self._touch_strip:
+            self._touch_strip.behaviour = MODWHEEL_BEHAVIOUR if self.touch_strip_toggle.is_toggled else DEFAULT_BEHAVIOUR
+
+    def set_touch_strip_indication(self, control):
+        self._touch_strip_indication = control
+        self._update_touch_strip_indication()
+
+    def _update_touch_strip_indication(self):
+        if self._touch_strip_indication:
+            self._touch_strip_indication.set_mode(TouchStripModes.CUSTOM_FREE)
+            self._touch_strip_indication.send_state([ (TouchStripElement.STATE_FULL if self.touch_strip_toggle.is_toggled else TouchStripElement.STATE_HALF) for _ in xrange(24) ])
 
     def set_note_strip(self, strip):
-        self._slider.set_scroll_strip(strip)
+        self._touch_slider.set_scroll_strip(strip)
 
     def set_octave_strip(self, strip):
-        self._slider.set_page_strip(strip)
+        self._touch_slider.set_page_strip(strip)
 
     def set_scales_toggle_button(self, button):
         raise button is None or button.is_momentary() or AssertionError
         self._scales_menu.set_toggle_button(button)
-
-    def set_presets_toggle_button(self, button):
-        self._scales.set_presets_toggle_button(button)
 
     def set_octave_up_button(self, button):
         self._slider.set_scroll_page_up_button(button)
@@ -496,6 +520,8 @@ class InstrumentComponent(CompoundComponent, Slideable, Messenger):
         if self.is_enabled():
             self._update_matrix()
             self._update_aftertouch()
+            self._update_touch_strip()
+            self._update_touch_strip_indication()
 
     def _update_pattern(self):
         self._pattern = self._get_pattern()

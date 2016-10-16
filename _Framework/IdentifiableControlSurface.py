@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/IdentifiableControlSurface.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/IdentifiableControlSurface.py
 from __future__ import absolute_import
 from .ControlSurface import ControlSurface
 from . import Task
@@ -25,7 +25,7 @@ class IdentifiableControlSurface(ControlSurface):
     def on_identified(self):
         raise NotImplementedError
 
-    def refresh_state(self):
+    def port_settings_changed(self):
         self._request_task.restart()
 
     def handle_sysex(self, midi_bytes):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Task.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/Task.py
 """
 Task management.
 """
@@ -423,7 +423,7 @@ except ImportError as err:
     pass
 
 def run(func, *a, **k):
-    return FuncTask(lambda t: None if func(*a, **k) else None)
+    return FuncTask(lambda t: (None if func(*a, **k) else None))
 
 
 def repeat(task):

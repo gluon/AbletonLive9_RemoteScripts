@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/MackieControl_Classic/ChannelStripController.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/MackieControl_Classic/ChannelStripController.py
 from MackieControlComponent import *
 from _Generic.Devices import *
 from itertools import chain
@@ -236,7 +236,7 @@ class ChannelStripController(MackieControlComponent):
             pass
         else:
             channel_strip = self.__channel_strips[stack_offset + strip_index]
-            raise not channel_strip.assigned_track() or not channel_strip.assigned_track().has_audio_output or AssertionError, 'in every other mode, the midimap should handle the messages'
+            raise not channel_strip.assigned_track() or not channel_strip.assigned_track().has_audio_output or AssertionError('in every other mode, the midimap should handle the messages')
 
     def handle_fader_touch(self, strip_offset, stack_offset, touched):
         """ forwarded to us by the channel_strips """
@@ -255,14 +255,14 @@ class ChannelStripController(MackieControlComponent):
                         param.value = param.value + 1
                 else:
                     param.value = param.default_value
-        elif self.__assignment_mode == CSM_PLUGINS:
-            if self.__plugin_mode == PCM_DEVICES:
-                device_index = strip_index + stack_offset + self.__plugin_mode_offsets[PCM_DEVICES]
-                if device_index >= 0 and device_index < len(self.song().view.selected_track.devices):
-                    if self.__chosen_plugin != None:
-                        self.__chosen_plugin.remove_parameters_listener(self.__on_parameter_list_of_chosen_plugin_changed)
-                    self.__chosen_plugin = self.song().view.selected_track.devices[device_index]
-                    self.__chosen_plugin != None and self.__chosen_plugin.add_parameters_listener(self.__on_parameter_list_of_chosen_plugin_changed)
+        elif self.__assignment_mode == CSM_PLUGINS and self.__plugin_mode == PCM_DEVICES:
+            device_index = strip_index + stack_offset + self.__plugin_mode_offsets[PCM_DEVICES]
+            if device_index >= 0 and device_index < len(self.song().view.selected_track.devices):
+                if self.__chosen_plugin != None:
+                    self.__chosen_plugin.remove_parameters_listener(self.__on_parameter_list_of_chosen_plugin_changed)
+                self.__chosen_plugin = self.song().view.selected_track.devices[device_index]
+                if self.__chosen_plugin != None:
+                    self.__chosen_plugin.add_parameters_listener(self.__on_parameter_list_of_chosen_plugin_changed)
                 self.__reorder_parameters()
                 self.__plugin_mode_offsets[PCM_PARAMETERS] = 0
                 self.__set_plugin_mode(PCM_PARAMETERS)
@@ -302,13 +302,13 @@ class ChannelStripController(MackieControlComponent):
         """
         if not self.__assignment_mode == CSM_PLUGINS:
             raise AssertionError
-            return self.__plugin_mode == PCM_DEVICES and (None, None)
-        elif not (self.__plugin_mode == PCM_PARAMETERS and self.__chosen_plugin):
-            raise AssertionError
-            parameters = self.__ordered_plugin_parameters
-            parameter_index = strip_index + stack_index + self.__plugin_mode_offsets[PCM_PARAMETERS]
-            if parameter_index >= 0 and parameter_index < len(parameters):
-                return parameters[parameter_index]
+            if self.__plugin_mode == PCM_DEVICES:
+                return (None, None)
+            elif not (self.__plugin_mode == PCM_PARAMETERS and self.__chosen_plugin):
+                raise AssertionError
+                parameters = self.__ordered_plugin_parameters
+                parameter_index = strip_index + stack_index + self.__plugin_mode_offsets[PCM_PARAMETERS]
+                return parameter_index >= 0 and parameter_index < len(parameters) and parameters[parameter_index]
             else:
                 return (None, None)
         else:
@@ -324,7 +324,7 @@ class ChannelStripController(MackieControlComponent):
     def __can_flip(self):
         if self.__assignment_mode == CSM_PLUGINS and self.__plugin_mode == PCM_DEVICES:
             return False
-        elif self.__assignment_mode == CSM_IO:
+        if self.__assignment_mode == CSM_IO:
             return False
         return True
 
@@ -343,48 +343,45 @@ class ChannelStripController(MackieControlComponent):
             sel_track = self.song().view.selected_track
             if self.__plugin_mode == PCM_DEVICES:
                 return self.__plugin_mode_offsets[PCM_DEVICES] + len(self.__channel_strips) < len(sel_track.devices)
-            elif not (self.__plugin_mode == PCM_PARAMETERS and self.__chosen_plugin):
-                raise AssertionError
-                parameters = self.__ordered_plugin_parameters
-                return self.__plugin_mode_offsets[PCM_PARAMETERS] + len(self.__channel_strips) < len(parameters)
-            else:
-                raise 0 or AssertionError
-        elif self.__assignment_mode == CSM_SENDS:
-            return self.__send_mode_offset + len(self.__channel_strips) < len(self.song().return_tracks)
+            raise self.__plugin_mode == PCM_PARAMETERS and (self.__chosen_plugin or AssertionError)
+            parameters = self.__ordered_plugin_parameters
+            return self.__plugin_mode_offsets[PCM_PARAMETERS] + len(self.__channel_strips) < len(parameters)
+        if not 0:
+            raise AssertionError
         else:
+            if self.__assignment_mode == CSM_SENDS:
+                return self.__send_mode_offset + len(self.__channel_strips) < len(self.song().return_tracks)
             return False
 
     def __available_routing_targets(self, channel_strip):
-        raise self.__assignment_mode == CSM_IO or AssertionError
-        t = channel_strip.assigned_track()
-        if t:
-            if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
-                return t.input_routings
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
-                return t.input_sub_routings
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
-                return t.output_routings
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB:
-                return t.output_sub_routings
-            else:
-                raise 0 or AssertionError
+        if not self.__assignment_mode == CSM_IO:
+            raise AssertionError
+            t = channel_strip.assigned_track()
+            if t:
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
+                    return t.input_routings
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
+                    return t.input_sub_routings
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
+                    return t.output_routings
+                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and t.output_sub_routings
+            raise 0 or AssertionError
         else:
             return None
 
     def __routing_target(self, channel_strip):
-        raise self.__assignment_mode == CSM_IO or AssertionError
-        t = channel_strip.assigned_track()
-        if t:
-            if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
-                return t.current_input_routing
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
-                return t.current_input_sub_routing
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
-                return t.current_output_routing
-            elif self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB:
-                return t.current_output_sub_routing
-            else:
-                raise 0 or AssertionError
+        if not self.__assignment_mode == CSM_IO:
+            raise AssertionError
+            t = channel_strip.assigned_track()
+            if t:
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_MAIN:
+                    return t.current_input_routing
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_INPUT_SUB:
+                    return t.current_input_sub_routing
+                if self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_MAIN:
+                    return t.current_output_routing
+                return self.__sub_mode_in_io_mode == CSM_IO_MODE_OUTPUT_SUB and t.current_output_sub_routing
+            raise 0 or AssertionError
         else:
             return None
 

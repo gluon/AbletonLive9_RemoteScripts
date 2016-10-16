@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/Capabilities.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/Capabilities.py
 PORTS_KEY = 'ports'
 CONTROLLER_ID_KEY = 'controller_id'
 TYPE_KEY = 'surface_type'
@@ -6,7 +6,7 @@ FIRMWARE_KEY = 'firmware_version'
 AUTO_LOAD_KEY = 'auto_load'
 VENDORID = 'vendor_id'
 PRODUCTIDS = 'product_ids'
-MODEL_NAME = 'model_name'
+MODEL_NAMES = 'model_names'
 DIRECTIONKEY = 'direction'
 PORTNAMEKEY = 'name'
 MACNAMEKEY = 'mac_name'
@@ -47,12 +47,16 @@ def outport(port_name = '', props = [], mac_name = None):
 
 def controller_id(vendor_id, product_ids, model_name):
     """ Generate a hardwareId dict"""
-    raise type(vendor_id) is int or AssertionError
-    raise type(product_ids) is list or AssertionError
-    for product_id in product_ids:
-        raise type(product_id) is int or AssertionError
+    if not type(vendor_id) is int:
+        raise AssertionError
+        raise type(product_ids) is list or AssertionError
+        for product_id in product_ids:
+            raise type(product_id) is int or AssertionError
 
-    raise type(model_name) is str or AssertionError
+        raise type(model_name) is str or type(model_name) is list or AssertionError
+        model_names = type(model_name) is str and [model_name]
+    else:
+        model_names = model_name
     return {VENDORID: vendor_id,
      PRODUCTIDS: product_ids,
-     MODEL_NAME: model_name}
+     MODEL_NAMES: model_names}

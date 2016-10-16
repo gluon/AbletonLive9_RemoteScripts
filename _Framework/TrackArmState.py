@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/TrackArmState.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/TrackArmState.py
 from __future__ import absolute_import
 from .SubjectSlot import Subject, subject_slot, SlotManager
 
@@ -25,13 +25,15 @@ class TrackArmState(Subject, SlotManager):
         self._on_arm_changed()
 
     def _on_arm_changed(self):
-        if not self._track.arm:
-            new_state = self._track.implicit_arm
-            self._arm = self._arm != new_state and new_state
+        new_state = self._track.arm or self._track.implicit_arm
+        if self._arm != new_state:
+            self._arm = new_state
             self.notify_arm()
 
     def _get_arm(self):
-        return self._arm if self._track.can_be_armed else False
+        if self._track.can_be_armed:
+            return self._arm
+        return False
 
     def _set_arm(self, new_state):
         if self._track.can_be_armed:

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC_Key_25/MixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC_Key_25/MixerComponent.py
 from _APC.MixerComponent import MixerComponent as MixerComponentBase
 from _APC.MixerComponent import ChanStripComponent as ChanStripComponentBase
 from _Framework.Util import nop

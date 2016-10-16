@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/DisplayingMixerComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AxiomPro/DisplayingMixerComponent.py
 from _Framework.ButtonElement import ButtonElement
 from _Framework.MixerComponent import MixerComponent
 from _Framework.PhysicalDisplayElement import PhysicalDisplayElement
@@ -59,22 +59,22 @@ class DisplayingMixerComponent(MixerComponent):
             found_recording_clip = False
             song = self.song()
             tracks = song.tracks
-            if song.is_playing:
-                check_arrangement = song.record_mode
-                for track in tracks:
-                    if track.can_be_armed and track.arm:
-                        if check_arrangement:
-                            found_recording_clip = True
-                            break
-                        else:
-                            playing_slot_index = track.playing_slot_index
-                            if playing_slot_index in range(len(track.clip_slots)):
-                                slot = track.clip_slots[playing_slot_index]
-                                if slot.has_clip and slot.clip.is_recording:
-                                    found_recording_clip = True
-                                    break
+            check_arrangement = song.is_playing and song.record_mode
+            for track in tracks:
+                if track.can_be_armed and track.arm:
+                    if check_arrangement:
+                        found_recording_clip = True
+                        break
+                    else:
+                        playing_slot_index = track.playing_slot_index
+                        if playing_slot_index in range(len(track.clip_slots)):
+                            slot = track.clip_slots[playing_slot_index]
+                            if slot.has_clip and slot.clip.is_recording:
+                                found_recording_clip = True
+                                break
 
-                if found_recording_clip or song.exclusive_arm:
+            if not found_recording_clip:
+                if song.exclusive_arm:
                     for track in tracks:
                         if track.can_be_armed and track.arm and track != sel_track:
                             track.arm = False

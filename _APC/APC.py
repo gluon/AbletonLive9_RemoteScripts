@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_APC/APC.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_APC/APC.py
 from __future__ import with_statement
 import Live
 from _Framework.ControlSurface import ControlSurface
@@ -56,15 +56,15 @@ class APC(ControlSurface):
             self._log_version(version_bytes)
 
     def _on_dongle_response(self, midi_bytes):
-        if midi_bytes[1] == MANUFACTURER_ID and midi_bytes[3] == self._product_model_id_byte() and midi_bytes[2] == self._device_id and midi_bytes[5] == 0:
-            if midi_bytes[6] == 16:
-                response = [long(0), long(0)]
-                for index in range(8):
-                    response[0] += long(midi_bytes[7 + index] & 15) << 4 * (7 - index)
-                    response[1] += long(midi_bytes[15 + index] & 15) << 4 * (7 - index)
+        if midi_bytes[1] == MANUFACTURER_ID and midi_bytes[3] == self._product_model_id_byte() and midi_bytes[2] == self._device_id and midi_bytes[5] == 0 and midi_bytes[6] == 16:
+            response = [long(0), long(0)]
+            for index in range(8):
+                response[0] += long(midi_bytes[7 + index] & 15) << 4 * (7 - index)
+                response[1] += long(midi_bytes[15 + index] & 15) << 4 * (7 - index)
 
-                expected_response = Live.Application.encrypt_challenge(self._dongle_challenge[0], self._dongle_challenge[1])
-                [long(expected_response[0]), long(expected_response[1])] == response and self._on_handshake_successful()
+            expected_response = Live.Application.encrypt_challenge(self._dongle_challenge[0], self._dongle_challenge[1])
+            if [long(expected_response[0]), long(expected_response[1])] == response:
+                self._on_handshake_successful()
 
     def _on_handshake_successful(self):
         self._suppress_session_highlight = False

@@ -1,11 +1,12 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC20/ShiftableSelectorComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC20/ShiftableSelectorComponent.py
 from _Framework.ModeSelectorComponent import ModeSelectorComponent
+from _Framework.Layer import Layer
 from consts import NOTE_MODE, ABLETON_MODE
 
 class ShiftableSelectorComponent(ModeSelectorComponent):
     """ SelectorComponent that assigns buttons to functions based on the shift button """
 
-    def __init__(self, select_buttons, master_button, arm_buttons, matrix, session, zooming, mixer, transport, slider_modes, mode_callback, *a, **k):
+    def __init__(self, select_buttons, master_button, arm_buttons, matrix, session, zooming, mixer, transport, slider_modes, mode_callback, note_matrix, background, *a, **k):
         raise len(select_buttons) == 8 or AssertionError
         raise len(arm_buttons) == 8 or AssertionError
         super(ShiftableSelectorComponent, self).__init__(*a, **k)
@@ -22,6 +23,8 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
         self._matrix = matrix
         self._mixer = mixer
         self._mode_callback = mode_callback
+        self._note_matrix = note_matrix
+        self._background = background
         self._master_button.add_value_listener(self._master_value)
 
     def disconnect(self):
@@ -37,6 +40,8 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
         self._matrix = None
         self._mixer = None
         self._mode_callback = None
+        self._note_matrix = None
+        self._background = None
 
     def set_mode_toggle(self, button):
         super(ShiftableSelectorComponent, self).set_mode_toggle(button)
@@ -49,6 +54,17 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
     def number_of_modes(self):
         return 2
 
+    def _set_session_navigation_controls(self, left, right, up, down):
+        self._session.set_track_bank_buttons(right, left)
+        self._session.set_scene_bank_buttons(down, up)
+        self._zooming.set_nav_buttons(up, down, left, right)
+
+    def _set_transport_controls(self, play, stop, rec, overdub):
+        self._transport.set_play_button(play)
+        self._transport.set_stop_button(stop)
+        self._transport.set_record_button(rec)
+        self._transport.set_overdub_button(overdub)
+
     def update(self):
         super(ShiftableSelectorComponent, self).update()
         if self.is_enabled():
@@ -58,22 +74,13 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
                     strip.set_select_button(None)
 
                 self._mixer.master_strip().set_select_button(None)
-                self._transport.set_play_button(self._select_buttons[0])
-                self._transport.set_stop_button(self._select_buttons[1])
-                self._transport.set_record_button(self._select_buttons[2])
-                self._transport.set_overdub_button(self._select_buttons[3])
-                self._session.set_track_bank_buttons(self._select_buttons[5], self._select_buttons[4])
-                self._session.set_scene_bank_buttons(self._select_buttons[7], self._select_buttons[6])
-                self._zooming.set_nav_buttons(self._select_buttons[6], self._select_buttons[7], self._select_buttons[4], self._select_buttons[5])
+                self._set_transport_controls(self._select_buttons[0], self._select_buttons[1], self._select_buttons[2], self._select_buttons[3])
+                if not self._note_mode_active:
+                    self._set_session_navigation_controls(self._select_buttons[4], self._select_buttons[5], self._select_buttons[6], self._select_buttons[7])
                 self._on_note_mode_changed()
             elif self._mode_index == 1:
-                self._transport.set_play_button(None)
-                self._transport.set_stop_button(None)
-                self._transport.set_record_button(None)
-                self._transport.set_overdub_button(None)
-                self._session.set_track_bank_buttons(None, None)
-                self._session.set_scene_bank_buttons(None, None)
-                self._zooming.set_nav_buttons(None, None, None, None)
+                self._set_transport_controls(None, None, None, None)
+                self._set_session_navigation_controls(None, None, None, None)
                 for index in range(len(self._select_buttons)):
                     strip = self._mixer.channel_strip(index)
                     strip.set_select_button(self._select_buttons[index])
@@ -106,17 +113,34 @@ class ShiftableSelectorComponent(ModeSelectorComponent):
             raise AssertionError
             if not value in range(128):
                 raise AssertionError
-                if self.is_enabled() and self._invert_assignment == self._toggle_pressed and (not self._master_button.is_momentary() or value > 0):
-                    for button in self._select_buttons:
-                        button.turn_off()
+                if self.is_enabled() and self._invert_assignment == self._toggle_pressed:
+                    if not self._master_button.is_momentary() or value > 0:
+                        for button in self._select_buttons:
+                            button.turn_off()
 
-                    self._matrix.reset()
-                    mode_byte = NOTE_MODE
-                    mode_byte = self._note_mode_active and ABLETON_MODE
-                self._mode_callback(mode_byte)
-                self._note_mode_active = not self._note_mode_active
+                        self._matrix.reset()
+                        mode_byte = NOTE_MODE
+                        mode_byte = self._note_mode_active and ABLETON_MODE
+                    self._mode_callback(mode_byte)
+                    self._note_mode_active = not self._note_mode_active
+                    if self._note_mode_active:
+                        for button in self._note_matrix:
+                            button.clear_send_cache()
+
+                        self._note_matrix.reset()
+                    self._set_transport_controls(self._select_buttons[0], self._select_buttons[1], self._select_buttons[2], self._select_buttons[3])
+                    self._transport.update()
+                    if self._note_mode_active:
+                        for button in self._note_matrix:
+                            button.clear_send_cache()
+
+                        self._note_matrix.reset()
+                    self._note_mode_active and self._set_session_navigation_controls(None, None, None, None)
+                    self._background.layer = Layer(left_button=self._select_buttons[4], right_button=self._select_buttons[5], up_button=self._select_buttons[6], down_button=self._select_buttons[7])
+                else:
+                    self._background.layer = None
+                    self._set_session_navigation_controls(self._select_buttons[4], self._select_buttons[5], self._select_buttons[6], self._select_buttons[7])
                 self._zooming.set_ignore_buttons(self._note_mode_active)
-                self._transport.update()
                 self._on_note_mode_changed()
 
     def _on_note_mode_changed(self):

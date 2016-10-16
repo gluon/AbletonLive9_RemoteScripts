@@ -1,7 +1,6 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/TouchEncoderElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/TouchEncoderElement.py
 from _Framework.EncoderElement import TouchEncoderElementBase
 from _Framework.SubjectSlot import subject_slot, SlotManager
-from _Framework.Util import nop, const
 
 class TouchEncoderObserver(object):
     """ Interface for observing the state of one or more TouchEncoderElements """
@@ -48,11 +47,11 @@ class TouchEncoderElement(TouchEncoderElementBase, SlotManager):
                 self._delete_handler.delete_clip_envelope(param)
             else:
                 self.begin_gesture()
+                self._begin_undo_step()
                 self._observer.on_encoder_touch(self)
                 self.notify_touch_value(value)
         else:
-            if self._undo_step_handler and self._undo_step_open:
-                self._undo_step_handler.end_undo_step()
+            self._end_undo_step()
             self._observer.on_encoder_touch(self)
             self.notify_touch_value(value)
             self.end_gesture()
@@ -69,12 +68,19 @@ class TouchEncoderElement(TouchEncoderElementBase, SlotManager):
             self._observer.on_encoder_parameter(self)
 
     def receive_value(self, value):
-        if self._undo_step_handler and self._trigger_undo_step:
-            self._undo_step_handler.begin_undo_step()
-            self._trigger_undo_step = False
-            self._undo_step_open = True
+        self._begin_undo_step()
         super(TouchEncoderElement, self).receive_value(value)
 
     def disconnect(self):
         super(TouchEncoderElement, self).disconnect()
         self._undo_step_handler = None
+
+    def _begin_undo_step(self):
+        if self._undo_step_handler and self._trigger_undo_step:
+            self._undo_step_handler.begin_undo_step()
+            self._trigger_undo_step = False
+            self._undo_step_open = True
+
+    def _end_undo_step(self):
+        if self._undo_step_handler and self._undo_step_open:
+            self._undo_step_handler.end_undo_step()

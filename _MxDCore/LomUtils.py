@@ -1,8 +1,16 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_MxDCore/LomUtils.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_MxDCore/LomUtils.py
 import sys
-from _Tools import types
+import types
+from itertools import ifilter
 from MxDUtils import TupleWrapper
-from LomTypes import TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, HIDDEN_TYPES, HIDDEN_PROPERTIES, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
+from LomTypes import cs_base_classes, EXPOSED_TYPE_PROPERTIES, TUPLE_TYPES, PROPERTY_TYPES, ENUM_TYPES, ROOT_KEYS, LomObjectError, LomAttributeError, is_class, get_root_prop, is_lom_object, is_cplusplus_lom_object, is_object_iterable
+
+def create_lom_doc_string(lom_object):
+    description = ''
+    if hasattr(lom_object, '__doc__') and isinstance(lom_object.__doc__, basestring) and len(lom_object.__doc__) > 0:
+        description = 'description %s' % lom_object.__doc__.replace('\n', ' ').replace(',', '\\,')
+    return description
+
 
 class LomInformation(object):
     """ Class that extracts information from a given LOM object """
@@ -13,7 +21,7 @@ class LomInformation(object):
         self._children = []
         self._functions = []
         self._properties = []
-        self._description = ''
+        self._description = create_lom_doc_string(lom_object)
         self._generate_object_info(lom_object)
 
     @property
@@ -36,24 +44,32 @@ class LomInformation(object):
     def properties(self):
         return tuple(self._properties)
 
+    def _add_list_of_children(self, prop_name):
+        type_name = TUPLE_TYPES[prop_name].__name__
+        self._lists_of_children.append((prop_name, type_name))
+
+    def _add_child(self, real_prop, prop_name):
+        type_name = (real_prop.__class__ if real_prop != None else PROPERTY_TYPES[prop_name]).__name__
+        self._children.append((prop_name, type_name))
+
     def _generate_object_info(self, lom_object):
-        if hasattr(lom_object, '__doc__') and isinstance(lom_object.__doc__, basestring) and len(lom_object.__doc__) > 0:
-            self._description = 'description %s' % lom_object.__doc__.replace('\n', ' ').replace(',', '\\,')
-        for prop_name in dir(lom_object):
-            if not prop_name.startswith('_') and prop_name not in HIDDEN_PROPERTIES:
-                self._generate_property_info(prop_name, lom_object)
+        property_names = []
+        if isinstance(lom_object, cs_base_classes()):
+            property_names = ifilter(lambda prop: not prop.startswith('_'), dir(lom_object))
+        else:
+            property_names = EXPOSED_TYPE_PROPERTIES.get(type(lom_object), [])
+        for name in property_names:
+            self._generate_property_info(name, lom_object)
 
     def _generate_property_info(self, prop_name, lom_object):
         try:
             real_prop = getattr(lom_object, prop_name)
-            if not isinstance(real_prop, HIDDEN_TYPES) and not is_class(real_prop):
+            if not is_class(real_prop):
                 prop_type = real_prop.__class__.__name__
                 if prop_name in TUPLE_TYPES:
-                    type_name = TUPLE_TYPES[prop_name].__name__
-                    self._lists_of_children.append((prop_name, type_name))
+                    self._add_list_of_children(prop_name)
                 elif prop_name in PROPERTY_TYPES.keys():
-                    type_name = (real_prop.__class__ if real_prop != None else PROPERTY_TYPES[prop_name]).__name__
-                    self._children.append((prop_name, type_name))
+                    self._add_child(real_prop, prop_name)
                 elif prop_name == 'canonical_parent':
                     if real_prop != None:
                         self._children.append((prop_name, prop_type))
@@ -154,9 +170,9 @@ class LomPathCalculator(object):
     def _find_property_object_path(self, lom_object, parent):
         component = None
         for key in PROPERTY_TYPES.keys():
-            if isinstance(lom_object, PROPERTY_TYPES[key]):
-                if hasattr(parent, key):
-                    component = lom_object == getattr(parent, key) and key
+            if isinstance(lom_object, PROPERTY_TYPES[key]) and hasattr(parent, key):
+                if lom_object == getattr(parent, key):
+                    component = key
                     break
 
         return component
@@ -174,7 +190,9 @@ class LomPathCalculator(object):
         return component
 
     def _prepend_path_component(self, component, components):
-        return [component] + components if component != None else []
+        if component != None:
+            return [component] + components
+        return []
 
     def _calculate_path(self, lom_object, external_device_getter):
         components = []
@@ -233,8 +251,6 @@ class LomPathResolver(object):
                     lom_object = lom_object[int(component)]
                 else:
                     lom_object = getattr(lom_object, component)
-                    if isinstance(lom_object, HIDDEN_TYPES):
-                        raise AttributeError
             except IndexError:
                 raise LomAttributeError("invalid index of component '%s'" % prev_component)
             except AttributeError:

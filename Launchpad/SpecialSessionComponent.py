@@ -1,11 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launchpad/SpecialSessionComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launchpad/SpecialSessionComponent.py
 from _Framework.SessionComponent import SessionComponent
 
 class SpecialSessionComponent(SessionComponent):
     """ Special session subclass that handles ConfigurableButtons """
 
     def _update_stop_clips_led(self, index):
-        if self.is_enabled() and self._stop_track_clip_buttons != None:
+        if self.is_enabled() and self._stop_track_clip_buttons != None and index < len(self._stop_track_clip_buttons):
             button = self._stop_track_clip_buttons[index]
             tracks_to_use = self.tracks_to_use()
             track_index = index + self.track_offset()

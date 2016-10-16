@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/PlayheadElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/PlayheadElement.py
 from _Framework.ControlElement import ControlElement
 from _Framework.Proxy import Proxy
 

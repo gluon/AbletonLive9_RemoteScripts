@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC40_MkII/QuantizationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC40_MkII/QuantizationComponent.py
 import Live
 from _Framework.Control import RadioButtonControl, control_list
 from _Framework.ControlSurfaceComponent import ControlSurfaceComponent

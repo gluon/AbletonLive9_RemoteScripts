@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/ConfigurableButtonElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/ConfigurableButtonElement.py
 from _Framework.ButtonElement import ButtonElement, ON_VALUE, OFF_VALUE
 from _Framework.Skin import Skin, SkinColorMissingError
 from Colors import Basic
@@ -65,6 +65,10 @@ class ConfigurableButtonElement(ButtonElement):
         self.set_identifier(self._original_identifier)
         self.set_channel(NON_FEEDBACK_CHANNEL)
         self.set_enabled(True)
+
+    def reset_state(self):
+        super(ConfigurableButtonElement, self).reset_state()
+        self.states = dict(self.default_states)
 
     def set_on_off_values(self, on_value, off_value):
         self.states[True] = on_value

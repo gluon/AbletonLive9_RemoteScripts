@@ -1,12 +1,18 @@
-Ableton Live 9.1.4 Remote Scripts
+Ableton Live 9.6 Remote Scripts
 =============================
 
-This is the unofficial repository of Ableton Live 9 MIDI Remote Scripts.
+This is the unofficial repository of Ableton Live 9.6 MIDI Remote Scripts.
 
-You can find more informations on http://julienbayle.net/ableton-live-9-midi-remote-scripts
+You can find more informations on 
+[this page](http://julienbayle.net/ableton-live-9-midi-remote-scripts "this page")
 
-UPDATED on 24th August 2014 with Live 9.1.4 MIDI Remote Scripts
+
+**UPDATED on 31th March 2016 with Lemur Live Control v2.1.31 (just in case)**
 
 (all files marked with older references didn't have changed since previous versions)
 
+
+===> NO support given, ONLY source files !
+
 Please, enjoy.
+

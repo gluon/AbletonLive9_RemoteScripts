@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ControlElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ControlElement.py
 from __future__ import absolute_import
 import traceback
 from . import Task
@@ -71,6 +71,7 @@ class ControlElement(Disconnectable):
         ControlElement is wrapped in any form of Proxy object.
         """
         send_midi = nop
+        reset_state = nop
 
         def __init__(self, outer = None, *a, **k):
             super(ControlElement.ProxiedInterface, self).__init__(*a, **k)
@@ -115,6 +116,9 @@ class ControlElement(Disconnectable):
 
     def reset(self):
         raise NotImplementedError
+
+    def reset_state(self):
+        pass
 
     @property
     def resource(self):

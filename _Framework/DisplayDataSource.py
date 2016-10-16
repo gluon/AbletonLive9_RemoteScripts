@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/DisplayDataSource.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/DisplayDataSource.py
 from __future__ import absolute_import
 from functools import partial
 
@@ -16,9 +16,9 @@ def adjust_string(original, length):
         raise AssertionError
         resulting_string = original
         if len(resulting_string) > length:
-            if resulting_string.endswith('dB'):
-                unit_db = resulting_string.find('.') != -1
-                resulting_string = len(resulting_string.strip()) > length and unit_db and resulting_string[:-2]
+            unit_db = resulting_string.endswith('dB') and resulting_string.find('.') != -1
+            if len(resulting_string.strip()) > length and unit_db:
+                resulting_string = resulting_string[:-2]
             if len(resulting_string) > length:
                 for char in (' ', '_', 'i', 'o', 'u', 'e', 'a'):
                     offset = 0 if char == ' ' else 1

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/DeviceNavigationComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/DeviceNavigationComponent.py
 from __future__ import with_statement
 from functools import partial
 from contextlib import contextmanager
@@ -237,16 +237,10 @@ class DeviceNavigationComponent(CompoundComponent):
         button = self._on_enter_value.subject
         if self.is_enabled() and button:
             with disconnectable(self._make_enter_node()) as node:
-                if node:
-                    button.set_light(button.is_pressed())
-                else:
-                    button.set_light('DefaultButton.Disabled')
+                button.set_light(node or 'DefaultButton.Disabled')
 
     def _update_exit_button(self):
         button = self._on_exit_value.subject
         if self.is_enabled() and button:
             with disconnectable(self._make_exit_node()) as node:
-                if node:
-                    button.set_light(button.is_pressed())
-                else:
-                    button.set_light('DefaultButton.Disabled')
+                button.set_light(node or 'DefaultButton.Disabled')

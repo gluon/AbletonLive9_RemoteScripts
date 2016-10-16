@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ModesComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ModesComponent.py
 """
 Mode handling components.
 """
@@ -10,7 +10,7 @@ from . import Task
 from .CompoundComponent import CompoundComponent
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .Dependency import depends
-from .Layer import Layer
+from .Layer import LayerBase
 from .Resource import StackingResource
 from .SubjectSlot import subject_slot
 from .Util import is_iterable, is_contextmanager, lazy_attribute, infinite_context_manager, NamedTuple
@@ -23,9 +23,9 @@ def tomode(thing):
     if isinstance(thing, ControlSurfaceComponent):
         return ComponentMode(thing)
     if isinstance(thing, tuple) and len(thing) == 2:
-        if isinstance(thing[0], ControlSurfaceComponent) and isinstance(thing[1], Layer):
+        if isinstance(thing[0], ControlSurfaceComponent) and isinstance(thing[1], LayerBase):
             return LayerMode(*thing)
-        elif callable(thing[0]) and callable(thing[1]):
+        if callable(thing[0]) and callable(thing[1]):
             mode = Mode()
             mode.enter_mode, mode.leave_mode = thing
             return mode
@@ -147,7 +147,9 @@ class LayerModeBase(Mode):
         self._layer = layer
 
     def _get_component(self):
-        return self._component() if callable(self._component) else self._component
+        if callable(self._component):
+            return self._component()
+        return self._component
 
 
 class LayerMode(LayerModeBase):
@@ -240,7 +242,9 @@ class SetAttributeMode(Mode):
         self._value = value
 
     def _get_object(self):
-        return self._obj() if callable(self._obj) else self._obj
+        if callable(self._obj):
+            return self._obj()
+        return self._obj
 
     def enter_mode(self):
         self._old_value = getattr(self._get_object(), self._attribute, None)
@@ -261,7 +265,7 @@ class DelayMode(Mode):
         super(DelayMode, self).__init__(*a, **k)
         raise mode is not None or AssertionError
         raise parent_task_group is not None or AssertionError
-        delay = delay or Defaults.MOMENTARY_DELAY
+        delay = delay if delay is not None else Defaults.MOMENTARY_DELAY
         self._mode = tomode(mode)
         self._mode_entered = False
         self._delay_task = parent_task_group.add(Task.sequence(Task.wait(delay), Task.run(self._enter_mode_delayed)))
@@ -370,10 +374,10 @@ class CancellableBehaviour(ModeButtonBehaviour):
     def press_immediate(self, component, mode):
         active_modes = component.active_modes
         groups = component.get_mode_groups(mode)
-        if not mode in active_modes:
-            can_cancel_mode = any(imap(lambda other: groups & component.get_mode_groups(other), active_modes))
-            if can_cancel_mode:
-                groups and component.pop_groups(groups)
+        can_cancel_mode = mode in active_modes or any(imap(lambda other: groups & component.get_mode_groups(other), active_modes))
+        if can_cancel_mode:
+            if groups:
+                component.pop_groups(groups)
             else:
                 component.pop_mode(mode)
             self.restore_previous_mode(component)
@@ -593,7 +597,9 @@ class ModesComponent(CompoundComponent):
     @property
     def selected_groups(self):
         entry = self._mode_map.get(self.selected_mode, None)
-        return entry.groups if entry else set()
+        if entry:
+            return entry.groups
+        return set()
 
     @property
     def active_modes(self):
@@ -682,7 +688,9 @@ class ModesComponent(CompoundComponent):
 
     def get_mode_groups(self, name):
         entry = self._mode_map.get(name, None)
-        return entry.groups if entry else set()
+        if entry:
+            return entry.groups
+        return set()
 
     def set_toggle_button(self, button):
         if button and self.is_enabled():
@@ -732,13 +740,13 @@ class ModesComponent(CompoundComponent):
 
     @subject_slot('value')
     def _on_toggle_value(self, value):
-        if self._shift_button:
-            shift = self._shift_button.is_pressed()
-            if not shift and self.is_enabled() and len(self._mode_list):
-                is_press = value and not self._last_toggle_value
-                is_release = not value and self._last_toggle_value
-                can_latch = self._mode_toggle_task.is_killed and self.selected_mode != self._mode_list[0]
-                (not self._mode_toggle.is_momentary() or is_press) and self.cycle_mode(1)
+        shift = self._shift_button and self._shift_button.is_pressed()
+        if not shift and self.is_enabled() and len(self._mode_list):
+            is_press = value and not self._last_toggle_value
+            is_release = not value and self._last_toggle_value
+            can_latch = self._mode_toggle_task.is_killed and self.selected_mode != self._mode_list[0]
+            if not self._mode_toggle.is_momentary() or is_press:
+                self.cycle_mode(1)
                 self._mode_toggle_task.restart()
             elif is_release and (self.momentary_toggle or can_latch):
                 self.cycle_mode(-1)
@@ -788,9 +796,9 @@ class EnablingModesComponent(ModesComponent):
     enabled while the 'enabled' mode is active.
     """
 
-    def __init__(self, component = None, toggle_value = False, *a, **k):
+    def __init__(self, component = None, toggle_value = False, disabled_value = False, *a, **k):
         super(EnablingModesComponent, self).__init__(*a, **k)
         component.set_enabled(False)
-        self.add_mode('disabled', None)
+        self.add_mode('disabled', None, disabled_value)
         self.add_mode('enabled', component, toggle_value)
         self.selected_mode = 'disabled'

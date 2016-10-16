@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/M4LInterfaceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/M4LInterfaceComponent.py
 from __future__ import absolute_import, with_statement
 from .ControlElement import ControlElementClient
 from .ControlSurfaceComponent import ControlSurfaceComponent
@@ -31,7 +31,8 @@ class M4LInterfaceComponent(ControlSurfaceComponent, ControlElementClient):
         return self._controls.keys()
 
     def get_control(self, control_name):
-        return self._controls[control_name] if control_name in self._controls else None
+        if control_name in self._controls:
+            return self._controls[control_name]
 
     def grab_control(self, control):
         raise control in self._controls.values() or AssertionError

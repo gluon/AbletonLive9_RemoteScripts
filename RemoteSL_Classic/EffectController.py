@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/RemoteSL_Classic/EffectController.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/RemoteSL_Classic/EffectController.py
 import Live
 from RemoteSLComponent import RemoteSLComponent
 from consts import *
@@ -44,18 +44,18 @@ class EffectController(RemoteSLComponent):
         elif cc_no in fx_encoder_row_ccs:
             strip = self.__strips[cc_no - FX_ENCODER_ROW_BASE_CC]
             strip.on_encoder_moved(cc_value)
-        elif not (cc_no in fx_lower_button_row_ccs and False):
-            raise AssertionError, 'Lower Button CCS should be passed to Live!'
-        elif not (cc_no in fx_poti_row_ccs and False):
-            raise AssertionError, 'Poti CCS should be passed to Live!'
+        elif cc_no in fx_lower_button_row_ccs:
+            raise False or AssertionError('Lower Button CCS should be passed to Live!')
+        elif cc_no in fx_poti_row_ccs:
+            raise False or AssertionError('Poti CCS should be passed to Live!')
         else:
-            raise False or AssertionError, 'unknown FX midi message'
+            raise False or AssertionError('unknown FX midi message')
 
     def receive_midi_note(self, note, velocity):
-        if not (note in fx_drum_pad_row_notes and False):
-            raise AssertionError, 'DrumPad CCS should be passed to Live!'
+        if note in fx_drum_pad_row_notes:
+            raise False or AssertionError('DrumPad CCS should be passed to Live!')
         else:
-            raise False or AssertionError, 'unknown FX midi message'
+            raise False or AssertionError('unknown FX midi message')
 
     def build_midi_map(self, script_handle, midi_map_handle):
         needs_takeover = True
@@ -146,7 +146,7 @@ class EffectController(RemoteSLComponent):
                 new_bank = max(self.__bank - 1, 0)
             else:
                 if not False:
-                    raise AssertionError, 'unknown Display midi message'
+                    raise AssertionError('unknown Display midi message')
                 if not self.__bank == new_bank:
                     self.__show_bank = True
                     if not self.__assigned_device_is_locked:
@@ -174,7 +174,7 @@ class EffectController(RemoteSLComponent):
             if cc_value == CC_VAL_BUTTON_PRESSED:
                 self.song().stop_all_clips()
         else:
-            raise False or AssertionError, 'unknown select row midi message'
+            raise False or AssertionError('unknown select row midi message')
 
     def __update_select_row_leds(self):
         if self.__assigned_device_is_locked:
@@ -264,4 +264,4 @@ class EffectChannelStrip():
                 self.__assigned_parameter.value = self.__assigned_parameter.default_value
 
     def on_encoder_moved(self, cc_value):
-        raise self.__assigned_parameter == None or AssertionError, 'should only be reached when the encoder was not realtime mapped '
+        raise self.__assigned_parameter == None or AssertionError('should only be reached when the encoder was not realtime mapped ')

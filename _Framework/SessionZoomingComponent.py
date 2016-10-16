@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/SessionZoomingComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/SessionZoomingComponent.py
 from __future__ import absolute_import
 from .CompoundComponent import CompoundComponent
 from .ScrollComponent import ScrollComponent
@@ -161,7 +161,7 @@ class SessionZoomingComponent(CompoundComponent):
 
     @subject_slot_group('value')
     def _on_scene_bank_value(self, value, sender):
-        if self.is_enabled():
+        if self.is_enabled() and self._buttons:
             if value != 0 or not sender.is_momentary():
                 button_offset = list(self._scene_bank_buttons).index(sender)
                 scene_offset = button_offset * self._buttons.height() * self._session.height()

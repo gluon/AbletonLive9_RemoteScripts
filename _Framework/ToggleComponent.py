@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ToggleComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ToggleComponent.py
 from __future__ import absolute_import
 from .ControlSurfaceComponent import ControlSurfaceComponent
 from .SubjectSlot import subject_slot
@@ -23,7 +23,7 @@ class ToggleComponent(ControlSurfaceComponent):
             if model_transform:
                 self.model_transform = model_transform
             if view_transform:
-                self.view_transform = model_transform
+                self.view_transform = view_transform
             self.read_only = read_only and read_only
 
     def model_transform(self, value):
@@ -42,7 +42,8 @@ class ToggleComponent(ControlSurfaceComponent):
     subject = property(_get_subject, _set_subject)
 
     def _get_value(self):
-        return getattr(self.subject, self._property_name) if self.subject else None
+        if self.subject:
+            return getattr(self.subject, self._property_name)
 
     def _set_value(self, value):
         setattr(self.subject, self._property_name, value)

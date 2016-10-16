@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/AxiomPro/PageableDeviceComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/AxiomPro/PageableDeviceComponent.py
 import Live
 from _Generic.Devices import *
 from _Framework.DeviceComponent import DeviceComponent
@@ -248,12 +248,12 @@ class PageableDeviceComponent(DeviceComponent):
                 display_string = ' - '
                 if index < num_banks:
                     if index < num_double_pages:
-                        if not (index == self._bank_index and self._page_index[index] == 0):
-                            if index != self._bank_index:
-                                add_offset_before = self._page_index[index] != 0
-                                add_offset_before and parameter_offset += num_controls
-                            display_string = str(parameter_offset + 1).rjust(2) + '-' + str(parameter_offset + num_controls).rjust(2)
-                            add_offset_before or parameter_offset += num_controls
+                        add_offset_before = index == self._bank_index and self._page_index[index] == 0 or index != self._bank_index and self._page_index[index] != 0
+                        if add_offset_before:
+                            parameter_offset += num_controls
+                        display_string = str(parameter_offset + 1).rjust(2) + '-' + str(parameter_offset + num_controls).rjust(2)
+                        if not add_offset_before:
+                            parameter_offset += num_controls
                     else:
                         display_string = str(parameter_offset + 1).rjust(2) + '-' + str(parameter_offset + num_controls).rjust(2)
                 self._page_name_data_sources[index].set_display_string(display_string)

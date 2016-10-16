@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC20/APC20.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC20/APC20.py
 from __future__ import with_statement
 from functools import partial
 from itertools import izip
@@ -16,6 +16,7 @@ from _APC.SkinDefault import make_biled_skin
 from ShiftableSelectorComponent import ShiftableSelectorComponent
 from ShiftableZoomingComponent import ShiftableZoomingComponent
 from SliderModesComponent import SliderModesComponent
+from BackgroundComponent import BackgroundComponent
 SESSION_WIDTH = 8
 SESSION_HEIGHT = 5
 MIXER_SIZE = 8
@@ -31,6 +32,7 @@ class APC20(APC):
             self._create_session()
             self._create_mixer()
             self._create_transport()
+            self._create_background()
             self._create_global_control()
             self._session.set_mixer(self._mixer)
             self.set_highlighting_session_component(self._session)
@@ -62,6 +64,13 @@ class APC20(APC):
         self._select_buttons = [ make_button(track_index, 51, name='%d_Select_Button' % track_index) for track_index in xrange(8) ]
         self._arm_buttons = [ make_button(track_index, 48, name='%d_Arm_Button' % track_index) for track_index in xrange(8) ]
         self._sliders = [ make_slider(track_index, 7, name='%d_Volume_Control' % track_index) for track_index in xrange(8) ]
+        self._note_matrix = ButtonMatrixElement(name='Note_Button_Matrix')
+        self._note_buttons = [ [ make_button(9, note + i, name='Note_%d_Button' % (note + i)) for i in xrange(4) ] for note in xrange(36, 75, 4) ]
+        for row in self._note_buttons:
+            for button in row:
+                button.send_depends_on_forwarding = False
+
+            self._note_matrix.add_row(row)
 
     def _create_session(self):
         self._session = SessionComponent(SESSION_WIDTH, SESSION_HEIGHT, name='Session_Control', auto_name=True, enable_skinning=True)
@@ -99,9 +108,12 @@ class APC20(APC):
     def _create_transport(self):
         self._transport = TransportComponent(name='Transport')
 
+    def _create_background(self):
+        self._background = BackgroundComponent(name='Background')
+
     def _create_global_control(self):
         self._slider_modes = SliderModesComponent(self._mixer, tuple(self._sliders), name='Slider_Modes')
-        self._shift_modes = ShiftableSelectorComponent(tuple(self._select_buttons), self._master_select_button, tuple(self._arm_buttons), self._matrix, self._session, self._session_zoom, self._mixer, self._transport, self._slider_modes, self._send_introduction_message, name='Shift_Modes')
+        self._shift_modes = ShiftableSelectorComponent(tuple(self._select_buttons), self._master_select_button, tuple(self._arm_buttons), self._matrix, self._session, self._session_zoom, self._mixer, self._transport, self._slider_modes, self._send_introduction_message, self._note_matrix, self._background, name='Shift_Modes')
         self._shift_modes.set_mode_toggle(self._shift_button)
 
     def _product_model_id_byte(self):

@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/_Framework/ComboElement.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/_Framework/ComboElement.py
 from __future__ import absolute_import, with_statement
 from itertools import imap
 from contextlib import contextmanager
@@ -109,8 +109,8 @@ class ComboElement(WrapperElement):
             self._wrapped_control.reset()
 
     def get_control_element_priority(self, element, priority):
-        if not (element == self._wrapped_control and (priority is None or 1 - priority + int(priority) > self.priority_increment)):
-            raise AssertionError, 'Attempting to increase the priority over a whole unit. ' + 'Make sure the combo element is not inside another combo element'
+        if element == self._wrapped_control:
+            raise priority is None or 1 - priority + int(priority) > self.priority_increment or AssertionError('Attempting to increase the priority over a whole unit. ' + 'Make sure the combo element is not inside another combo element')
             priority = DEFAULT_PRIORITY if priority is None else priority
             return priority + self.priority_increment
         return priority

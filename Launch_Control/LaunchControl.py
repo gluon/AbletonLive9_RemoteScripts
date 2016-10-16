@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Launch_Control/LaunchControl.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Launch_Control/LaunchControl.py
 from __future__ import with_statement
 from functools import partial
 import Live
@@ -13,7 +13,7 @@ from _Framework.Layer import Layer
 from _Framework.ModesComponent import ModesComponent, LayerMode
 from _Framework.SubjectSlot import subject_slot
 from _Framework.Util import nop
-from Push.ViewControlComponent import ViewControlComponent
+from _Framework.ViewControlComponent import ViewControlComponent
 from ButtonSysexControl import ButtonSysexControl
 from ConfigurableButtonElement import ConfigurableButtonElement
 from DeviceNavigationComponent import DeviceNavigationComponent

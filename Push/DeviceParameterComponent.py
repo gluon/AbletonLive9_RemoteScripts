@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/Push/DeviceParameterComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/midi-remote-scripts/Push/DeviceParameterComponent.py
 from itertools import chain, repeat, ifilter
 import Live
 AutomationState = Live.DeviceParameter.AutomationState
@@ -41,6 +41,19 @@ def is_parameter_quantized(parameter, parent_device):
 def parameter_mapping_sensitivity(parameter):
     is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
     return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.CONTINUOUS_MAPPING_SENSITIVITY
+
+
+def fine_grain_parameter_mapping_sensitivity(parameter):
+    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
+    return consts.QUANTIZED_MAPPING_SENSITIVITY if is_quantized else consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
+
+
+def _update_encoder_sensitivity(encoder, parameter):
+    default = parameter_mapping_sensitivity(parameter)
+    if hasattr(encoder, 'set_sensitivities'):
+        encoder.set_sensitivities(default, fine_grain_parameter_mapping_sensitivity(parameter))
+    else:
+        encoder.mapping_sensitivity = default
 
 
 class ParameterProvider(Subject):
@@ -115,7 +128,7 @@ class DeviceParameterComponent(ControlSurfaceComponent):
         for parameter, encoder in zip(self.parameters, self._parameter_controls):
             if encoder:
                 encoder.connect_to(parameter)
-                encoder.mapping_sensitivity = parameter_mapping_sensitivity(parameter)
+                _update_encoder_sensitivity(encoder, parameter)
 
     def _update_parameters(self):
         if self.is_enabled():

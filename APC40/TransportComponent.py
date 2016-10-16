@@ -1,4 +1,4 @@
-#Embedded file name: /Users/versonator/Jenkins/live/Binary/Core_Release_64_static/midi-remote-scripts/APC40/TransportComponent.py
+#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/APC40/TransportComponent.py
 import Live
 from _Framework.Control import ButtonControl
 from _Framework.TransportComponent import TransportComponent as TransportComponentBase
