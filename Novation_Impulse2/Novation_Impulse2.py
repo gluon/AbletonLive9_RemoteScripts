@@ -49,6 +49,10 @@ class Novation_Impulse2(ControlSurface):
             self._has_sliders = True
             self._current_midi_map = None
             self._display_reset_delay = -1
+            self._string_to_display = None
+            self.shift_pressed = False
+            # special alternative buttons mode. for now only mixer buttons become record buttons. later we will add something more
+            self.alternative_buttons_mode = False
             self._shift_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 39)
             self._preview_button = ButtonElement(IS_MOMENTARY, MIDI_CC_TYPE, 0, 41)
             self._master_slider = SliderElement(MIDI_CC_TYPE, 0, 8)
@@ -67,10 +71,6 @@ class Novation_Impulse2(ControlSurface):
             mixer_button.name = 'Encoder_Mixer_Mode'
             self._encoder_modes = EncoderModeSelector(self._device_component, self._mixer, self._next_bank_button, self._prev_bank_button, self._encoders)
             self._encoder_modes.set_device_mixer_buttons(device_button, mixer_button)
-            self._string_to_display = None
-            self.shift_pressed = False
-            # special alternative buttons mode. for now only mixer buttons become record buttons. later we will add something more
-            self.alternative_buttons_mode = False
             self._shift_button.add_value_listener(self._shift_button_handler)
 
             for component in self.components:
@@ -346,6 +346,7 @@ class Novation_Impulse2(ControlSurface):
             self._set_string_to_display(display_string)
 
     def _mixer_button_value(self, value, sender):
+        self.log ('__mixer_button_value ' + str(value) + ' ' +str(sender))
         if not value in range(128):
             raise AssertionError
         #if self._mixer.is_enabled() and value > 0:
@@ -360,7 +361,7 @@ class Novation_Impulse2(ControlSurface):
         # if shift_pressed XOR alternative_mode
         if self.shift_pressed <> self.alternative_buttons_mode:
             self.log("_mixer_button_value")
-            self.log(value)
+            self.log(str(value))
             if (value == 0):
                 self.select_armed_track_if_only_one()
 
@@ -369,10 +370,11 @@ class Novation_Impulse2(ControlSurface):
         song = self.song()
         armed_tracks = []
         tracks = song.tracks
+        self.log("select_armed_track_if_only_one 2")
         for track in tracks:
             if track.can_be_armed and track.arm:
                 armed_tracks.append(track)
-        self.log(len(armed_tracks))
+        self.log(str(len(armed_tracks)))
         if (len(armed_tracks) == 1):
             self.log("selecting the track")
             sel_track = armed_tracks[0]
@@ -423,7 +425,7 @@ class Novation_Impulse2(ControlSurface):
 
 
     def _shift_button_handler(self, value):
-        self.log("root shift handler")
+        self.log("root shift handler : "+ str(value))
         if not self._shift_button != None:
             raise AssertionError
         if not value in range(128):

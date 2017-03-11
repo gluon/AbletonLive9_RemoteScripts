@@ -83,7 +83,8 @@ class TransportViewModeSelector(ModeSelectorComponent):
 
     def _loop_pressed(self, value):
         self.log("loop handler transport component " + str(value))
-        if value == 1:
+        
+        if (value == 1) and (self._shift_pressed):
             self._parent.flipAlternativeButtonMode()
 
 

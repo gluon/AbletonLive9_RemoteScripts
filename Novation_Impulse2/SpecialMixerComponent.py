@@ -58,7 +58,7 @@ class SpecialMixerComponent(MixerComponent):
         return
 
     def _mute_solo_flip_value(self, value):
-        #self.log(value)
+        self.log("_mute_solo_flip_value" + str(value))
         if not self._mute_solo_flip_button != None:
             raise AssertionError
         if not value in range(128):
@@ -68,21 +68,26 @@ class SpecialMixerComponent(MixerComponent):
 
 
     def updateMixerButtons(self):
-        self.log("updateMixerButtons" + str(self.parent.shift_pressed) + " " +str(self.parent.alternative_buttons_mode))
+        parent_shift_pressed = self.parent.shift_pressed
+        parent_alternative_buttons_mode = self.parent.alternative_buttons_mode
+        self.log("updateMixerButtons " + str(parent_shift_pressed) + " " +str(parent_alternative_buttons_mode))
         if self._strip_mute_solo_buttons != None:
             for index in range(len(self._strip_mute_solo_buttons)):
                 strip = self.channel_strip(index)
                 self.log("setting strip")
                 if self.parent.shift_pressed or self.parent.alternative_buttons_mode:
+                        self.log("setting strip to arm")
                         strip.set_mute_button(None)
                         strip.set_solo_button(None)
                         strip.set_arm_button(self._strip_mute_solo_buttons[index])
                 else:
                     if self._mute_solo_raw_value == 0:
+                        self.log("setting strip to solo")
                         strip.set_mute_button(None)
                         strip.set_solo_button(self._strip_mute_solo_buttons[index])
                         strip.set_arm_button(None)
                     else:
+                        self.log("setting strip to mute")
                         strip.set_solo_button(None)
                         strip.set_mute_button(self._strip_mute_solo_buttons[index])
                         strip.set_arm_button(None)
