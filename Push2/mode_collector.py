@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mode_collector.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mode_collector.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import listenable_property, listens, Subject, SlotManager
+from ableton.v2.base import listenable_property, listens, EventObject
 
-class ModeCollector(SlotManager, Subject):
+class ModeCollector(EventObject):
 
-    def __init__(self, main_modes = None, mix_modes = None, global_mix_modes = None, device_modes = None, *a, **k):
+    def __init__(self, main_modes=None, mix_modes=None, global_mix_modes=None, device_modes=None, *a, **k):
         super(ModeCollector, self).__init__(*a, **k)
         self._main_modes = main_modes
         self._mix_modes = mix_modes

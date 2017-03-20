@@ -1,10 +1,16 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/grid_resolution.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/grid_resolution.py
+# Compiled at: 2016-06-08 13:13:04
 from __future__ import absolute_import, print_function
 import Live
-from ableton.v2.base import product, listens, SlotManager, Subject
+from ableton.v2.base import EventObject, product, listens
 GridQuantization = Live.Clip.GridQuantization
 QUANTIZATION_FACTOR = 24
-QUANTIZATION_LIST = [2.0,
+QUANTIZATION_LIST = [
+ 2.0,
  3.0,
  4.0,
  6.0,
@@ -15,8 +21,11 @@ QUANTIZATION_LIST = [2.0,
 CLIP_VIEW_GRID_LIST = tuple(product([GridQuantization.g_thirtysecond,
  GridQuantization.g_sixteenth,
  GridQuantization.g_eighth,
- GridQuantization.g_quarter], [True, False]))
-CLIP_LENGTH_LIST = [2.0,
+ GridQuantization.g_quarter], [
+ True,
+ False]))
+CLIP_LENGTH_LIST = [
+ 2.0,
  4.0,
  4.0,
  8.0,
@@ -26,14 +35,14 @@ CLIP_LENGTH_LIST = [2.0,
  32.0]
 DEFAULT_INDEX = 3
 
-class GridResolution(SlotManager, Subject):
-    __events__ = ('index',)
+class GridResolution(EventObject):
+    __events__ = ('index', )
 
     def __init__(self, *a, **k):
         super(GridResolution, self).__init__(*a, **k)
         self._index = DEFAULT_INDEX
         self._quantization_buttons = []
-        self._quantization_button_slots = self.register_slot_manager()
+        self._quantization_button_slots = self.register_disconnectable(EventObject())
 
     def _get_index(self):
         return self._index
@@ -79,6 +88,8 @@ class GridResolution(SlotManager, Subject):
                     button.turn_on()
                 else:
                     button.turn_off()
+
+        return
 
     def update(self):
         self._update_quantization_buttons()

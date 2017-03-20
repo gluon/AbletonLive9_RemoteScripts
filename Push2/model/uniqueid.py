@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/uniqueid.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/uniqueid.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from itertools import count
 

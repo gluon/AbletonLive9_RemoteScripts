@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/action_with_options_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/action_with_options_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from itertools import izip_longest
 from ableton.v2.base import in_range, clamp, task
@@ -57,13 +62,13 @@ class ActionWithSettingsComponent(CompoundComponent):
 
 
 class OptionsComponent(Component):
-    __events__ = ('selected_option',)
+    __events__ = ('selected_option', )
     unselected_color = 'Option.Unselected'
     selected_color = 'Option.Selected'
     _selected_option = None
     select_buttons = control_list(ButtonControl, control_count=0)
 
-    def __init__(self, num_options = 8, num_labels = 4, num_display_segments = None, *a, **k):
+    def __init__(self, num_options=8, num_labels=4, num_display_segments=None, *a, **k):
         super(OptionsComponent, self).__init__(*a, **k)
         num_display_segments = num_display_segments or num_options
         self._label_data_sources = [ DisplayDataSource() for _ in xrange(num_labels) ]
@@ -90,10 +95,11 @@ class OptionsComponent(Component):
         return self._selected_option
 
     def _set_selected_option(self, selected_option):
-        raise in_range(selected_option, 0, len(self.option_names)) or selected_option is None or AssertionError
+        assert in_range(selected_option, 0, len(self.option_names)) or selected_option is None
         self._selected_option = selected_option
         self._update_select_buttons()
         self._update_data_sources()
+        return
 
     selected_option = property(_get_selected_option, _set_selected_option)
 
@@ -152,7 +158,7 @@ class OptionsComponent(Component):
 
 class ActionWithOptionsComponent(ActionWithSettingsComponent):
 
-    def __init__(self, num_options = 8, *a, **k):
+    def __init__(self, num_options=8, *a, **k):
         super(ActionWithOptionsComponent, self).__init__(*a, **k)
         self._options = self.register_component(OptionsComponent(num_options=num_options))
         self._options.set_enabled(False)

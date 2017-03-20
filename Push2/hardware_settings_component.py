@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/hardware_settings_component.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/hardware_settings_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, listens, task
@@ -10,10 +11,10 @@ MIN_BRIGHTNESS_FOR_FADE_IN = 0
 
 class HardwareSettingsComponent(Component):
 
-    def __init__(self, led_brightness_element = None, display_brightness_element = None, settings = None, *a, **k):
-        raise led_brightness_element is not None or AssertionError
-        raise display_brightness_element is not None or AssertionError
-        raise settings is not None or AssertionError
+    def __init__(self, led_brightness_element=None, display_brightness_element=None, settings=None, *a, **k):
+        assert led_brightness_element is not None
+        assert display_brightness_element is not None
+        assert settings is not None
         super(HardwareSettingsComponent, self).__init__(*a, **k)
         self._settings = settings
         self._led_brightness_element = led_brightness_element
@@ -24,14 +25,20 @@ class HardwareSettingsComponent(Component):
         self._fade_in_delay_task = self._tasks.add(task.sequence(task.wait(LED_FADE_IN_DELAY), task.run(self._led_brightness_timer.restart))).kill()
         self.__on_led_brightness_changed.subject = settings
         self.__on_display_brightness_changed.subject = settings
+        return
 
     def disconnect(self):
         super(HardwareSettingsComponent, self).disconnect()
         self._led_brightness_timer.stop()
         self._led_brightness_timer = None
+        return
+
+    def hardware_initialized(self):
+        self.fade_in_led_brightness(self._settings.led_brightness)
+        self._display_brightness_element.send_value(self._settings.display_brightness)
 
     def fade_in_led_brightness(self, target_brightness):
-        raise MIN_BRIGHTNESS_FOR_FADE_IN <= target_brightness <= self._settings.max_led_brightness or AssertionError
+        assert MIN_BRIGHTNESS_FOR_FADE_IN <= target_brightness <= self._settings.max_led_brightness
         self._led_brightness = MIN_BRIGHTNESS_FOR_FADE_IN
         self._target_led_brightness = target_brightness
         self._led_brightness_element.send_value(MIN_BRIGHTNESS_FOR_FADE_IN)

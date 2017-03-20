@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_parameter_bank_with_options.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_parameter_bank_with_options.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listenable_property, liveobj_valid, find_if
 from pushbase.device_parameter_bank import create_device_bank, DescribedDeviceParameterBank
@@ -19,7 +20,7 @@ class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):
 
     def _current_option_slots(self):
         bank = self._definition.value_by_index(self.index)
-        return bank.get(OPTIONS_KEY) or ('',) * OPTIONS_PER_BANK
+        return bank.get(OPTIONS_KEY) or ('', ) * OPTIONS_PER_BANK
 
     def _content_slots(self):
         return self._current_option_slots() + super(DescribedDeviceParameterBankWithOptions, self)._content_slots()
@@ -27,7 +28,9 @@ class DescribedDeviceParameterBankWithOptions(DescribedDeviceParameterBank):
     def _collect_options(self):
         option_slots = self._current_option_slots()
         options = getattr(self._device, 'options', [])
-        return [ find_if(lambda o: o.name == str(slot_definition), options) for slot_definition in option_slots ]
+        return [ find_if(lambda o: o.name == str(slot_definition), options)
+         for slot_definition in option_slots
+               ]
 
     def _update_parameters(self):
         super(DescribedDeviceParameterBankWithOptions, self)._update_parameters()

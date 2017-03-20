@@ -1,20 +1,30 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/elements.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/elements.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from ableton.v2.base import depends, recursive_map
-from ableton.v2.control_surface import PrioritizedResource, MIDI_NOTE_TYPE
+from ableton.v2.control_surface import CompoundElement, MIDI_NOTE_TYPE, PrioritizedResource
 from ableton.v2.control_surface.elements import ButtonMatrixElement, DoublePressElement, FineGrainWithModifierEncoderElement, MultiElement
 from . import consts
 from .configurable_button_element import PadButtonElement
 from .control_element_factory import create_button, create_modifier_button, create_note_button
 from .playhead_element import PlayheadElement
+from .velocity_levels_element import VelocityLevelsElement
 from .touch_encoder_element import TouchEncoderElement
+BASE_ENCODER_SENSITIVITY = 0.5
 
 class Elements(object):
 
-    def __init__(self, deleter = None, undo_handler = None, pad_sensitivity_update = None, playhead = None, continuous_mapping_sensitivity = consts.CONTINUOUS_MAPPING_SENSITIVITY, fine_grained_continuous_mapping_sensitivity = consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY, *a, **k):
-        raise deleter is not None or AssertionError
-        raise undo_handler is not None or AssertionError
-        raise playhead is not None or AssertionError
+    def __init__(self, deleter=None, undo_handler=None, pad_sensitivity_update=None, playhead=None, velocity_levels=None, continuous_mapping_sensitivity=None, fine_grained_continuous_mapping_sensitivity=None, *a, **k):
+        assert deleter is not None
+        assert undo_handler is not None
+        assert playhead is not None
+        assert velocity_levels is not None
+        assert continuous_mapping_sensitivity is not None
+        assert fine_grained_continuous_mapping_sensitivity is not None
         super(Elements, self).__init__(*a, **k)
         self.foot_pedal_button = DoublePressElement(create_button(69, 'Foot_Pedal', is_rgb=True))
         self.nav_up_button = create_button(46, 'Up_Arrow')
@@ -57,36 +67,50 @@ class Elements(object):
         self.create_track_button = create_button(53, 'Create_Track_Button', undo_step_handler=undo_handler)
         self.double_button = create_button(117, 'Double_Button', undo_step_handler=undo_handler)
         self.user_button = create_button(59, 'User_Button', undo_step_handler=undo_handler)
-        self.select_buttons_raw = [ create_button(20 + idx, 'Track_Select_Button' + str(idx)) for idx in xrange(8) ]
-        self.select_buttons = ButtonMatrixElement(name='Track_Select_Buttons', rows=[self.select_buttons_raw])
-        self.track_state_buttons_raw = [ create_button(102 + idx, 'Track_State_Button' + str(idx), is_rgb=True) for idx in xrange(8) ]
-        self.track_state_buttons = ButtonMatrixElement(name='Track_State_Buttons', rows=[self.track_state_buttons_raw])
-        self.side_buttons_raw = [ create_button(36 + idx, 'Scene_Launch_Button' + str(idx)) for idx in reversed(xrange(8)) ]
-        self.side_buttons = ButtonMatrixElement(name='Scene_Launch_Buttons', rows=[self.side_buttons_raw])
+        self.select_buttons_raw = [ create_button(20 + idx, 'Track_Select_Button' + str(idx)) for idx in xrange(8)
+                                  ]
+        self.select_buttons = ButtonMatrixElement(name='Track_Select_Buttons', rows=[
+         self.select_buttons_raw])
+        self.track_state_buttons_raw = [ create_button(102 + idx, 'Track_State_Button' + str(idx), is_rgb=True) for idx in xrange(8)
+                                       ]
+        self.track_state_buttons = ButtonMatrixElement(name='Track_State_Buttons', rows=[
+         self.track_state_buttons_raw])
+        self.side_buttons_raw = [ create_button(36 + idx, 'Scene_Launch_Button' + str(idx)) for idx in reversed(xrange(8))
+                                ]
+        self.side_buttons = ButtonMatrixElement(name='Scene_Launch_Buttons', rows=[
+         self.side_buttons_raw])
 
         @depends(skin=None)
-        def create_pad_button(pad_id, name, skin = None, **k):
+        def create_pad_button(pad_id, name, skin=None, **k):
             return PadButtonElement(pad_id, pad_sensitivity_update, True, MIDI_NOTE_TYPE, 0, (36 + pad_id), skin=skin, name=name, **k)
 
-        self.matrix_rows_raw = [ [ create_pad_button((7 - row) * 8 + column, str(column) + '_Clip_' + str(row) + '_Button', is_rgb=True, default_states={True: 'DefaultMatrix.On',
-         False: 'DefaultMatrix.Off'}) for column in xrange(8) ] for row in xrange(8) ]
+        self.matrix_rows_raw = [ [ create_pad_button((7 - row) * 8 + column, str(column) + '_Clip_' + str(row) + '_Button', is_rgb=True, default_states={True: 'DefaultMatrix.On',False: 'DefaultMatrix.Off'}) for column in xrange(8) ] for row in xrange(8)
+                               ]
         double_press_rows = recursive_map(DoublePressElement, self.matrix_rows_raw)
         self.matrix = ButtonMatrixElement(name='Button_Matrix', rows=self.matrix_rows_raw)
         self.double_press_matrix = ButtonMatrixElement(name='Double_Press_Matrix', rows=double_press_rows)
         self.single_press_event_matrix = ButtonMatrixElement(name='Single_Press_Event_Matrix', rows=recursive_map(lambda x: x.single_press, double_press_rows))
         self.double_press_event_matrix = ButtonMatrixElement(name='Double_Press_Event_Matrix', rows=recursive_map(lambda x: x.double_press, double_press_rows))
         self.tempo_control_tap = create_note_button(10, 'Tempo_Control_Tap')
-        self.tempo_control = TouchEncoderElement(channel=0, identifier=14, map_mode=consts.GLOBAL_MAP_MODE, name='Tempo_Control', undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=consts.ENCODER_SENSITIVITY, touch_element=self.tempo_control_tap)
+        self.tempo_control = TouchEncoderElement(channel=0, identifier=14, map_mode=consts.GLOBAL_MAP_MODE, name='Tempo_Control', undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=BASE_ENCODER_SENSITIVITY, touch_element=self.tempo_control_tap)
         self.swing_control_tap = create_note_button(9, 'Swing_Control_Tap')
-        self.swing_control = TouchEncoderElement(channel=0, identifier=15, map_mode=consts.GLOBAL_MAP_MODE, name='Swing_Control', undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=consts.ENCODER_SENSITIVITY, touch_element=self.swing_control_tap)
+        self.swing_control = TouchEncoderElement(channel=0, identifier=15, map_mode=consts.GLOBAL_MAP_MODE, name='Swing_Control', undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=BASE_ENCODER_SENSITIVITY, touch_element=self.swing_control_tap)
         self.master_volume_control_tap = create_note_button(8, 'Master_Volume_Tap')
-        self.master_volume_control = TouchEncoderElement(channel=0, identifier=79, map_mode=consts.GLOBAL_MAP_MODE, undo_step_handler=undo_handler, delete_handler=deleter, name='Master_Volume_Control', encoder_sensitivity=consts.ENCODER_SENSITIVITY, touch_element=self.master_volume_control_tap)
+        self.master_volume_control = TouchEncoderElement(channel=0, identifier=79, map_mode=consts.GLOBAL_MAP_MODE, undo_step_handler=undo_handler, delete_handler=deleter, name='Master_Volume_Control', encoder_sensitivity=BASE_ENCODER_SENSITIVITY, touch_element=self.master_volume_control_tap)
         self.master_volume_control.mapping_sensitivity = continuous_mapping_sensitivity
-        self.global_param_touch_buttons_raw = [ create_note_button(index, 'Track_Control_Touch_' + str(index), resource_type=PrioritizedResource) for index in range(8) ]
-        self.global_param_touch_buttons = ButtonMatrixElement(name='Track_Control_Touches', rows=[self.global_param_touch_buttons_raw])
-        self.parameter_controls_raw = [ TouchEncoderElement(channel=0, identifier=71 + index, map_mode=consts.GLOBAL_MAP_MODE, undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=consts.ENCODER_SENSITIVITY, name='Track_Control_' + str(index), touch_element=self.global_param_touch_buttons_raw[index]) for index in xrange(8) ]
-        self.global_param_controls = ButtonMatrixElement(name='Track_Controls', rows=[self.parameter_controls_raw])
-        self.fine_grain_param_controls_raw = [ FineGrainWithModifierEncoderElement(encoder, self.shift_button, fine_grained_continuous_mapping_sensitivity, continuous_mapping_sensitivity) for encoder in self.parameter_controls_raw ]
-        self.fine_grain_param_controls = ButtonMatrixElement(rows=[self.fine_grain_param_controls_raw])
+        self.global_param_touch_buttons_raw = [ create_note_button(index, 'Track_Control_Touch_' + str(index), resource_type=PrioritizedResource) for index in range(8)
+                                              ]
+        self.global_param_touch_buttons = ButtonMatrixElement(name='Track_Control_Touches', rows=[
+         self.global_param_touch_buttons_raw])
+        self.parameter_controls_raw = [ TouchEncoderElement(channel=0, identifier=71 + index, map_mode=consts.GLOBAL_MAP_MODE, undo_step_handler=undo_handler, delete_handler=deleter, encoder_sensitivity=BASE_ENCODER_SENSITIVITY, name='Track_Control_' + str(index), touch_element=self.global_param_touch_buttons_raw[index]) for index in xrange(8)
+                                      ]
+        self.global_param_controls = ButtonMatrixElement(name='Track_Controls', rows=[
+         self.parameter_controls_raw])
+        self.fine_grain_param_controls_raw = [ FineGrainWithModifierEncoderElement(encoder, self.shift_button, fine_grained_continuous_mapping_sensitivity, continuous_mapping_sensitivity) for encoder in self.parameter_controls_raw
+                                             ]
+        self.fine_grain_param_controls = ButtonMatrixElement(rows=[
+         self.fine_grain_param_controls_raw])
         self.any_touch_button = MultiElement(*self.global_param_touch_buttons.nested_control_elements())
         self.playhead_element = PlayheadElement(playhead)
+        self.velocity_levels_element = VelocityLevelsElement(velocity_levels)
+        return

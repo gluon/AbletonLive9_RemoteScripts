@@ -1,10 +1,15 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/browser_util.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/browser_util.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 FilterType = Live.Browser.FilterType
 DeviceType = Live.Device.DeviceType
 
-def filter_type_for_hotswap_target(target, default = FilterType.disabled):
+def filter_type_for_hotswap_target(target, default=FilterType.disabled):
     """
     Returns the appropriate browser filter type for a given hotswap target.
     """
@@ -26,7 +31,7 @@ def filter_type_for_hotswap_target(target, default = FilterType.disabled):
     return default
 
 
-def get_selection_for_new_device(selection, insert_left = False):
+def get_selection_for_new_device(selection, insert_left=False):
     """
     Returns a device, depending on the type of object that is selected at this moment.
     For drum pads, it returns the last device in the pads chain.

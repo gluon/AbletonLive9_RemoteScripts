@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/sysex.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/sysex.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from ableton.v2.base import chunks
 from ableton.v2.control_surface import midi
@@ -8,26 +9,28 @@ PAD_VELOCITY_CURVE_CHUNK_SIZE = 16
 MODE_SWITCH_MESSAGE_ID = 10
 
 def make_aftertouch_mode_message(mode_id):
-    raise mode_id in ('polyphonic', 'mono') or AssertionError
+    assert mode_id in ('polyphonic', 'mono')
     mode_byte = 0 if mode_id == 'mono' else 1
     return make_message(30, (mode_byte,))
 
 
 def make_mode_switch_messsage(mode_id):
-    raise mode_id[0] in (LIVE_MODE, USER_MODE) or AssertionError
+    assert mode_id[0] in (LIVE_MODE, USER_MODE)
     return make_message(MODE_SWITCH_MESSAGE_ID, mode_id)
 
 
 def make_rgb_palette_entry_message(index, hex_color, white_balance):
     r, g, b = _make_rgb_from_hex(hex_color)
-    return make_message(3, (index,) + to_7L1M(r) + to_7L1M(g) + to_7L1M(b) + to_7L1M(white_balance))
+    return make_message(3, (
+     index,) + to_7L1M(r) + to_7L1M(g) + to_7L1M(b) + to_7L1M(white_balance))
 
 
 def _make_rgb_from_hex(hex_value):
     r = hex_value >> 16
     g = hex_value >> 8 & 255
     b = hex_value & 255
-    return (r, g, b)
+    return (
+     r, g, b)
 
 
 def make_reapply_palette_message():
@@ -72,8 +75,9 @@ def make_touch_strip_mode_message(mode):
 
 
 TOUCHSTRIP_STATE_TO_BRIGHTNESS = {TouchStripStates.STATE_OFF: 0,
- TouchStripStates.STATE_HALF: 1,
- TouchStripStates.STATE_FULL: 6}
+   TouchStripStates.STATE_HALF: 1,
+   TouchStripStates.STATE_FULL: 6
+   }
 
 def _make_touch_strip_light(state):
     if len(state) == 2:
@@ -98,7 +102,7 @@ def make_pad_velocity_curve_message(index, velocities):
     Updates a chunk of velocities in the voltage to velocity table.
     The index refers to the first entry in the velocities list.
     """
-    raise len(velocities) == PAD_VELOCITY_CURVE_CHUNK_SIZE or AssertionError
+    assert len(velocities) == PAD_VELOCITY_CURVE_CHUNK_SIZE
     return make_message(32, (index,) + tuple(velocities))
 
 
@@ -118,7 +122,7 @@ def make_led_brightness_message(brightness):
     brightness may be limited to a maximum value (e.g. 32) internally
     when power supply is not connected.
     """
-    raise 0 <= brightness <= 127 or AssertionError
+    assert 0 <= brightness <= 127
     return make_message(6, (brightness,))
 
 
@@ -132,7 +136,7 @@ def make_display_brightness_message(brightness):
     via MIDI, the remaining values are set by the firmware, depending
     on the power source.
     """
-    raise 0 <= brightness <= 255 or AssertionError
+    assert 0 <= brightness <= 255
     return make_message(8, to_7L1M(brightness))
 
 
@@ -150,18 +154,33 @@ def extract_identity_response_info(data):
     build = from_7L7M(data[14], data[15])
     sn = from_7L7777M(data[16:21])
     board_revision = data[21] if len(data) > 22 else 0
-    return (major,
-     minor,
-     build,
-     sn,
-     board_revision)
+    return (
+     major, minor, build, sn, board_revision)
+
+
+def make_pad_setting_message(scene_index, track_index, setting):
+    """
+    This command allows to select one of N available sets of pad
+    parameter values called settings.
+    
+    If scene_index and track_index are 0, the settings for all pads are selected.
+    
+    scene_index - 1 (top) ... 8(bottom), or 0 for all pads
+    track_index - 1 (left) ... 8(right), or 0 for all pads
+    setting     - (0-regular, 1-less sensitive)
+    """
+    assert 0 <= scene_index <= 8
+    assert 0 <= track_index <= 8
+    assert 0 <= setting <= 2
+    return make_message(40, (scene_index, track_index, setting))
 
 
 MANUFACTURER_ID = (0, 33, 29)
-MESSAGE_START = (midi.SYSEX_START,) + MANUFACTURER_ID + (1, 1)
+MESSAGE_START = (
+ midi.SYSEX_START,) + MANUFACTURER_ID + (1, 1)
 IDENTITY_RESPONSE_PRODUCT_ID_BYTES = MANUFACTURER_ID + (103, 50, 2, 0)
 
-def make_message(command_id, arguments = tuple()):
+def make_message(command_id, arguments=tuple()):
     """
     Create a sysex message from a command id and the optional arguments
     
@@ -183,13 +202,15 @@ def make_message_identifier(command_id):
 def to_7L1M(value):
     """ Returns a list with the 7 lower bits of the value followed by the 1 higher bit
     """
-    return (value & 127, value >> 7 & 1)
+    return (
+     value & 127, value >> 7 & 1)
 
 
 def to_7L5M(value):
     """ Returns a list with the 7 lower bits of the value followed by the 5 higher bits
     """
-    return (value & 127, value >> 7 & 31)
+    return (
+     value & 127, value >> 7 & 31)
 
 
 def from_7L7M(lsb, msb):

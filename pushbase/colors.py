@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/colors.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/colors.py
+# Compiled at: 2016-11-16 18:13:20
 """
 Module for the color interfaces defining all posible ways of turning
 on buttons on Push.
@@ -14,7 +19,7 @@ class PushColor(Color):
         return not self.needs_rgb_interface or interface.is_rgb
 
     def draw(self, interface):
-        raise self.can_draw_on_interface(interface) or AssertionError
+        assert self.can_draw_on_interface(interface)
         super(PushColor, self).draw(interface)
 
 
@@ -25,16 +30,17 @@ class RgbColor(PushColor):
     needs_rgb_interface = True
     _rgb_value = (0, 0, 0)
 
-    def __init__(self, midi_value = None, rgb_value = None, *a, **k):
+    def __init__(self, midi_value=None, rgb_value=None, *a, **k):
         super(RgbColor, self).__init__(midi_value=midi_value, *a, **k)
         if rgb_value is not None:
             self._rgb_value = rgb_value
+        return
 
     def shade(self, shade_level):
         """
         Generate a new shaded RGB from this color.
         """
-        raise shade_level > 0 and shade_level <= 2 or AssertionError
+        assert shade_level > 0 and shade_level <= 2
         shade_factor = 1.0 / 2.0 * (2 - shade_level)
         return RgbColor(self.midi_value + shade_level, [ a * b for a, b in izip(self._rgb_value, repeat(shade_factor)) ])
 
@@ -58,7 +64,7 @@ class FallbackColor(PushColor):
     or rgb button.
     """
 
-    def __init__(self, default_color = None, fallback_color = None, *a, **k):
+    def __init__(self, default_color=None, fallback_color=None, *a, **k):
         super(FallbackColor, self).__init__(midi_value=to_midi_value(fallback_color), *a, **k)
         self.default_color = default_color
 
@@ -79,7 +85,7 @@ class AnimatedColor(PushColor):
     def midi_value(self):
         return self.convert_to_midi_value()
 
-    def __init__(self, color1 = RgbColor(), color2 = RgbColor(), channel2 = 7, *a, **k):
+    def __init__(self, color1=RgbColor(), color2=RgbColor(), channel2=7, *a, **k):
         super(AnimatedColor, self).__init__(*a, **k)
         self.color1 = color1
         self.color2 = color2
@@ -89,7 +95,7 @@ class AnimatedColor(PushColor):
         return self.color1.can_draw_on_interface(interface) and self.color2.can_draw_on_interface(interface)
 
     def draw(self, interface):
-        raise interface.num_delayed_messages >= 2 or AssertionError
+        assert interface.num_delayed_messages >= 2
         interface.send_value(self.color1.midi_value)
         interface.send_value(self.color2.midi_value, channel=self.channel2)
 
@@ -102,12 +108,9 @@ class Pulse(AnimatedColor):
     Smoothly pulsates between two colors.
     """
 
-    def __init__(self, color1 = RgbColor(), color2 = RgbColor(), speed = 6, *a, **k):
-        channel2 = [4,
-         6,
-         12,
-         24,
-         48].index(speed) + 6
+    def __init__(self, color1=RgbColor(), color2=RgbColor(), speed=6, *a, **k):
+        channel2 = [
+         4, 6, 12, 24, 48].index(speed) + 6
         super(Pulse, self).__init__(color1=color1, color2=color2, channel2=channel2, *a, **k)
 
 
@@ -116,13 +119,18 @@ class Blink(AnimatedColor):
     Blinks jumping between two colors.
     """
 
-    def __init__(self, color1 = 0, color2 = 0, speed = 6, *a, **k):
-        channel2 = [4,
-         6,
-         12,
-         24,
-         48].index(speed) + 11
+    def __init__(self, color1=0, color2=0, speed=6, *a, **k):
+        channel2 = [4, 6, 12, 24, 48].index(speed) + 11
         super(Blink, self).__init__(color1=color1, color2=color2, channel2=channel2, *a, **k)
+
+
+class TransparentColor(object):
+    """
+    Color that does not transmit any MIDI data.
+    """
+
+    def draw(self, interface):
+        pass
 
 
 class Rgb:
@@ -161,6 +169,7 @@ class Basic:
     FULL_BLINK_FAST = FallbackColor(Blink(Rgb.WHITE, Rgb.BLACK, 24), 6)
     OFF = FallbackColor(Rgb.BLACK, 0)
     ON = FallbackColor(Rgb.WHITE, 127)
+    TRANSPARENT = TransparentColor()
 
 
 class BiLed:
@@ -187,67 +196,68 @@ class BiLed:
     ON = FallbackColor(Rgb.WHITE, 127)
 
 
-CLIP_COLOR_TABLE = {15549221: 60,
- 12411136: 61,
- 11569920: 62,
- 8754719: 63,
- 5480241: 64,
- 695438: 65,
- 31421: 66,
- 197631: 67,
- 3101346: 68,
- 6441901: 69,
- 8092539: 70,
- 3947580: 71,
- 16712965: 72,
- 12565097: 73,
- 10927616: 74,
- 8046132: 75,
- 4047616: 76,
- 49071: 77,
- 1090798: 78,
- 5538020: 79,
- 8940772: 80,
- 10701741: 81,
- 12008809: 82,
- 9852725: 83,
- 16149507: 84,
- 12581632: 85,
- 8912743: 86,
- 1769263: 87,
- 2490280: 88,
- 5111762: 89,
- 1698303: 90,
- 9160191: 91,
- 9611263: 92,
- 12094975: 93,
- 14183652: 94,
- 16726484: 95,
- 16753961: 96,
- 16773172: 97,
- 14939139: 98,
- 14402304: 99,
- 12492131: 100,
- 9024637: 101,
- 8962746: 102,
- 10204100: 103,
- 8758722: 104,
- 13011836: 105,
- 15810688: 106,
- 16749734: 107,
- 16753524: 108,
- 16772767: 109,
- 13821080: 110,
- 12243060: 111,
- 11119017: 112,
- 13958625: 113,
- 13496824: 114,
- 12173795: 115,
- 13482980: 116,
- 13684944: 117,
- 14673637: 118,
- 16777215: Rgb.WHITE}
-RGB_COLOR_TABLE = ((0, 0),
+CLIP_COLOR_TABLE = {15549221: 60,12411136: 61,
+   11569920: 62,
+   8754719: 63,
+   5480241: 64,
+   695438: 65,
+   31421: 66,
+   197631: 67,
+   3101346: 68,
+   6441901: 69,
+   8092539: 70,
+   3947580: 71,
+   16712965: 72,
+   12565097: 73,
+   10927616: 74,
+   8046132: 75,
+   4047616: 76,
+   49071: 77,
+   1090798: 78,
+   5538020: 79,
+   8940772: 80,
+   10701741: 81,
+   12008809: 82,
+   9852725: 83,
+   16149507: 84,
+   12581632: 85,
+   8912743: 86,
+   1769263: 87,
+   2490280: 88,
+   5111762: 89,
+   1698303: 90,
+   9160191: 91,
+   9611263: 92,
+   12094975: 93,
+   14183652: 94,
+   16726484: 95,
+   16753961: 96,
+   16773172: 97,
+   14939139: 98,
+   14402304: 99,
+   12492131: 100,
+   9024637: 101,
+   8962746: 102,
+   10204100: 103,
+   8758722: 104,
+   13011836: 105,
+   15810688: 106,
+   16749734: 107,
+   16753524: 108,
+   16772767: 109,
+   13821080: 110,
+   12243060: 111,
+   11119017: 112,
+   13958625: 113,
+   13496824: 114,
+   12173795: 115,
+   13482980: 116,
+   13684944: 117,
+   14673637: 118,
+   16777215: Rgb.WHITE
+   }
+RGB_COLOR_TABLE = (
+ (0, 0),
  (1, 1973790),
  (2, 8355711),
  (3, 16777215),

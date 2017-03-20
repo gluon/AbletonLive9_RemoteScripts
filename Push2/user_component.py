@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/user_component.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/user_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from ableton.v2.control_surface.mode import ModeButtonBehaviour
@@ -7,11 +8,12 @@ from . import sysex
 
 class UserButtonBehavior(ModeButtonBehaviour):
 
-    def __init__(self, user_component = None, *a, **k):
-        raise user_component is not None or AssertionError
+    def __init__(self, user_component=None, *a, **k):
+        assert user_component is not None
         super(UserButtonBehavior, self).__init__(*a, **k)
         self._previous_mode = None
         self._user_component = user_component
+        return
 
     def press_immediate(self, component, mode):
         if component.selected_mode != 'user' and self._user_component.mode == sysex.LIVE_MODE:
@@ -24,10 +26,11 @@ class UserButtonBehavior(ModeButtonBehaviour):
         self._leave_user_mode(component)
 
     def _leave_user_mode(self, component):
-        if not (component.selected_mode == 'user' and self._user_component.mode == sysex.USER_MODE and self._previous_mode is not None):
-            raise AssertionError
+        if component.selected_mode == 'user' and self._user_component.mode == sysex.USER_MODE:
+            assert self._previous_mode is not None
             component.selected_mode = self._previous_mode
             self._previous_mode = None
+        return
 
 
 class UserComponent(UserComponentBase):

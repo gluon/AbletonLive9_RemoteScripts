@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/elements.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/elements.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.control_surface.elements import SysexElement
 from pushbase.control_element_factory import create_button, create_note_button
@@ -9,8 +10,8 @@ from . import sysex
 
 class Elements(ElementsBase):
 
-    def __init__(self, model = None, *a, **k):
-        raise model is not None or AssertionError
+    def __init__(self, model=None, *a, **k):
+        assert model is not None
         self._model = model
         super(Elements, self).__init__(continuous_mapping_sensitivity=CONTINUOUS_MAPPING_SENSITIVITY, fine_grained_continuous_mapping_sensitivity=FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY, *a, **k)
         for button in self.select_buttons_raw:
@@ -35,6 +36,7 @@ class Elements(ElementsBase):
         self.layout_button = create_button(31, 'Layout')
         self._create_touch_strip()
         self.aftertouch_control = SysexElement(send_message_generator=sysex.make_aftertouch_mode_message, default_value='polyphonic')
+        return
 
     def _create_touch_strip(self):
         touch_strip_mode_element = SysexElement(send_message_generator=sysex.make_touch_strip_mode_message)

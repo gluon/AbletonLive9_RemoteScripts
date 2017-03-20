@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/device_parameter_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/device_parameter_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from itertools import chain, repeat, izip_longest
 import Live
@@ -19,7 +24,7 @@ def graphic_bar_for_parameter(parameter):
     return consts.GRAPH_VOL
 
 
-def convert_parameter_value_to_graphic(param, param_to_value = lambda p: p.value):
+def convert_parameter_value_to_graphic(param, param_to_value=lambda p: p.value):
     if param != None:
         param_range = param.max - param.min
         param_bar = graphic_bar_for_parameter(param)
@@ -41,7 +46,7 @@ def update_encoder_sensitivity(encoder, parameter_info):
 class DeviceParameterComponentBase(Component):
     controls = ControlList(MappedControl, 8)
 
-    def __init__(self, parameter_provider = None, *a, **k):
+    def __init__(self, parameter_provider=None, *a, **k):
         super(DeviceParameterComponentBase, self).__init__(*a, **k)
         self._parameter_controls = []
         self.parameter_provider = parameter_provider
@@ -53,6 +58,7 @@ class DeviceParameterComponentBase(Component):
         self._parameter_provider = provider or ParameterProvider()
         self._on_parameters_changed.subject = self._parameter_provider
         self._update_parameters()
+        self._on_parameter_provider_changed(provider)
 
     parameter_provider = property(_get_parameter_provider, _set_parameter_provider)
 
@@ -67,6 +73,8 @@ class DeviceParameterComponentBase(Component):
             control.mapped_parameter = parameter
             if parameter:
                 control.update_sensitivities(parameter_info.default_encoder_sensitivity, parameter_info.fine_grain_encoder_sensitivity)
+
+        return
 
     @property
     def parameters(self):
@@ -84,6 +92,9 @@ class DeviceParameterComponentBase(Component):
     def _on_parameters_changed(self):
         self._update_parameters()
 
+    def _on_parameter_provider_changed(self, provider):
+        pass
+
     def update(self):
         super(DeviceParameterComponentBase, self).update()
         self._update_parameters()
@@ -96,9 +107,14 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
     """
 
     def __init__(self, *a, **k):
-        self._parameter_name_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
-        self._parameter_value_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
-        self._parameter_graphic_data_sources = map(DisplayDataSource, ('', '', '', '', '', '', '', ''))
+        self._parameter_name_data_sources = map(DisplayDataSource, ('', '', '', '',
+                                                                    '', '', '', ''))
+        self._parameter_value_data_sources = map(DisplayDataSource, ('', '', '', '',
+                                                                     '', '', '',
+                                                                     ''))
+        self._parameter_graphic_data_sources = map(DisplayDataSource, ('', '', '',
+                                                                       '', '', '',
+                                                                       '', ''))
         super(DeviceParameterComponent, self).__init__(*a, **k)
 
     def set_name_display_line(self, line):
@@ -153,6 +169,8 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
                     name = consts.CHAR_FULL_BLOCK + name
                 name_data_source.set_display_string(name or '')
 
+        return
+
     def _update_parameter_values(self):
         if self.is_enabled():
             for parameter, data_source in izip_longest(self.parameters, self._parameter_value_data_sources):
@@ -170,7 +188,8 @@ class DeviceParameterComponent(DeviceParameterComponentBase):
     def parameter_to_string(self, parameter):
         if parameter == None:
             return ''
-        return unicode(parameter)
+        else:
+            return unicode(parameter)
 
     def parameter_to_value(self, parameter):
         return parameter.value

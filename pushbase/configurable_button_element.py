@@ -1,6 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/configurable_button_element.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/configurable_button_element.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
-from ableton.v2.base import in_range
+from ableton.v2.base import const, in_range
 from ableton.v2.control_surface import Skin, SkinColorMissingError
 from ableton.v2.control_surface.elements import ButtonElement, ON_VALUE, OFF_VALUE
 from .colors import Basic
@@ -26,11 +31,12 @@ class ConfigurableButtonElement(ButtonElement):
 
     default_skin = Skin(Colors)
     default_states = {True: 'DefaultButton.On',
-     False: 'DefaultButton.Off'}
+       False: 'DefaultButton.Off'
+       }
     num_delayed_messages = 2
     send_depends_on_forwarding = False
 
-    def __init__(self, is_momentary, msg_type, channel, identifier, skin = None, is_rgb = False, default_states = None, *a, **k):
+    def __init__(self, is_momentary, msg_type, channel, identifier, skin=None, is_rgb=False, default_states=None, *a, **k):
         super(ConfigurableButtonElement, self).__init__(is_momentary, msg_type, channel, identifier, skin=(skin or self.default_skin), *a, **k)
         if default_states is not None:
             self.default_states = default_states
@@ -38,6 +44,7 @@ class ConfigurableButtonElement(ButtonElement):
         self.is_rgb = is_rgb
         self._force_next_value = False
         self.set_channel(NON_FEEDBACK_CHANNEL)
+        return
 
     @property
     def _on_value(self):
@@ -115,12 +122,16 @@ class PadButtonElement(ConfigurableButtonElement):
     parameter defines the Pad coordine id used in the sysex protocol.
     """
 
-    def __init__(self, pad_id = None, pad_sensitivity_update = None, *a, **k):
-        raise pad_id is not None or AssertionError
+    class ProxiedInterface(ConfigurableButtonElement.ProxiedInterface):
+        sensitivity_profile = const(None)
+
+    def __init__(self, pad_id=None, pad_sensitivity_update=None, *a, **k):
+        assert pad_id is not None
         super(PadButtonElement, self).__init__(*a, **k)
         self._sensitivity_profile = 'default'
         self._pad_id = pad_id
         self._pad_sensitivity_update = pad_sensitivity_update
+        return
 
     def _get_sensitivity_profile(self):
         return self._sensitivity_profile
@@ -129,6 +140,7 @@ class PadButtonElement(ConfigurableButtonElement):
         if profile != self._sensitivity_profile and self._pad_sensitivity_update is not None:
             self._sensitivity_profile = profile
             self._pad_sensitivity_update.set_pad(self._pad_id, profile)
+        return
 
     sensitivity_profile = property(_get_sensitivity_profile, _set_sensitivity_profile)
 

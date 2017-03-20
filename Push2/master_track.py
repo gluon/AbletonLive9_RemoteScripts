@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/master_track.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/master_track.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listens
 from ableton.v2.control_surface import Component
@@ -7,13 +8,14 @@ from ableton.v2.control_surface.control import ToggleButtonControl
 class MasterTrackComponent(Component):
     toggle_button = ToggleButtonControl()
 
-    def __init__(self, tracks_provider = None, *a, **k):
-        raise tracks_provider is not None or AssertionError
+    def __init__(self, tracks_provider=None, *a, **k):
+        assert tracks_provider is not None
         super(MasterTrackComponent, self).__init__(*a, **k)
         self._tracks_provider = tracks_provider
         self.__on_selected_item_changed.subject = self._tracks_provider
         self._previous_selection = self._tracks_provider.selected_item
         self._update_button_state()
+        return
 
     @listens('selected_item')
     def __on_selected_item_changed(self, *a):

@@ -1,10 +1,15 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/scrollable_list_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/scrollable_list_component.py
+# Compiled at: 2016-06-08 13:13:04
 """
 Scrollable list component.
 """
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import in_range, Event
+from ableton.v2.base import EventObject, in_range, Event
 from ableton.v2.base.signal import short_circuit_signal
 from ableton.v2.control_surface import Component
 from ableton.v2.control_surface.elements import DisplayDataSource
@@ -15,7 +20,9 @@ class ScrollableListComponent(Component):
     Component for handling a list of options with a limtied set of
     buttons and display segments.
     """
-    __events__ = (Event(name='change_option', doc=' Event signaled when the selected option changes '), Event(name='press_option', signal=short_circuit_signal, doc='\n       Event signaled when an option is pressed getting the option as\n       parameter.  The ScrollableListComponent is connected to it, if\n       you want to override selection behaviour, connect to the front\n       and return True from your handler.\n       '))
+    __events__ = (
+     Event(name='change_option', doc=' Event signaled when the selected option changes '),
+     Event(name='press_option', signal=short_circuit_signal, doc='\n       Event signaled when an option is pressed getting the option as\n       parameter.  The ScrollableListComponent is connected to it, if\n       you want to override selection behaviour, connect to the front\n       and return True from your handler.\n       '))
     num_segments = 8
     display_line = 3
     jump_size = 3
@@ -24,13 +31,15 @@ class ScrollableListComponent(Component):
 
     def __init__(self, *a, **k):
         super(ScrollableListComponent, self).__init__(*a, **k)
-        self._data_sources = [ DisplayDataSource() for _ in range(self.num_segments) ]
+        self._data_sources = [ DisplayDataSource() for _ in range(self.num_segments)
+                             ]
         self._selected_option = None
         self._offset_index = 0
         self._option_names = []
         self._select_buttons = []
-        self._select_button_slots = self.register_slot_manager()
+        self._select_button_slots = self.register_disconnectable(EventObject())
         self.register_slot(self, self._set_selected_option, 'press_option')
+        return
 
     def set_display_line(self, line):
         if line:
@@ -73,11 +82,12 @@ class ScrollableListComponent(Component):
         return self._selected_option
 
     def _set_selected_option(self, selected_option):
-        if not (selected_option != self._selected_option and (selected_option == None or in_range(selected_option, 0, self._option_names))):
-            raise AssertionError
+        if selected_option != self._selected_option:
+            assert selected_option == None or in_range(selected_option, 0, self._option_names)
             self._selected_option = selected_option
             self.notify_change_option(selected_option)
             self.update()
+        return
 
     selected_option = property(_get_selected_option, _set_selected_option)
 
@@ -106,15 +116,17 @@ class ScrollableListComponent(Component):
     def _on_select_value(self, value, sender):
         if not self.is_enabled() or not value:
             return
-        index = list(self._select_buttons).index(sender)
-        if index == 0 and self._offset_index != 0:
-            self.scroll_left()
-        elif index == self.num_segments - 1 and self._offset_index < self._maximal_offset():
-            self.scroll_right()
-        elif self._offset_index == 0:
-            self.notify_press_option(index if index < len(self._option_names) else None)
         else:
-            self.notify_press_option(index + self._offset_index - 1)
+            index = list(self._select_buttons).index(sender)
+            if index == 0 and self._offset_index != 0:
+                self.scroll_left()
+            elif index == self.num_segments - 1 and self._offset_index < self._maximal_offset():
+                self.scroll_right()
+            elif self._offset_index == 0:
+                self.notify_press_option(index if index < len(self._option_names) else None)
+            else:
+                self.notify_press_option(index + self._offset_index - 1)
+            return
 
     def _get_display_string(self, option_index):
         if option_index < len(self._option_names):
@@ -155,7 +167,7 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
     Scrollable list that has a toggle button associated with every
     available option.
     """
-    __events__ = ('toggle_option',)
+    __events__ = ('toggle_option', )
 
     def __init__(self, *a, **k):
         super(ScrollableListWithTogglesComponent, self).__init__(*a, **k)
@@ -174,6 +186,7 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
             slot.subject = button
 
         self._update_state_buttons()
+        return
 
     def option_state(self, index):
         return self._option_states[index]
@@ -197,6 +210,7 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
                     self.notify_press_option(None)
             else:
                 self.notify_press_option(None)
+        return
 
     def _set_option_names(self, names):
         """ overrides """
@@ -211,22 +225,25 @@ class ScrollableListWithTogglesComponent(ScrollableListComponent):
     def _update_state_buttons(self):
         if not self.is_enabled():
             return
-        buttons = [ slot.subject for slot in self._state_button_slots ]
-        if buttons[0]:
-            first_button, max_button = 0, len(buttons)
-            if self._offset_index > 0:
-                buttons[0].turn_off()
-                first_button = 1
-            if self._offset_index < self._maximal_offset():
-                buttons[-1].turn_off()
-                max_button -= 1
-            for state, button in zip(self._option_states[self._offset_index:], buttons[first_button:max_button]):
-                if button != None:
-                    if state:
-                        button.turn_on()
-                    else:
+        else:
+            buttons = [ slot.subject for slot in self._state_button_slots ]
+            if buttons[0]:
+                first_button, max_button = 0, len(buttons)
+                if self._offset_index > 0:
+                    buttons[0].turn_off()
+                    first_button = 1
+                if self._offset_index < self._maximal_offset():
+                    buttons[-1].turn_off()
+                    max_button -= 1
+                for state, button in zip(self._option_states[self._offset_index:], buttons[first_button:max_button]):
+                    if button != None:
+                        if state:
+                            button.turn_on()
+                        else:
+                            button.turn_off()
+
+                for button in buttons[len(self._option_states):]:
+                    if button != None:
                         button.turn_off()
 
-            for button in buttons[len(self._option_states):]:
-                if button != None:
-                    button.turn_off()
+            return

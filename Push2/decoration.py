@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/decoration.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/decoration.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import find_if, liveobj_changed, liveobj_valid
@@ -13,7 +14,7 @@ def find_decorated_object(proxied_object, decorator_factory):
 
 class TrackDecoratorFactory(DecoratorFactory):
 
-    def attach_nesting_level(self, decorated, nesting_level = 0, parent = None):
+    def attach_nesting_level(self, decorated, nesting_level=0, parent=None):
         parent_nesting = parent.nesting_level if parent else 0
         decorated.parent_track = parent
         decorated.nesting_level = nesting_level + parent_nesting

@@ -1,8 +1,13 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/parameter_provider.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/parameter_provider.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import liveobj_valid, NamedTuple, Subject
-from . import consts
-DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')}
+from ableton.v2.base import liveobj_valid, NamedTuple, EventObject
+DISCRETE_PARAMETERS_DICT = {'GlueCompressor': ('Ratio', 'Attack', 'Release', 'Peak Clip In')
+   }
 
 def is_parameter_quantized(parameter, parent_device):
     is_quantized = False
@@ -12,26 +17,12 @@ def is_parameter_quantized(parameter, parent_device):
     return is_quantized
 
 
-def parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    if is_quantized:
-        return consts.QUANTIZED_MAPPING_SENSITIVITY
-    return consts.CONTINUOUS_MAPPING_SENSITIVITY
-
-
-def fine_grain_parameter_mapping_sensitivity(parameter):
-    is_quantized = is_parameter_quantized(parameter, parameter and parameter.canonical_parent)
-    if is_quantized:
-        return consts.QUANTIZED_MAPPING_SENSITIVITY
-    return consts.FINE_GRAINED_CONTINUOUS_MAPPING_SENSITIVITY
-
-
 class ParameterInfo(NamedTuple):
     parameter = None
-    default_encoder_sensitivity = (None,)
-    fine_grain_encoder_sensitivity = (None,)
+    default_encoder_sensitivity = None
+    fine_grain_encoder_sensitivity = None
 
-    def __init__(self, name = None, *a, **k):
+    def __init__(self, name=None, *a, **k):
         super(ParameterInfo, self).__init__(_overriden_name=name, *a, **k)
 
     @property
@@ -39,12 +30,8 @@ class ParameterInfo(NamedTuple):
         return self._overriden_name or getattr(self.parameter, 'name', '')
 
 
-def generate_info(parameter, name = None, default_sens_factory = parameter_mapping_sensitivity, fine_sens_factory = fine_grain_parameter_mapping_sensitivity):
-    return ParameterInfo(name=name, parameter=parameter, default_encoder_sensitivity=default_sens_factory(parameter), fine_grain_encoder_sensitivity=fine_sens_factory(parameter))
-
-
-class ParameterProvider(Subject):
-    __events__ = ('parameters',)
+class ParameterProvider(EventObject):
+    __events__ = ('parameters', )
 
     @property
     def parameters(self):

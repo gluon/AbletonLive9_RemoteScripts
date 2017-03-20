@@ -1,6 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/parameter_slot_description.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/parameter_slot_description.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import find_if, listens_group, liveobj_valid, Subject, SlotManager
+from ableton.v2.base import find_if, listens_group, liveobj_valid, EventObject
 RESULTING_NAME_KEY = 'ResultingName'
 CONDITION_NAME_KEY = 'ConditionName'
 CONDITIONS_LIST_NAME_KEY = 'ConditionsListName'
@@ -14,7 +19,7 @@ def find_parameter(name, host):
     return find_if(lambda p: p.original_name == name, parameters)
 
 
-class ParameterSlotDescription(Subject, SlotManager):
+class ParameterSlotDescription(EventObject):
     """
     Description class that allows chosing a parameter (name) based on
     the values of other parameters. To retrieve the chosen parameter name
@@ -26,7 +31,7 @@ class ParameterSlotDescription(Subject, SlotManager):
       - slot = use('A').if_parameter('B').has_value('1.0')                       .and_parameter('C').has_value('0.5').else_use('D')
       - parameter_name = str(slot)
     """
-    __events__ = ('content',)
+    __events__ = ('content', )
 
     def __init__(self, *a, **k):
         super(ParameterSlotDescription, self).__init__(*a, **k)
@@ -34,13 +39,17 @@ class ParameterSlotDescription(Subject, SlotManager):
         self._default_parameter_name = ''
         self._conditions = []
         self._cached_content = None
+        return
 
     def _calc_content(self):
         content = self._default_parameter_name
         for condition in self._conditions:
             result = True
             for subcond in condition[CONDITIONS_LIST_NAME_KEY]:
-                result = eval('%s %s %s' % (result, subcond[OPERAND_NAME_KEY], subcond[PREDICATE_KEY](find_parameter(subcond[CONDITION_NAME_KEY], self._parameter_host))))
+                result = eval('%s %s %s' % (
+                 result,
+                 subcond[OPERAND_NAME_KEY],
+                 subcond[PREDICATE_KEY](find_parameter(subcond[CONDITION_NAME_KEY], self._parameter_host))))
                 if not result:
                     continue
 
@@ -68,15 +77,19 @@ class ParameterSlotDescription(Subject, SlotManager):
 
     def if_parameter(self, parameter_name):
         self._conditions.append({RESULTING_NAME_KEY: self._default_parameter_name,
-         CONDITIONS_LIST_NAME_KEY: [{CONDITION_NAME_KEY: parameter_name,
-                                     OPERAND_NAME_KEY: AND}]})
+           CONDITIONS_LIST_NAME_KEY: [
+                                    {CONDITION_NAME_KEY: parameter_name,
+                                       OPERAND_NAME_KEY: AND
+                                       }]
+           })
         self._default_parameter_name = ''
         return self
 
     def chain_condition(self, operand, parameter_name):
-        raise len(self._conditions) > 0 and len(self._conditions[-1][CONDITIONS_LIST_NAME_KEY]) > 0 and not self._default_parameter_name or AssertionError
+        assert len(self._conditions) > 0 and len(self._conditions[-1][CONDITIONS_LIST_NAME_KEY]) > 0 and not self._default_parameter_name
         self._conditions[-1][CONDITIONS_LIST_NAME_KEY].append({CONDITION_NAME_KEY: parameter_name,
-         OPERAND_NAME_KEY: operand})
+           OPERAND_NAME_KEY: operand
+           })
         return self
 
     def and_parameter(self, parameter_name):
@@ -86,7 +99,7 @@ class ParameterSlotDescription(Subject, SlotManager):
         return self.chain_condition(OR, parameter_name)
 
     def _add_condition_predicate(self, predicate):
-        raise len(self._conditions) > 0 and PREDICATE_KEY not in self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1] or AssertionError
+        assert len(self._conditions) > 0 and PREDICATE_KEY not in self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1]
         self._conditions[-1][CONDITIONS_LIST_NAME_KEY][-1][PREDICATE_KEY] = predicate
 
     def has_value(self, value):
