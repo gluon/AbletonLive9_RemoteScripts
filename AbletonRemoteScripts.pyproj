@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{ed5fbfbf-4be8-482d-b574-58db3cd35247}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>Novation_Impulse2\__init__.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>AbletonRemoteScripts</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Include="Nocturn2\._apihelper.py" />
+    <Compile Include="Nocturn2\._consts.py" />
+    <Compile Include="Nocturn2\._DeviceController.py" />
+    <Compile Include="Nocturn2\._MixerController.py" />
+    <Compile Include="Nocturn2\._Nocturn.py" />
+    <Compile Include="Nocturn2\._NocturnComponent.py" />
+    <Compile Include="Nocturn2\._PlayingController.py" />
+    <Compile Include="Nocturn2\._SceneController.py" />
+    <Compile Include="Nocturn2\.___init__.py" />
+    <Compile Include="Nocturn2\.___init__.py2.py" />
+    <Compile Include="Nocturn2\apihelper.py" />
+    <Compile Include="Nocturn2\consts.py" />
+    <Compile Include="Nocturn2\DeviceController.py" />
+    <Compile Include="Nocturn2\MixerController.py" />
+    <Compile Include="Nocturn2\Nocturn.py" />
+    <Compile Include="Nocturn2\NocturnComponent.py" />
+    <Compile Include="Nocturn2\PlayingController.py" />
+    <Compile Include="Nocturn2\SceneController.py" />
+    <Compile Include="Nocturn2\__init__.py" />
+    <Compile Include="Nocturn2\__init__.py2.py" />
+    <Compile Include="Novation_Impulse2_9_1\EncoderModeSelector.py" />
+    <Compile Include="Novation_Impulse2_9_1\Novation_Impulse2.py" />
+    <Compile Include="Novation_Impulse2_9_1\PeekableEncoderElement.py" />
+    <Compile Include="Novation_Impulse2_9_1\ShiftableTransportComponent.py" />
+    <Compile Include="Novation_Impulse2_9_1\SpecialMixerComponent.py" />
+    <Compile Include="Novation_Impulse2_9_1\TransportViewModeSelector.py" />
+    <Compile Include="Novation_Impulse2_9_1\__init__.py" />
+    <Compile Include="Novation_Impulse2\EncoderModeSelector.py" />
+    <Compile Include="Novation_Impulse2\Novation_Impulse2.py" />
+    <Compile Include="Novation_Impulse2\PeekableEncoderElement.py" />
+    <Compile Include="Novation_Impulse2\ShiftableTransportComponent.py" />
+    <Compile Include="Novation_Impulse2\SpecialMixerComponent.py" />
+    <Compile Include="Novation_Impulse2\TransportViewModeSelector.py" />
+    <Compile Include="Novation_Impulse2\__init__.py" />
+    <Compile Include="Novation_Impulse\EncoderModeSelector.py" />
+    <Compile Include="Novation_Impulse\Novation_Impulse.py" />
+    <Compile Include="Novation_Impulse\PeekableEncoderElement.py" />
+    <Compile Include="Novation_Impulse\ShiftableTransportComponent.py" />
+    <Compile Include="Novation_Impulse\SpecialMixerComponent.py" />
+    <Compile Include="Novation_Impulse\TransportViewModeSelector.py" />
+    <Compile Include="Novation_Impulse\__init__.py" />
+    <Compile Include="_Framework\ButtonElement.py" />
+    <Compile Include="_Framework\ButtonMatrixElement.py" />
+    <Compile Include="_Framework\ButtonSliderElement.py" />
+    <Compile Include="_Framework\Capabilities.py" />
+    <Compile Include="_Framework\ChannelStripComponent.py" />
+    <Compile Include="_Framework\ChannelTranslationSelector.py" />
+    <Compile Include="_Framework\ClipSlotComponent.py" />
+    <Compile Include="_Framework\CompoundComponent.py" />
+    <Compile Include="_Framework\CompoundElement.py" />
+    <Compile Include="_Framework\ControlElement.py" />
+    <Compile Include="_Framework\ControlSurface.py" />
+    <Compile Include="_Framework\ControlSurfaceComponent.py" />
+    <Compile Include="_Framework\Debug.py" />
+    <Compile Include="_Framework\Defaults.py" />
+    <Compile Include="_Framework\Dependency.py" />
+    <Compile Include="_Framework\DeviceBankRegistry.py" />
+    <Compile Include="_Framework\DeviceComponent.py" />
+    <Compile Include="_Framework\Disconnectable.py" />
+    <Compile Include="_Framework\DisplayDataSource.py" />
+    <Compile Include="_Framework\EncoderElement.py" />
+    <Compile Include="_Framework\InputControlElement.py" />
+    <Compile Include="_Framework\Layer.py" />
+    <Compile Include="_Framework\LogicalDisplaySegment.py" />
+    <Compile Include="_Framework\MixerComponent.py" />
+    <Compile Include="_Framework\ModesComponent.py" />
+    <Compile Include="_Framework\ModeSelectorComponent.py" />
+    <Compile Include="_Framework\MomentaryModeObserver.py" />
+    <Compile Include="_Framework\NotifyingControlElement.py" />
+    <Compile Include="_Framework\PhysicalDisplayElement.py" />
+    <Compile Include="_Framework\Resource.py" />
+    <Compile Include="_Framework\SceneComponent.py" />
+    <Compile Include="_Framework\ScrollComponent.py" />
+    <Compile Include="_Framework\SessionComponent.py" />
+    <Compile Include="_Framework\SessionZoomingComponent.py" />
+    <Compile Include="_Framework\Signal.py" />
+    <Compile Include="_Framework\SliderElement.py" />
+    <Compile Include="_Framework\SubjectSlot.py" />
+    <Compile Include="_Framework\SwitchModeSelectorComponent.py" />
+    <Compile Include="_Framework\SysexValueControl.py" />
+    <Compile Include="_Framework\Task.py" />
+    <Compile Include="_Framework\ToggleComponent.py" />
+    <Compile Include="_Framework\TrackArmState.py" />
+    <Compile Include="_Framework\TrackEQComponent.py" />
+    <Compile Include="_Framework\TrackFilterComponent.py" />
+    <Compile Include="_Framework\TransportComponent.py" />
+    <Compile Include="_Framework\Util.py" />
+    <Compile Include="_Framework\__init__.py" />
+    <Compile Include="_Generic\Devices.py" />
+    <Compile Include="_Generic\GenericScript.py" />
+    <Compile Include="_Generic\SelectChanStripComponent.py" />
+    <Compile Include="_Generic\SpecialMixerComponent.py" />
+    <Compile Include="_Generic\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Nocturn2\" />
+    <Folder Include="Nocturn2\Automap\" />
+    <Folder Include="Novation_Impulse2" />
+    <Folder Include="Novation_Impulse2_9_1\" />
+    <Folder Include="Novation_Impulse\" />
+    <Folder Include="_Framework\" />
+    <Folder Include="_Generic\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Nocturn2\.DS_Store" />
+    <Content Include="Nocturn2\._.DS_Store" />
+    <Content Include="Nocturn2\Automap\.DS_Store" />
+    <Content Include="Nocturn2\Automap\._.DS_Store" />
+    <Content Include="Nocturn2\Automap\._User.automap" />
+    <Content Include="Nocturn2\Automap\Fx.automap" />
+    <Content Include="Nocturn2\Automap\Inst.automap" />
+    <Content Include="Nocturn2\Automap\Mixer.automap" />
+    <Content Include="Nocturn2\Automap\User.automap" />
+    <Content Include="Nocturn2\readme.txt" />
+    <Content Include="Novation_Impulse2_9_1\debug.bat" />
+    <Content Include="Novation_Impulse2_9_1\deploy.bat" />
+    <Content Include="Novation_Impulse2_9_1\readme.txt" />
+    <Content Include="Novation_Impulse2\debug.bat" />
+    <Content Include="Novation_Impulse2\deploy.bat" />
+    <Content Include="Novation_Impulse2\readme.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

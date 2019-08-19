@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AutomapFile>
+    <PlugID PlugID="722721511" PlugID3="1444606871" PlugID2="121931358" PlugID1="1500714846" />
+    <DeviceID DeviceID="-1215975765" DeviceID3="-1866063922" DeviceID2="1279478674" DeviceID1="2136172004" />
+    <Type Type="0" />
+    <BrowserHint Value="0" />
+    <Group name="Controls">
+        <Group name="Page 1 Encoders">
+            <Param name="CC# 0" shortName="Scene" id="0" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 1" shortName="Track" id="1" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 2" shortName="Quantize" id="2" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 3" shortName="Scrub" id="3" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 4" shortName="Clip Scrub" id="4" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 5" shortName="Loop Start" id="5" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 6" shortName="Loop Length" id="6" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 7" shortName="Pitch" id="7" intStep="0" intMax="63" intMin="-64" high="0" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Pots">
+            <Param name="Note 091 (G5)" shortName="Metronome" id="220" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 092 (Ab5)" shortName="Play" id="221" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 093 (A5)" shortName="Stop" id="222" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 094 (Bb5)" shortName="Record" id="223" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 095 (B5)" shortName="Overwrite" id="224" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 096 (C6)" shortName="Punch In" id="225" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 097 (C#6)" shortName="Loop" id="226" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 098 (D6)" shortName="Punch Out" id="227" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Sliders">
+            <Param name="CC# 0" shortName="Scene" id="0" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 1" shortName="Track" id="1" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 2" shortName="Quantize" id="2" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 3" shortName="Scrub" id="3" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 4" shortName="Clip Scrub" id="4" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 5" shortName="Loop Start" id="5" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 6" shortName="Loop Length" id="6" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 7" shortName="Pitch" id="7" intStep="0" intMax="63" intMin="-64" high="0" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Encoder Buttons">
+            <Param name="Note 056 (Ab2)" shortName="1 Trigger" id="185" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 057 (A2)" shortName="2 Trigger" id="186" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 058 (Bb2)" shortName="3 Trigger" id="187" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 059 (B2)" shortName="4 Trigger" id="188" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 060 (C3)" shortName="5 Trigger" id="189" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 061 (C#3)" shortName="6 Trigger" id="190" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 062 (D3)" shortName="7 Trigger" id="191" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 063 (Eb3)" shortName="8 Trigger" id="192" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pot Buttons">
+            <Param name="CC# 0" shortName="Scene" id="0" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 1" shortName="Track" id="1" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 2" shortName="Quantize" id="2" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 3" shortName="Scrub" id="3" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 4" shortName="Clip Scrub" id="4" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 5" shortName="Loop Start" id="5" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 6" shortName="Loop Length" id="6" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+            <Param name="CC# 7" shortName="Pitch" id="7" intStep="0" intMax="63" intMin="-64" high="0" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Slider Buttons">
+            <Param name="Note 064 (E3)" shortName="1 Playing" id="193" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 065 (F3)" shortName="2 Playing" id="194" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 066 (F#3)" shortName="3 Playing" id="195" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 067 (G3)" shortName="4 Playing" id="196" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 068 (Ab3)" shortName="5 Playing" id="197" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 069 (A3)" shortName="6 Playing" id="198" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 070 (Bb3)" shortName="7 Playing" id="199" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 071 (B3)" shortName="8 Playing" id="200" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+    </Group>
+</AutomapFile>

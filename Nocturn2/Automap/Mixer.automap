@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AutomapFile>
+    <PlugID PlugID="722721511" PlugID3="1444606871" PlugID2="121931358" PlugID1="1500714846" />
+    <DeviceID DeviceID="-1215975765" DeviceID3="-1866063922" DeviceID2="1279478674" DeviceID1="2136172004" />
+    <Type Type="3" />
+    <BrowserHint Value="0" />
+    <Group name="Controls">
+        <Group name="Page 1 Encoders">
+            <Param name="CC# 0" shortName="1 Vol" id="0" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 1" shortName="2 Vol" id="1" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 2" shortName="3 Vol" id="2" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 3" shortName="4 Vol" id="3" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 4" shortName="5 Vol" id="4" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 5" shortName="6 Vol" id="5" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 6" shortName="7 Vol" id="6" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 7" shortName="8 Vol" id="7" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pots">
+            <Param name="Note 016 (E-1)" shortName="1 Mute" id="145" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 017 (F-1)" shortName="2 Mute" id="146" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 018 (F#-1)" shortName="3 Mute" id="147" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 019 (G-1)" shortName="4 Mute" id="148" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 020 (Ab-1)" shortName="5 Mute" id="149" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 021 (A-1)" shortName="6 Mute" id="150" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 022 (Bb-1)" shortName="7 Mute" id="151" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 023 (B-1)" shortName="8 Mute" id="152" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Sliders">
+            <Param name="CC# 8" shortName="1 Pan" id="8" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 9" shortName="2 Pan" id="9" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 10" shortName="3 Pan" id="10" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 11" shortName="4 Pan" id="11" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 12" shortName="5 Pan" id="12" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 13" shortName="6 Pan" id="13" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 14" shortName="7 Pan" id="14" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 15" shortName="8 Pan" id="15" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Encoder Buttons">
+            <Param name="Note 008 (Ab-2)" shortName="1 Solo" id="137" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 009 (A-2)" shortName="2 Solo" id="138" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 010 (Bb-2)" shortName="3 Solo" id="139" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 011 (B-2)" shortName="4 Solo" id="140" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 012 (C-1)" shortName="5 Solo" id="141" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 013 (C#-1)" shortName="6 Solo" id="142" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 014 (D-1)" shortName="7 Solo" id="143" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 015 (Eb-1)" shortName="8 Solo" id="144" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+        <Group name="Page 1 Pot Buttons">
+            <Param name="CC# 16" shortName="1 Return vol" id="16" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 17" shortName="2 Return Vol" id="17" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 18" shortName="3 Return Vol" id="18" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 19" shortName="4 Return Vol" id="19" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 20" shortName="Master Vol" id="20" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 21" shortName="Master Pan" id="21" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+            <Param name="CC# 22" shortName="Cue Vol" id="22" intStep="1" intMax="127" intMin="0" high="127" low="0" step="1.000000" />
+            <Param name="CC# 23" shortName="Tempo" id="23" intStep="0" intMax="127" intMin="0" high="0" low="0" step="0.000000" />
+        </Group>
+        <Group name="Page 1 Slider Buttons">
+            <Param name="Note 040 (E1)" shortName="1 Return Mute" id="169" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 041 (F1)" shortName="2 Return Mute" id="170" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 042 (F#1)" shortName="3 Return Mute" id="171" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 043 (G1)" shortName="4 Return Mute" id="172" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 044 (Ab1)" shortName="Sel/Arm" id="173" intStep="127" intMax="127" intMin="0" high="127" low="0" step="127.000000" />
+            <Param name="Note 045 (A1)" shortName="Nudge Down" id="174" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="Note 046 (Bb1)" shortName="Nudge UP" id="175" intStep="0" intMax="127" intMin="0" high="127" low="0" step="0.000000" />
+            <Param name="Note 047 (B1)" shortName="Tap Temp" id="176" intStep="100" intMax="100" intMin="0" high="100" low="0" step="100.000000" />
+        </Group>
+        <Group name="Page 1 XFader">
+            <Param name="Pitch Bend" shortName="Crossfader" id="128" intStep="1" intMax="63" intMin="-64" high="63" low="-64" step="1.000000" />
+        </Group>
+    </Group>
+</AutomapFile>
