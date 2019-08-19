@@ -75,11 +75,10 @@ class ShiftableTransportComponent(TransportComponent):
 
 
     def _shift_button_handler(self, value):
-        self.log("shift handler transport component " + str(value))
+        self.log("shift handler transport component : " + str(value))
         if not value in range(128):
             raise AssertionError
-        self.log("shift handler 2")
-        self.log("shift handler 3")
+        self.log("shift handler transport component 2")
         if self._parent.shift_pressed:
             self._play_toggle.set_toggle_button(None)
             self._session.set_stop_all_clips_button(self._stop_button)
@@ -98,7 +97,7 @@ class ShiftableTransportComponent(TransportComponent):
             self.set_metronome_button(None)
             self.set_record_button(self._record_button)
 
-        self.log("shift handler 4")
+        self.log("shift handler transport component 3")
 
 
     def _ffwd_value(self, value):
