@@ -3,7 +3,7 @@ Ableton Live 9.6 Remote Scripts
 
 This is the unofficial repository of Ableton Live 9.6 MIDI Remote Scripts.
 
-Ableton Live 10.x Remote Scripts Source are [THERE](https://github.com/gluon/AbletonLive10_MIDIRemoteScripts)
+Ableton Live 10.x Remote Scripts Source are [THERE](https://github.com/gluon/AbletonLive10.1_MIDIRemoteScripts)
 
 You can find more informations on 
 [this page](http://julienbayle.net/ableton-live-9-midi-remote-scripts "this page")
