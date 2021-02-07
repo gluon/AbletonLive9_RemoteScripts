@@ -1,17 +1,53 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_component.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_component.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from itertools import imap
 from math import ceil
 import Live
 from ableton.v2.base import BooleanContext, depends, index_if, lazy_attribute, listenable_property, listens, liveobj_changed, liveobj_valid, nop, task
-from ableton.v2.control_surface import Component
+from ableton.v2.control_surface import Component, CompoundComponent
 from ableton.v2.control_surface.control import control_list, ButtonControl, StepEncoderControl, ToggleButtonControl
 from pushbase.browser_util import filter_type_for_hotswap_target, get_selection_for_new_device
+from pushbase.consts import MessageBoxText
+from pushbase.live_util import get_position_for_new_track
 from pushbase.message_box_component import Messenger
-from .colors import translate_color_index
+from .colors import DISPLAY_BUTTON_SHADE_LEVEL, IndexedColor
 from .browser_list import BrowserList
 from .browser_item import BrowserItem, ProxyBrowserItem
+NAVIGATION_COLORS = dict(color='Browser.Navigation', disabled_color='Browser.NavigationDisabled')
+
+class LoadNeighbourOverlayComponent(Component):
+    __events__ = ('load_next', 'load_previous')
+    load_next_button = ButtonControl(repeat=False, **NAVIGATION_COLORS)
+    load_previous_button = ButtonControl(repeat=False, **NAVIGATION_COLORS)
+
+    @load_next_button.pressed
+    def button(self, button):
+        self.notify_load_next()
+
+    @load_previous_button.pressed
+    def button(self, button):
+        self.notify_load_previous()
+
+    @listenable_property
+    def can_load_next(self):
+        return self.load_next_button.enabled
+
+    @can_load_next.setter
+    def can_load_next(self, can_load_next):
+        self.load_next_button.enabled = can_load_next
+        self.notify_can_load_next()
+
+    @listenable_property
+    def can_load_previous(self):
+        return self.load_previous_button.enabled
+
+    @can_load_previous.setter
+    def can_load_previous(self, can_load_previous):
+        self.load_previous_button.enabled = can_load_previous
+        self.notify_can_load_previous()
+
 
 class WrappedLoadableBrowserItem(BrowserItem):
 
@@ -26,35 +62,40 @@ class WrappedLoadableBrowserItem(BrowserItem):
         else:
             relation = self._browser.relation_to_hotswap_target(self._contained_item)
             return relation == Live.Browser.Relation.equal
+            return
 
 
 class FolderBrowserItem(BrowserItem):
 
-    def __init__(self, wrapped_loadable = None, *a, **k):
-        raise wrapped_loadable is not None or AssertionError
+    def __init__(self, wrapped_loadable=None, *a, **k):
+        assert wrapped_loadable is not None
         super(FolderBrowserItem, self).__init__(*a, **k)
         self._wrapped_loadable = wrapped_loadable
+        return
 
     @property
     def is_selected(self):
         if self._contained_item is None:
             return self._is_selected
-        return self._contained_item.is_selected
+        else:
+            return self._contained_item.is_selected
 
     @lazy_attribute
     def children(self):
-        return [self._wrapped_loadable] + list(self.contained_item.children)
+        return [
+         self._wrapped_loadable] + list(self.contained_item.children)
 
 
 class PluginPresetBrowserItem(BrowserItem):
 
-    def __init__(self, preset_name = None, preset_index = None, vst_device = None, *a, **k):
-        raise preset_name is not None or AssertionError
-        raise preset_index is not None or AssertionError
-        raise vst_device is not None or AssertionError
+    def __init__(self, preset_name=None, preset_index=None, vst_device=None, *a, **k):
+        assert preset_name is not None
+        assert preset_index is not None
+        assert vst_device is not None
         super(PluginPresetBrowserItem, self).__init__(name=(preset_name if preset_name else '<Empty Slot %i>' % (preset_index + 1)), is_loadable=True, *a, **k)
         self.preset_index = preset_index
         self._vst_device = vst_device
+        return
 
     @property
     def is_selected(self):
@@ -67,35 +108,40 @@ class PluginPresetBrowserItem(BrowserItem):
 
 class PluginBrowserItem(BrowserItem):
 
-    def __init__(self, vst_device = None, *a, **k):
+    def __init__(self, vst_device=None, *a, **k):
         super(PluginBrowserItem, self).__init__(is_loadable=False, is_selected=True, *a, **k)
-        raise vst_device is not None or AssertionError
+        assert vst_device is not None
         self._vst_device = vst_device
+        return
 
     @property
     def children(self):
-        return [ PluginPresetBrowserItem(preset_name=preset, preset_index=i, vst_device=self._vst_device) for i, preset in enumerate(self._vst_device.presets) ]
+        return [ PluginPresetBrowserItem(preset_name=preset, preset_index=i, vst_device=self._vst_device) for i, preset in enumerate(self._vst_device.presets)
+               ]
 
 
 class CannotFocusListError(Exception):
     pass
 
 
-class BrowserComponent(Component, Messenger):
+class BrowserComponent(CompoundComponent, Messenger):
     __events__ = ('loaded', 'close')
     NUM_ITEMS_PER_COLUMN = 6
     NUM_VISIBLE_BROWSER_LISTS = 7
     NUM_COLUMNS_IN_EXPANDED_LIST = 3
     EXPAND_LIST_TIME = 1.5
     REVEAL_PREVIEW_LIST_TIME = 0.2
-    navigation_colors = dict(color='Browser.Navigation', disabled_color='Browser.NavigationDisabled')
+    MIN_TIME = 0.6
+    MAX_TIME = 1.4
+    MIN_TIME_TEXT_LENGTH = 30
+    MAX_TIME_TEXT_LENGTH = 70
     up_button = ButtonControl(repeat=True)
     down_button = ButtonControl(repeat=True)
-    right_button = ButtonControl(repeat=True, **navigation_colors)
-    left_button = ButtonControl(repeat=True, **navigation_colors)
-    back_button = ButtonControl(**navigation_colors)
-    open_button = ButtonControl(**navigation_colors)
-    load_button = ButtonControl(**navigation_colors)
+    right_button = ButtonControl(repeat=True, **NAVIGATION_COLORS)
+    left_button = ButtonControl(repeat=True, **NAVIGATION_COLORS)
+    back_button = ButtonControl(**NAVIGATION_COLORS)
+    open_button = ButtonControl(**NAVIGATION_COLORS)
+    load_button = ButtonControl(**NAVIGATION_COLORS)
     close_button = ButtonControl()
     prehear_button = ToggleButtonControl(toggled_color='Browser.Option', untoggled_color='Browser.OptionDisabled')
     scroll_encoders = control_list(StepEncoderControl, num_steps=10, control_count=NUM_VISIBLE_BROWSER_LISTS)
@@ -107,11 +153,10 @@ class BrowserComponent(Component, Messenger):
     can_exit = listenable_property.managed(False)
     context_color_index = listenable_property.managed(-1)
     context_text = listenable_property.managed('')
-    load_text = listenable_property.managed('')
 
     @depends(commit_model_changes=None, selection=None)
-    def __init__(self, preferences = dict(), commit_model_changes = None, selection = None, main_modes_ref = None, *a, **k):
-        raise commit_model_changes is not None or AssertionError
+    def __init__(self, preferences=dict(), commit_model_changes=None, selection=None, main_modes_ref=None, *a, **k):
+        assert commit_model_changes is not None
         super(BrowserComponent, self).__init__(*a, **k)
         self._lists = []
         self._browser = Live.Application.get_application().browser
@@ -124,20 +169,22 @@ class BrowserComponent(Component, Messenger):
         self._unexpand_with_scroll_encoder = False
         self._delay_preview_list = BooleanContext()
         self._selection = selection
-        self._load_next = False
         self._main_modes_ref = main_modes_ref if main_modes_ref is not None else nop
+        self._load_neighbour_overlay = self.register_component(LoadNeighbourOverlayComponent(is_enabled=False))
         self._content_filter_type = None
         self._content_hotswap_target = None
         self._preview_list_task = self._tasks.add(task.sequence(task.wait(self.REVEAL_PREVIEW_LIST_TIME), task.run(self._replace_preview_list_by_task))).kill()
         self._update_root_items()
         self._update_navigation_buttons()
-        self._update_load_text()
         self._update_context()
         self.prehear_button.is_toggled = preferences.setdefault('browser_prehear', True)
         self._on_selected_track_color_index_changed.subject = self.song.view
         self._on_selected_track_name_changed.subject = self.song.view
         self._on_detail_clip_name_changed.subject = self.song.view
         self._on_hotswap_target_changed.subject = self._browser
+        self._on_load_next.subject = self._load_neighbour_overlay
+        self._on_load_previous.subject = self._load_neighbour_overlay
+        self._on_focused_item_changed.subject = self
         self.register_slot(self, self.notify_focused_item, 'focused_list_index')
 
         def auto_unexpand():
@@ -145,6 +192,7 @@ class BrowserComponent(Component, Messenger):
             self._update_list_offset()
 
         self._unexpand_task = self._tasks.add(task.sequence(task.wait(self.EXPAND_LIST_TIME), task.run(auto_unexpand))).kill()
+        return
 
     @up_button.pressed
     def up_button(self, button):
@@ -220,6 +268,8 @@ class BrowserComponent(Component, Messenger):
             except CannotFocusListError:
                 pass
 
+        return
+
     @scroll_encoders.released
     def scroll_encoders(self, encoders):
         self._on_encoder_released()
@@ -234,6 +284,8 @@ class BrowserComponent(Component, Messenger):
                 self._on_encoder_value(value)
             except CannotFocusListError:
                 pass
+
+        return
 
     @scroll_focused_encoder.value
     def scroll_focused_encoder(self, value, encoder):
@@ -276,12 +328,13 @@ class BrowserComponent(Component, Messenger):
             if encoder.index == 0:
                 return self.list_offset
             return self.list_offset + 1
-        index = self.list_offset + encoder.index
-        if self.focused_list_index + 1 == index and self.focused_list.selected_item.is_loadable:
-            index = self.focused_list_index
-        if 0 <= index < len(self._lists):
-            return index
         else:
+            index = self.list_offset + encoder.index
+            if self.focused_list_index + 1 == index and self.should_widen_focused_item:
+                index = self.focused_list_index
+            if 0 <= index < len(self._lists):
+                return index
+            return None
             return None
 
     @load_button.pressed
@@ -325,10 +378,23 @@ class BrowserComponent(Component, Messenger):
     def expanded(self):
         return self._expanded
 
+    @property
+    def load_neighbour_overlay(self):
+        return self._load_neighbour_overlay
+
+    @listenable_property
+    def should_widen_focused_item(self):
+        return self.focused_item.is_loadable and not self.focused_item.is_device
+
+    @property
+    def context_display_type(self):
+        return 'custom_button'
+
     def disconnect(self):
         super(BrowserComponent, self).disconnect()
         self._lists = []
         self._commit_model_changes = None
+        return
 
     @expanded.setter
     def expanded(self, expanded):
@@ -363,15 +429,23 @@ class BrowserComponent(Component, Messenger):
                 self._update_root_items()
                 self._update_context()
                 self._update_list_offset()
+                self._update_load_neighbour_overlay_visibility()
+            else:
+                self._load_neighbour_overlay.set_enabled(False)
         self._current_hotswap_target = self._browser.hotswap_target
+
+    @listens('focused_item')
+    def _on_focused_item_changed(self):
+        self.notify_should_widen_focused_item()
 
     @property
     def browse_for_audio_clip(self):
         main_modes = self._main_modes_ref()
         if main_modes is None:
             return False
-        has_midi_support = self.song.view.selected_track.has_midi_input
-        return not has_midi_support and 'clip' in main_modes.active_modes
+        else:
+            has_midi_support = self.song.view.selected_track.has_midi_input
+            return not has_midi_support and 'clip' in main_modes.active_modes
 
     def _switched_to_empty_pad(self):
         hotswap_target = self._browser.hotswap_target
@@ -379,7 +453,7 @@ class BrowserComponent(Component, Messenger):
         was_browsing_pad = isinstance(self._current_hotswap_target, Live.DrumPad.DrumPad)
         return is_browsing_drumpad and was_browsing_pad and len(hotswap_target.chains) == 0
 
-    def _focus_list_with_index(self, index, crop = True):
+    def _focus_list_with_index(self, index, crop=True):
         """
         Focus the list with the given index.
         Raises CannotFocusListError if the operation fails.
@@ -387,9 +461,9 @@ class BrowserComponent(Component, Messenger):
         """
         if self._focused_list_index != index:
             if self._finish_preview_list_task():
-                raise index >= len(self._lists) and CannotFocusListError()
-        if not 0 <= index < len(self._lists):
-            raise AssertionError
+                if index >= len(self._lists):
+                    raise CannotFocusListError()
+            assert 0 <= index < len(self._lists)
             self._on_focused_selection_changed.subject = None
             if self._focused_list_index > index and crop:
                 for l in self._lists[self._focused_list_index:]:
@@ -405,10 +479,11 @@ class BrowserComponent(Component, Messenger):
                 self._crop_browser_lists(self._focused_list_index + 2)
             if self._focused_list_index == len(self._lists) - 1:
                 self._replace_preview_list()
-            self._reset_load_next()
+            self._load_neighbour_overlay.set_enabled(False)
             self._update_navigation_buttons()
             return True
-        return False
+        else:
+            return False
 
     @listens('selected_index')
     def _on_focused_selection_changed(self):
@@ -418,34 +493,61 @@ class BrowserComponent(Component, Messenger):
             self._replace_preview_list()
         self._update_navigation_buttons()
         self._prehear_selected_item()
-        self._reset_load_next()
+        self._load_neighbour_overlay.set_enabled(False)
         self.notify_focused_item()
 
     def _get_actual_item(self, item):
         contained_item = getattr(item, 'contained_item', None)
         if contained_item is not None:
             return contained_item
-        return item
+        else:
+            return item
+
+    def _previous_can_be_loaded(self):
+        return self.focused_list.selected_index > 0 and self.focused_list.items[self.focused_list.selected_index - 1].is_loadable
+
+    def _next_can_be_loaded(self):
+        items = self.focused_list.items
+        return self.focused_list.selected_index < len(items) - 1 and items[self.focused_list.selected_index + 1].is_loadable
+
+    @listens('load_next')
+    def _on_load_next(self):
+        self.focused_list.selected_index += 1
+        self._load_selected_item()
+
+    @listens('load_previous')
+    def _on_load_previous(self):
+        self.focused_list.selected_index -= 1
+        self._load_selected_item()
+
+    def _update_load_neighbour_overlay_visibility(self):
+        self._load_neighbour_overlay.set_enabled(liveobj_valid(self._browser.hotswap_target) and (self._next_can_be_loaded() or self._previous_can_be_loaded()) and not self.focused_list.selected_item.is_device)
 
     def _load_selected_item(self):
         focused_list = self.focused_list
-        if self._load_next:
-            focused_list.selected_index += 1
-        self._load_next = focused_list.selected_index < len(focused_list.items) - 1 and liveobj_valid(self._browser.hotswap_target)
-        self._update_load_text()
+        self._update_load_neighbour_overlay_visibility()
+        self._update_navigation_buttons()
         item = self._get_actual_item(focused_list.selected_item)
-        notification_ref = self.show_notification(self._make_notification_text(item))
-        self._commit_model_changes()
         self._load_item(item)
         self.notify_loaded()
-        notification = notification_ref()
-        if notification is not None:
-            notification.reschedule_after_slow_operation()
+
+    def _show_load_notification(self, item):
+        notification_text = self._make_notification_text(item)
+        text_length = len(notification_text)
+        notification_time = self.MIN_TIME
+        if text_length > self.MIN_TIME_TEXT_LENGTH:
+            if text_length > self.MAX_TIME_TEXT_LENGTH:
+                notification_time = self.MAX_TIME
+            else:
+                notification_time = self.MIN_TIME + (self.MAX_TIME - self.MIN_TIME) * float(text_length - self.MIN_TIME_TEXT_LENGTH) / (self.MAX_TIME_TEXT_LENGTH - self.MIN_TIME_TEXT_LENGTH)
+        self.show_notification(notification_text, notification_time=notification_time)
+        self._commit_model_changes()
 
     def _make_notification_text(self, browser_item):
         return 'Loading %s' % browser_item.name
 
     def _load_item(self, item):
+        self._show_load_notification(item)
         if liveobj_valid(self._browser.hotswap_target):
             if isinstance(item, PluginPresetBrowserItem):
                 self._browser.hotswap_target.selected_preset_index = item.preset_index
@@ -455,10 +557,6 @@ class BrowserComponent(Component, Messenger):
         else:
             with self._insert_right_of_selected():
                 self._browser.load_item(item)
-
-    def _reset_load_next(self):
-        self._load_next = False
-        self._update_load_text()
 
     @contextmanager
     def _insert_right_of_selected(self):
@@ -482,23 +580,24 @@ class BrowserComponent(Component, Messenger):
         if self.prehear_button.is_toggled and not self._updating_root_items:
             self._browser.stop_preview()
 
-    def _update_load_text(self):
-        self.load_text = 'Load Next' if self._load_next else 'Load'
-
     def _update_navigation_buttons(self):
         focused_list = self.focused_list
         self.up_button.enabled = focused_list.selected_index > 0
         self.down_button.enabled = focused_list.selected_index < len(focused_list.items) - 1
         selected_item_loadable = self.focused_list.selected_item.is_loadable
-        assume_can_enter = self._preview_list_task.is_running and not selected_item_loadable
         can_exit = self._focused_list_index > 0
+        assume_can_enter = self._preview_list_task.is_running and not selected_item_loadable
         can_enter = self._focused_list_index < len(self._lists) - 1 or assume_can_enter
         self.back_button.enabled = can_exit
         self.open_button.enabled = can_enter
         self.load_button.enabled = selected_item_loadable
-        context_button_color = translate_color_index(self.context_color_index) if self.context_color_index > -1 else 'Browser.Navigation'
+        self._load_neighbour_overlay.can_load_previous = self._previous_can_be_loaded()
+        self._load_neighbour_overlay.can_load_next = self._next_can_be_loaded()
+        context_button_color = IndexedColor.from_live_index(self.context_color_index, DISPLAY_BUTTON_SHADE_LEVEL) if self.context_color_index > -1 else 'Browser.Navigation'
         self.load_button.color = context_button_color
         self.close_button.color = context_button_color
+        self._load_neighbour_overlay.load_next_button.color = context_button_color
+        self._load_neighbour_overlay.load_previous_button.color = context_button_color
         if not self._expanded:
             self.left_button.enabled = self.back_button.enabled
             self.right_button.enabled = can_enter or self._can_auto_expand()
@@ -527,6 +626,7 @@ class BrowserComponent(Component, Messenger):
             self.context_text = selected_track.name
         selected_track_color_index = selected_track.color_index
         self.context_color_index = selected_track_color_index if selected_track_color_index is not None else -1
+        return
 
     def _enter_selected_item(self):
         item_entered = False
@@ -589,7 +689,7 @@ class BrowserComponent(Component, Messenger):
             enable_wrapping = getattr(selected_item, 'enable_wrapping', True) and self.focused_list.items_wrapped
             self._append_browser_list(children_iterator=children_iterator, limit=self.num_preview_items, enable_wrapping=enable_wrapping)
 
-    def _append_browser_list(self, children_iterator, limit = -1, enable_wrapping = True):
+    def _append_browser_list(self, children_iterator, limit=-1, enable_wrapping=True):
         l = BrowserList(item_iterator=children_iterator, item_wrapper=self._wrap_item if enable_wrapping else nop, limit=limit)
         l.items_wrapped = enable_wrapping
         self._lists.append(l)
@@ -618,6 +718,7 @@ class BrowserComponent(Component, Messenger):
     def _invalidate_content_cache(self):
         self._content_hotswap_target = None
         self._content_filter_type = None
+        return
 
     def _update_content_cache(self):
         self._content_filter_type = self._browser.filter_type
@@ -635,8 +736,9 @@ class BrowserComponent(Component, Messenger):
                 self._select_hotswap_target()
                 self._on_focused_selection_changed.subject = self.focused_list
                 self._on_focused_selection_changed()
+        return
 
-    def _select_hotswap_target(self, list_index = 0):
+    def _select_hotswap_target(self, list_index=0):
         if list_index < len(self._lists):
             l = self._lists[list_index]
             l.access_all = True
@@ -661,6 +763,7 @@ class BrowserComponent(Component, Messenger):
             self._update_root_items()
             self._update_context()
             self._update_list_offset()
+            self._update_load_neighbour_overlay_visibility()
             self._update_navigation_buttons()
             self.expanded = False
             self._update_list_offset()
@@ -681,7 +784,7 @@ class BrowserComponent(Component, Messenger):
         having two actions on an item (open and load).
         """
         wrapped_loadable = WrappedLoadableBrowserItem(name=item.name, is_loadable=True, contained_item=item)
-        return FolderBrowserItem(name=item.name, contained_item=item, wrapped_loadable=wrapped_loadable)
+        return FolderBrowserItem(name=item.name, is_loadable=True, is_device=True, contained_item=item, wrapped_loadable=wrapped_loadable, icon='browser_arrowcontent.svg')
 
     def _is_hotswap_target_plugin(self, item):
         return isinstance(self._browser.hotswap_target, Live.PluginDevice.PluginDevice) and isinstance(item, Live.Browser.BrowserItem) and self._browser.relation_to_hotswap_target(item) == Live.Browser.Relation.equal
@@ -693,7 +796,7 @@ class BrowserComponent(Component, Messenger):
 class TrackBrowserItem(BrowserItem):
     filter_type = Live.Browser.FilterType.hotswap_off
 
-    def create_track(self, song, index):
+    def create_track(self, song, selected_track_index):
         raise NotImplementedError
 
 
@@ -703,8 +806,8 @@ class MidiTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(MidiTrackBrowserItem, self).__init__(name='MIDI track', *a, **k)
 
-    def create_track(self, song, index):
-        song.create_midi_track(index)
+    def create_track(self, song, selected_track_index):
+        song.create_midi_track(get_position_for_new_track(song, selected_track_index))
 
 
 class AudioTrackBrowserItem(TrackBrowserItem):
@@ -713,8 +816,8 @@ class AudioTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(AudioTrackBrowserItem, self).__init__(name='Audio track', *a, **k)
 
-    def create_track(self, song, index):
-        song.create_audio_track(index)
+    def create_track(self, song, selected_track_index):
+        song.create_audio_track(get_position_for_new_track(song, selected_track_index))
 
 
 class ReturnTrackBrowserItem(TrackBrowserItem):
@@ -723,7 +826,7 @@ class ReturnTrackBrowserItem(TrackBrowserItem):
     def __init__(self, *a, **k):
         super(ReturnTrackBrowserItem, self).__init__(name='Return track', *a, **k)
 
-    def create_track(self, song, index):
+    def create_track(self, song, selected_track_index):
         song.create_return_track()
 
 
@@ -741,7 +844,10 @@ class NewTrackBrowserComponent(BrowserComponent):
 
     def __init__(self, *a, **k):
         self._content = []
-        self._track_type_items = [MidiTrackBrowserItem(children=self._content), AudioTrackBrowserItem(children=self._content), ReturnTrackBrowserItem(children=self._content)]
+        self._track_type_items = [
+         MidiTrackBrowserItem(children=self._content),
+         AudioTrackBrowserItem(children=self._content),
+         ReturnTrackBrowserItem(children=self._content)]
         super(NewTrackBrowserComponent, self).__init__(*a, **k)
         if self.is_enabled():
             self._update_filter_type()
@@ -758,9 +864,14 @@ class NewTrackBrowserComponent(BrowserComponent):
     def browse_for_audio_clip(self):
         return False
 
+    @property
+    def context_display_type(self):
+        return 'cancel_button'
+
     def _update_root_content(self):
         real_root_items = super(NewTrackBrowserComponent, self)._make_root_browser_items()
-        self._content[:] = [DefaultTrackBrowserItem()] + real_root_items
+        self._content[:] = [
+         DefaultTrackBrowserItem()] + real_root_items
 
     def _update_root_items(self):
         self._set_filter_type(self._track_type_items[0].filter_type)
@@ -776,21 +887,31 @@ class NewTrackBrowserComponent(BrowserComponent):
             self._update_root_content()
 
     def _update_context(self):
-        self.context_text = 'Close'
+        pass
 
     def _load_item(self, item):
-        self._selected_track_item().create_track(self.song, self._selected_track_index())
-        if not isinstance(item, DefaultTrackBrowserItem):
-            super(NewTrackBrowserComponent, self)._load_item(item)
+        try:
+            self._selected_track_item().create_track(self.song, self._selected_track_index())
+            if isinstance(item, DefaultTrackBrowserItem):
+                self._show_load_notification(item)
+            else:
+                super(NewTrackBrowserComponent, self)._load_item(item)
+        except Live.Base.LimitationError:
+            self.show_notification(MessageBoxText.TRACK_LIMIT_REACHED)
+        except RuntimeError:
+            self.show_notification(MessageBoxText.MAX_RETURN_TRACKS_REACHED)
 
     def _make_notification_text(self, browser_item):
-        return '%s loaded in track %i' % (browser_item.name, self._selected_track_index() + 1)
+        if isinstance(browser_item, DefaultTrackBrowserItem):
+            return 'Default track created'
+        new_track_position = self._selected_track_index() + 1
+        return '%s loaded in track %i' % (browser_item.name, new_track_position)
 
     def _selected_track_index(self):
         song = self.song
         selected_track = self._selection.selected_track
         if selected_track in song.tracks:
-            return list(song.tracks).index(selected_track) + 1
+            return list(song.tracks).index(selected_track)
         return -1
 
     def _selected_track_item(self):
@@ -840,20 +961,27 @@ def make_root_browser_items(browser, filter_type):
     legacy_libraries = wrap_items(list(browser.legacy_libraries), 'browser_8folder.svg')
     current_project = wrap_item(browser.current_project, 'browser_currentproject.svg')
     if filter_type == Live.Browser.FilterType.samples:
-        categories = [packs] + legacy_libraries + [current_project]
+        categories = [
+         packs] + legacy_libraries + [current_project]
     else:
-        common_items = [wrap_item(browser.max_for_live, 'browser_max.svg'), wrap_item(browser.plugins, 'browser_plugins.svg'), packs] + legacy_libraries + [current_project]
+        common_items = [
+         wrap_item(browser.max_for_live, 'browser_max.svg'), wrap_item(browser.plugins, 'browser_plugins.svg'), packs] + legacy_libraries + [current_project]
         if filter_type == Live.Browser.FilterType.audio_effect_hotswap:
-            categories = [audio_effects] + common_items
+            categories = [
+             audio_effects] + common_items
         elif filter_type == Live.Browser.FilterType.midi_effect_hotswap:
-            categories = [midi_effects] + common_items
+            categories = [
+             midi_effects] + common_items
         elif filter_type == Live.Browser.FilterType.instrument_hotswap:
-            categories = [sounds, drums, instruments] + common_items
+            categories = [
+             sounds, drums, instruments] + common_items
         else:
-            categories = [sounds,
+            categories = [
+             sounds,
              drums,
              instruments,
              audio_effects,
              midi_effects] + common_items
     user_files = UserFilesBrowserItem(browser, name='User Files', icon='browser_userfiles.svg')
-    return [user_files] + categories
+    return [
+     user_files] + categories

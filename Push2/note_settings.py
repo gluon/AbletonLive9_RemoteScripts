@@ -1,8 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/note_settings.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/note_settings.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import listenable_property, listens, liveobj_valid
+from ableton.v2.base import listenable_property, listens
 from ableton.v2.control_surface.control import StepEncoderControl
+from ableton.v2.control_surface.elements.color import SelectedClipColor
 from pushbase.note_settings_component import NoteSettingBase, NoteSettingsComponentBase, step_offset_percentage
+from .colors import SelectedDrumPadColor
 
 class NoteSetting(NoteSettingBase):
 
@@ -72,7 +75,10 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
 
     def __init__(self, *a, **k):
         super(NoteSettingsComponent, self).__init__(*a, **k)
-        self.__on_color_index_changed.subject = self.song.view
+        self._selected_drum_pad_color = self.register_disconnectable(SelectedDrumPadColor(song=self.song))
+        self._selected_clip_color = self.register_disconnectable(SelectedClipColor(song_view=self.song.view))
+        self._color = self._selected_clip_color
+        self.__on_midi_value_changed.subject = self._color
 
     def _create_settings(self, grid_resolution):
         args = dict(grid_resolution=grid_resolution)
@@ -84,6 +90,19 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
         self._add_setting(self._coarse)
         self._add_setting(self._fine)
         self._add_setting(self._velocity)
+
+    def set_color_mode(self, color_mode):
+        self._color = self.get_color_for_mode(color_mode)
+        self.__on_midi_value_changed.subject = self._color
+        self.notify_color_index()
+
+    def get_color_for_mode(self, color_mode):
+        if color_mode == 'drum_pad':
+            return self._selected_drum_pad_color
+        else:
+            if color_mode == 'clip':
+                return self._selected_clip_color
+            return None
 
     @property
     def nudge(self):
@@ -103,11 +122,12 @@ class NoteSettingsComponent(NoteSettingsComponentBase):
 
     @listenable_property
     def color_index(self):
-        clip = self.song.view.detail_clip
-        if liveobj_valid(clip):
-            return clip.color_index
-        return -1
+        color_index = self._color.midi_value
+        if color_index is not None:
+            return color_index
+        else:
+            return -1
 
-    @listens('detail_clip.color_index')
-    def __on_color_index_changed(self, *a):
+    @listens('midi_value')
+    def __on_midi_value_changed(self, *a):
         self.notify_color_index()

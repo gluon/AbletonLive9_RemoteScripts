@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/auto_arm_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/auto_arm_component.py
+# Compiled at: 2016-09-29 19:13:24
 """
 Component that automatically arms the selected track.
 """
@@ -21,11 +26,12 @@ class AutoArmRestoreBehaviour(LatchingBehaviour):
     condition changes.
     """
 
-    def __init__(self, auto_arm = None, *a, **k):
+    def __init__(self, auto_arm=None, *a, **k):
         super(AutoArmRestoreBehaviour, self).__init__(*a, **k)
         self._auto_arm = auto_arm
         self._last_update_params = None
         self._skip_super = False
+        return
 
     def press_immediate(self, component, mode):
         called_super = False
@@ -75,12 +81,13 @@ class AutoArmComponent(Component, Messenger):
         self._on_tracks_changed()
         self._notification_reference = partial(nop, None)
         self._on_selected_track_changed.subject = self.song.view
+        return
 
     def auto_arm_restore_behaviour(self, *extra_classes, **extra_params):
         if not self._auto_arm_restore_behaviour:
             self._auto_arm_restore_behaviour = mixin(AutoArmRestoreBehaviour, *extra_classes)(auto_arm=self, **extra_params)
         else:
-            raise not extra_params and not extra_classes or AssertionError
+            assert not extra_params and not extra_classes
         return self._auto_arm_restore_behaviour
 
     def track_can_be_armed(self, track):
@@ -102,6 +109,7 @@ class AutoArmComponent(Component, Messenger):
     def _hide_notification(self):
         if self._notification_reference() is not None:
             self._notification_reference().hide()
+        return
 
     def update(self):
         super(AutoArmComponent, self).update()
@@ -134,7 +142,7 @@ class AutoArmComponent(Component, Messenger):
     def _on_tracks_changed(self):
         tracks = filter(lambda t: t.can_be_armed, self.song.tracks)
         self._on_arm_changed.replace_subjects(tracks)
-        self._on_current_input_routing_changed.replace_subjects(tracks)
+        self._on_input_routing_type_changed.replace_subjects(tracks)
         self._on_frozen_state_changed.replace_subjects(tracks)
 
     @listens('exclusive_arm')
@@ -145,8 +153,8 @@ class AutoArmComponent(Component, Messenger):
     def _on_arm_changed(self, track):
         self.update()
 
-    @listens_group('current_input_routing')
-    def _on_current_input_routing_changed(self, track):
+    @listens_group('input_routing_type')
+    def _on_input_routing_type_changed(self, track):
         self.update()
 
     @listens_group('is_frozen')

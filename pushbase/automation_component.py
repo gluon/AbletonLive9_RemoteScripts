@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/automation_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/automation_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 from ableton.v2.base import clamp, task, liveobj_valid
@@ -44,14 +49,16 @@ class AutomationComponent(DeviceParameterComponent):
 
     @property
     def parameters(self):
-        return map(lambda info: (info.parameter if info else None), self._parameter_infos_to_use())
+        return map(lambda info:         if info:
+info.parameterNone, self._parameter_infos_to_use())
 
     @property
     def parameter_infos(self):
         return self._parameter_infos_to_use()
 
     def _parameter_infos_to_use(self):
-        return map(lambda info: (info if self.parameter_is_automateable(info.parameter if info else None) else None), self._parameter_provider.parameters)
+        return map(lambda info:         if self.parameter_is_automateable(info.parameter if info else None):
+infoNone, self._parameter_provider.parameters)
 
     @property
     def can_automate_parameters(self):
@@ -120,10 +127,13 @@ class AutomationComponent(DeviceParameterComponent):
     def _update_parameter_floats(self):
         if self._clip and self.is_enabled():
             parameters = self.parameters
-            envelopes = [ (self._clip.automation_envelope(self._parameter_for_index(parameters, index)) if param != None else None) for index, param in enumerate(parameters) ]
-            self._parameter_floats = [ [ (self._value_at_time(envelope, step) if envelope != None else 0.0) for envelope in envelopes ] for step in self.selected_time ]
+            envelopes = [ (self._clip.automation_envelope(self._parameter_for_index(parameters, index)) if param != None else None) for index, param in enumerate(parameters)
+                        ]
+            self._parameter_floats = [ [ (self._value_at_time(envelope, step) if envelope != None else 0.0) for envelope in envelopes ] for step in self.selected_time
+                                     ]
         else:
             self._parameter_floats = []
+        return
 
     def _insert_step(self, time_range, time_index, param_index, envelope, value):
         param = self._parameter_for_index(self.parameters, param_index)

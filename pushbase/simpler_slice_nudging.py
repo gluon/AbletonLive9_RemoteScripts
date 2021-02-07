@@ -1,13 +1,18 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/simpler_slice_nudging.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/simpler_slice_nudging.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 import Live
-from ableton.v2.base import SlotManager, find_if, liveobj_valid, clamp, listens
+from ableton.v2.base import EventObject, find_if, liveobj_valid, clamp, listens
 from .device_chain_utils import is_simpler
 CENTERED_NUDGE_VALUE = 0.5
 MINIMUM_SLICE_DISTANCE = 2
 
-class SimplerSliceNudging(SlotManager):
+class SimplerSliceNudging(EventObject):
     _simpler = None
     _nudge_parameter = None
 
@@ -16,6 +21,7 @@ class SimplerSliceNudging(SlotManager):
         self.__on_selected_slice_changed.subject = self._simpler
         with self._updating_nudge_parameter():
             self._nudge_parameter = find_if(lambda p: p.name == 'Nudge', self._simpler.parameters if liveobj_valid(self._simpler) else [])
+        return
 
     @contextmanager
     def _updating_nudge_parameter(self):
@@ -25,6 +31,7 @@ class SimplerSliceNudging(SlotManager):
         if self._nudge_parameter:
             self._nudge_parameter.set_display_value_conversion(self._display_value_conversion)
         self.__on_nudge_delta.subject = self._nudge_parameter
+        return
 
     def _can_access_slicing_properties(self):
         return liveobj_valid(self._simpler) and liveobj_valid(self._simpler.sample) and self._simpler.current_playback_mode == Live.SimplerDevice.PlaybackMode.slicing

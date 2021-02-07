@@ -1,12 +1,17 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/device_parameter_bank.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/device_parameter_bank.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import SlotManager, Subject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
+from ableton.v2.base import EventObject, find_if, listens, listens_group, listenable_property, liveobj_valid, clamp
 from .banking_util import PARAMETERS_KEY, MAIN_KEY, BANK_FORMAT, all_parameters
 
-class DeviceParameterBank(SlotManager, Subject):
+class DeviceParameterBank(EventObject):
 
-    def __init__(self, size = None, device = None, banking_info = None, *a, **k):
-        raise size is not None or AssertionError
+    def __init__(self, size=None, device=None, banking_info=None, *a, **k):
+        assert size is not None
         super(DeviceParameterBank, self).__init__(*a, **k)
         self._size = size
         self._device = device
@@ -15,6 +20,7 @@ class DeviceParameterBank(SlotManager, Subject):
         self._parameters = None
         self._on_parameters_changed.subject = device
         self._update_parameters()
+        return
 
     def bank_count(self):
         return self._banking_info.device_bank_count(self._device, bank_size=self._size)
@@ -74,7 +80,7 @@ class DeviceParameterBank(SlotManager, Subject):
 
 class DescribedDeviceParameterBank(DeviceParameterBank):
 
-    def __init__(self, device = None, banking_info = None, *a, **k):
+    def __init__(self, device=None, banking_info=None, *a, **k):
         self._definition = banking_info.device_bank_definition(device)
         self._dynamic_slots = []
         super(DescribedDeviceParameterBank, self).__init__(device=device, banking_info=banking_info, *a, **k)
@@ -101,6 +107,7 @@ class DescribedDeviceParameterBank(DeviceParameterBank):
             slot.set_parameter_host(self.device)
 
         self._on_slot_content_changed.replace_subjects(self._dynamic_slots)
+        return
 
     def _calc_name(self):
         return self._definition.key_by_index(self.index)
@@ -108,7 +115,9 @@ class DescribedDeviceParameterBank(DeviceParameterBank):
     def _collect_parameters(self):
         parameters = self._device.parameters
         bank_slots = self._current_parameter_slots()
-        return [ find_if(lambda p: p.original_name == str(slot_definition), parameters) for slot_definition in bank_slots ]
+        return [ find_if(lambda p: p.original_name == str(slot_definition), parameters)
+         for slot_definition in bank_slots
+               ]
 
     def _update_parameters(self):
         self._setup_dynamic_slots()
@@ -119,7 +128,7 @@ class MaxDeviceParameterBank(DeviceParameterBank):
 
     def __init__(self, *a, **k):
         super(MaxDeviceParameterBank, self).__init__(*a, **k)
-        raise hasattr(self._device, 'get_bank_count') or AssertionError
+        assert hasattr(self._device, 'get_bank_count')
 
     def _calc_name(self):
         if self.bank_count() == 0:
@@ -133,10 +142,11 @@ class MaxDeviceParameterBank(DeviceParameterBank):
     def _collect_parameters(self):
         if self.bank_count() == 0:
             return [None] * self._size
-        parameters = self._device.parameters
-        mx_index = self.index - int(self._banking_info.has_main_bank(self._device))
-        indices = self.device.get_bank_parameters(mx_index)
-        return [ (parameters[index] if index >= 0 else None) for index in indices ]
+        else:
+            parameters = self._device.parameters
+            mx_index = self.index - int(self._banking_info.has_main_bank(self._device))
+            indices = self.device.get_bank_parameters(mx_index)
+            return [ (parameters[index] if index >= 0 else None) for index in indices ]
 
 
 def create_device_bank(device, banking_info):

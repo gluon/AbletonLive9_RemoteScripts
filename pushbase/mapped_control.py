@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/mapped_control.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/mapped_control.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import clamp, listens, liveobj_valid
 from ableton.v2.control_surface.control import MappedControl as MappedControlBase
@@ -41,6 +46,7 @@ class MappedControl(MappedControlBase):
                 self._control_value.subject = None
                 self._update_control_element()
             self._quantized_stepper.reset()
+            return
 
         def _update_control_element(self):
             if liveobj_valid(self.mapped_parameter):
@@ -59,7 +65,7 @@ class MappedControl(MappedControlBase):
         @listens('normalized_value')
         def _control_value(self, value):
             if is_zoom_parameter(self.mapped_parameter):
-                self.mapped_parameter.zoom(value)
+                self.mapped_parameter.zoom(value * self._control_element.mapping_sensitivity)
             if self.mapped_parameter.is_quantized:
                 steps = self._quantized_stepper.advance(value)
                 if steps != 0:

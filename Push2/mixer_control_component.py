@@ -1,30 +1,25 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mixer_control_component.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mixer_control_component.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
 from itertools import izip, izip_longest
 from math import ceil
-from ableton.v2.base import clamp, depends, listens, liveobj_valid, NamedTuple
+import Live
+from ableton.v2.base import clamp, depends, listens, listens_group, liveobj_valid, NamedTuple
 from ableton.v2.control_surface.control import control_list, ButtonControl
 from ableton.v2.control_surface.mode import ModesComponent
 from pushbase.mapped_control import MappedControl
 from .real_time_channel import RealTimeDataComponent
 from .item_lister_component import SimpleItemSlot
 MIXER_SECTIONS = ('Volumes', 'Pans')
-SEND_SECTIONS = ['A Sends',
- 'B Sends',
- 'C Sends',
- 'D Sends',
- 'E Sends',
- 'F Sends',
- 'G Sends',
- 'H Sends',
- 'I Sends',
- 'J Sends',
- 'K Sends',
- 'L Sends']
+SEND_SECTIONS = [
+ 'A Sends', 'B Sends', 'C Sends', 'D Sends',
+ 'E Sends', 'F Sends', 'G Sends', 'H Sends',
+ 'I Sends', 'J Sends', 'K Sends', 'L Sends']
 SEND_LIST_LENGTH = 5
-SEND_MODE_NAMES = ['send_slot_one',
+SEND_MODE_NAMES = [
+ 'send_slot_one',
  'send_slot_two',
  'send_slot_three',
  'send_slot_four',
@@ -35,19 +30,43 @@ class MixerSectionDescription(NamedTuple):
     parameter_name = None
 
 
+def find_parent_track(live_obj):
+    if isinstance(live_obj, Live.Track.Track):
+        return live_obj
+    else:
+        return find_parent_track(live_obj.canonical_parent)
+
+
+def assign_parameters(controls, parameters):
+    for control, parameter in izip_longest(controls, parameters):
+        if control:
+            if not liveobj_valid(parameter) or isinstance(parameter.canonical_parent, Live.MixerDevice.MixerDevice):
+                control.mapped_parameter = parameter
+            else:
+                track = find_parent_track(parameter)
+                control.mapped_parameter = parameter if liveobj_valid(track) and not track.is_frozen else None
+
+    return
+
+
 class MixerControlComponent(ModesComponent):
     __events__ = ('items', 'selected_item')
     controls = control_list(MappedControl)
     cycle_sends_button = ButtonControl(color='DefaultButton.Off')
 
+    @staticmethod
+    def get_tracks(items):
+        return filter(lambda item: item is not None and isinstance(item.proxied_object, Live.Track.Track), items)
+
     @depends(tracks_provider=None, real_time_mapper=None, register_real_time_data=None)
-    def __init__(self, view_model = None, tracks_provider = None, real_time_mapper = None, register_real_time_data = None, *a, **k):
-        raise liveobj_valid(real_time_mapper) or AssertionError
-        raise view_model is not None or AssertionError
-        raise tracks_provider is not None or AssertionError
+    def __init__(self, view_model=None, tracks_provider=None, real_time_mapper=None, register_real_time_data=None, *a, **k):
+        assert liveobj_valid(real_time_mapper)
+        assert view_model is not None
+        assert tracks_provider is not None
         super(MixerControlComponent, self).__init__(*a, **k)
         self._send_offset = 0
-        self.real_time_meter_handlers = [ RealTimeDataComponent(channel_type='meter', real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data, is_enabled=False) for _ in xrange(8) ]
+        self.real_time_meter_handlers = [ RealTimeDataComponent(channel_type='meter', real_time_mapper=real_time_mapper, register_real_time_data=register_real_time_data, is_enabled=False) for _ in xrange(8)
+                                        ]
         self._track_provider = tracks_provider
         self._on_return_tracks_changed.subject = self.song
         self._on_mode_changed.subject = self
@@ -63,18 +82,21 @@ class MixerControlComponent(ModesComponent):
         self._update_mixer_sections()
         self._on_items_changed.subject = self._track_provider
         self._on_selected_item_changed.subject = self._track_provider
+        self.__on_track_frozen_state_changed.replace_subjects(self.get_tracks(self._track_provider.items))
+        return
 
     def _setup_modes(self, view_model):
         self._add_mode('volume', view_model.volumeControlListView, lambda mixer: mixer.volume, additional_mode_contents=self.real_time_meter_handlers)
         self._add_mode('panning', view_model.panControlListView, lambda mixer: mixer.panning)
 
         def add_send_mode(index):
-            self._add_mode(SEND_MODE_NAMES[index], view_model.sendControlListView, lambda mixer: (mixer.sends[self._send_offset + index] if len(mixer.sends) > self._send_offset + index else None))
+            self._add_mode(SEND_MODE_NAMES[index], view_model.sendControlListView, lambda mixer:             if len(mixer.sends) > self._send_offset + index:
+mixer.sends[self._send_offset + index]None)
 
         for i in xrange(SEND_LIST_LENGTH):
             add_send_mode(i)
 
-    def _add_mode(self, mode, view, parameter_getter, additional_mode_contents = []):
+    def _add_mode(self, mode, view, parameter_getter, additional_mode_contents=[]):
         description = MixerSectionDescription(view=view, parameter_getter=parameter_getter)
         self.add_mode(mode, additional_mode_contents + [partial(self._set_mode, description)])
         mode_button = self.get_mode_button(mode)
@@ -126,6 +148,10 @@ class MixerControlComponent(ModesComponent):
     def _on_items_changed(self):
         self._update_controls(self._parameter_getter, self._selected_view)
 
+    @listens_group('is_frozen')
+    def __on_track_frozen_state_changed(self, identifier):
+        self._update_controls(self._parameter_getter, self._selected_view)
+
     @listens('selected_item')
     def _on_selected_item_changed(self):
         if self.number_sends <= SEND_LIST_LENGTH:
@@ -150,7 +176,8 @@ class MixerControlComponent(ModesComponent):
             mixer_section_names = list(MIXER_SECTIONS) + SEND_SECTIONS[position:position + pos_range]
             self._mixer_sections = [ SimpleItemSlot(name=name) for name in mixer_section_names ]
             if self.number_sends > SEND_LIST_LENGTH:
-                self._mixer_sections.extend([SimpleItemSlot()] * (8 - len(self._mixer_sections)))
+                self._mixer_sections.extend([
+                 SimpleItemSlot()] * (8 - len(self._mixer_sections)))
                 self._mixer_sections[7] = SimpleItemSlot(icon='page_right.svg')
             self.notify_items()
             if self.selected_mode in SEND_MODE_NAMES:
@@ -167,21 +194,24 @@ class MixerControlComponent(ModesComponent):
         return self._selected_item
 
     def _update_controls(self, parameter_getter, control_view):
-        parameters = self._get_parameter_for_tracks(parameter_getter)
-        control_view.parameters = parameters
-        self._update_realtime_ids()
-        for control, parameter in izip_longest(self.controls, parameters):
-            control.mapped_parameter = parameter
+        if self.is_enabled():
+            parameters = self._get_parameter_for_tracks(parameter_getter)
+            control_view.parameters = parameters
+            self._update_realtime_ids()
+            assign_parameters(self.controls, parameters)
 
     def _update_realtime_ids(self):
         mixables = self._track_provider.items
         for handler, mixable in izip(self.real_time_meter_handlers, mixables):
             handler.set_data(mixable.mixer_device if liveobj_valid(mixable) else None)
 
+        return
+
     def _get_parameter_for_tracks(self, parameter_getter):
         tracks = self._track_provider.items
         self.controls.control_count = len(tracks)
-        return map(lambda t: (parameter_getter(t.mixer_device) if t else None), tracks)
+        return map(lambda t:         if t:
+parameter_getter(t.mixer_device)None, tracks)
 
     def mode_can_be_used(self, mode):
         return mode not in SEND_MODE_NAMES or SEND_MODE_NAMES.index(mode) + self._send_offset < self.number_sends

@@ -1,12 +1,14 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_options.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/device_options.py
+# Compiled at: 2016-06-08 13:13:04
 from __future__ import absolute_import, print_function
-from ableton.v2.base import liveobj_valid, listenable_property, listens, const, Subject, Slot, SlotManager
+from ableton.v2.base import liveobj_valid, listenable_property, listens, const, EventObject, Slot
 
-class DeviceTriggerOption(Subject):
-    __events__ = ('default_label',)
+class DeviceTriggerOption(EventObject):
+    __events__ = ('default_label', )
 
-    def __init__(self, name = None, default_label = None, callback = None, is_active = None):
-        raise callback or AssertionError
+    def __init__(self, name=None, default_label=None, callback=None, is_active=None, *a, **k):
+        assert callback
+        super(DeviceTriggerOption, self).__init__(*a, **k)
         self.trigger = callback
         self._name = name or 'Option'
         self._default_label = default_label or self._name
@@ -33,9 +35,9 @@ class DeviceTriggerOption(Subject):
     default_label = property(_get_default_label, _set_default_label)
 
 
-class DeviceSwitchOption(SlotManager, DeviceTriggerOption):
+class DeviceSwitchOption(DeviceTriggerOption):
 
-    def __init__(self, second_label = None, parameter = None, *a, **k):
+    def __init__(self, second_label=None, parameter=None, *a, **k):
         super(DeviceSwitchOption, self).__init__(callback=self.cycle_index, *a, **k)
         self._second_label = second_label or ''
         self.set_parameter(parameter)
@@ -68,11 +70,11 @@ class DeviceSwitchOption(SlotManager, DeviceTriggerOption):
             self._parameter.value = float((self.active_index + 1.0) % 2)
 
 
-class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
+class DeviceOnOffOption(DeviceTriggerOption):
     ON_LABEL = 'ON'
     OFF_LABEL = 'OFF'
 
-    def __init__(self, name = None, property_host = None, property_name = '', *a, **k):
+    def __init__(self, name=None, property_host=None, property_name='', *a, **k):
         super(DeviceOnOffOption, self).__init__(callback=self.cycle_index, name=name, *a, **k)
         self._property_host = property_host
         self._property_name = property_name
@@ -81,7 +83,7 @@ class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
             self.notify_active_index()
             self.notify_default_label()
 
-        self._property_slot = self.register_slot(Slot(subject=property_host, event=property_name, listener=notify_index_and_default_label))
+        self._property_slot = self.register_slot(Slot(subject=property_host, event_name=property_name, listener=notify_index_and_default_label))
 
     def _property_value(self):
         if liveobj_valid(self._property_host):
@@ -103,4 +105,6 @@ class DeviceOnOffOption(SlotManager, DeviceTriggerOption):
 
     @property
     def default_label(self):
-        return '%s %s' % (self._default_label, self.ON_LABEL if self._property_value() else self.OFF_LABEL)
+        return '%s %s' % (
+         self._default_label,
+         self.ON_LABEL if self._property_value() else self.OFF_LABEL)

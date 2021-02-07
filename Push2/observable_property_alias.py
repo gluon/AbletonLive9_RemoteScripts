@@ -1,10 +1,11 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/observable_property_alias.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/observable_property_alias.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
-from ableton.v2.base import SlotManager, Slot
+from ableton.v2.base import EventObject, Slot
 
-class ObservablePropertyAlias(SlotManager):
+class ObservablePropertyAlias(EventObject):
 
-    def __init__(self, alias_host, property_host = None, property_name = '', alias_name = None, getter = None, *a, **k):
+    def __init__(self, alias_host, property_host=None, property_name='', alias_name=None, getter=None, *a, **k):
         super(ObservablePropertyAlias, self).__init__(*a, **k)
         self._alias_host = alias_host
         self._alias_name = alias_name or property_name
@@ -12,6 +13,7 @@ class ObservablePropertyAlias(SlotManager):
         self._property_name = property_name
         self._property_slot = None
         self._setup_alias(getter)
+        return
 
     def _get_property_host(self):
         return self._property_host

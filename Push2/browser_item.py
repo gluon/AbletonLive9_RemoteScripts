@@ -1,18 +1,21 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_item.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_item.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import Proxy
 
 class BrowserItem(object):
 
-    def __init__(self, name = '', icon = '', children = None, is_loadable = False, is_selected = False, contained_item = None, enable_wrapping = True, *a, **k):
+    def __init__(self, name='', icon='', children=None, is_loadable=False, is_selected=False, is_device=False, contained_item=None, enable_wrapping=True, *a, **k):
         super(BrowserItem, self).__init__(*a, **k)
         self._name = name
         self._icon = icon
         self._children = [] if children is None else children
         self._is_loadable = is_loadable
         self._is_selected = is_selected
+        self._is_device = is_device
         self._contained_item = contained_item
         self._enable_wrapping = enable_wrapping
+        return
 
     @property
     def name(self):
@@ -44,7 +47,7 @@ class BrowserItem(object):
 
     @property
     def is_device(self):
-        return False
+        return self._is_device
 
     @property
     def enable_wrapping(self):
@@ -54,12 +57,13 @@ class BrowserItem(object):
     def uri(self):
         if self._contained_item is not None:
             return self._contained_item.uri
-        return self._name
+        else:
+            return self._name
 
 
 class ProxyBrowserItem(Proxy):
 
-    def __init__(self, enable_wrapping = True, icon = '', *a, **k):
+    def __init__(self, enable_wrapping=True, icon='', *a, **k):
         super(ProxyBrowserItem, self).__init__(*a, **k)
         self._enable_wrapping = enable_wrapping
         self._icon = icon

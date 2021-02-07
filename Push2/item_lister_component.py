@@ -1,27 +1,24 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/item_lister_component.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/item_lister_component.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from itertools import izip
-from ableton.v2.base import forward_property, listens, SlotManager, Subject
+from ableton.v2.base import forward_property, listenable_property, listens, EventObject
 from ableton.v2.control_surface import Component, CompoundComponent
-from ableton.v2.control_surface.control import control_list, ButtonControl, RadioButtonControl
+from ableton.v2.control_surface.control import control_list, ButtonControl
 
-class SimpleItemSlot(SlotManager, Subject):
-    __events__ = ('name',)
+class SimpleItemSlot(EventObject):
 
-    def __init__(self, item = None, name = '', nesting_level = -1, icon = '', *a, **k):
+    def __init__(self, item=None, name='', nesting_level=-1, icon='', *a, **k):
         super(SimpleItemSlot, self).__init__(*a, **k)
         self._item = item
         self._name = name
         self._nesting_level = nesting_level
         self._icon = icon
-        self.__on_name_changed.subject = self._item if hasattr(self._item, 'name_has_listener') else None
+        self.__on_name_changed.subject = self._item if getattr(self._item, 'name_has_listener', None) else None
+        self.__on_color_index_changed.subject = self._item if getattr(self._item, 'color_index_has_listener', None) else None
+        return
 
-    @listens('name')
-    def __on_name_changed(self):
-        self.notify_name()
-        self._name = self._item.name
-
-    @property
+    @listenable_property
     def name(self):
         return self._name
 
@@ -37,12 +34,26 @@ class SimpleItemSlot(SlotManager, Subject):
     def icon(self):
         return self._icon
 
+    @listenable_property
+    def color_index(self):
+        return getattr(self._item, 'color_index', -1)
+
+    @listens('name')
+    def __on_name_changed(self):
+        self.notify_name()
+        self._name = self._item.name
+
+    @listens('color_index')
+    def __on_color_index_changed(self):
+        self.notify_color_index()
+
 
 class ItemSlot(SimpleItemSlot):
 
-    def __init__(self, item = None, nesting_level = 0, **k):
-        raise item != None or AssertionError
+    def __init__(self, item=None, nesting_level=0, **k):
+        assert item != None
         super(ItemSlot, self).__init__(item=item, name=item.name, nesting_level=nesting_level, **k)
+        return
 
     def __eq__(self, other):
         return id(self) == id(other) or self._item == other
@@ -56,7 +67,7 @@ class ItemSlot(SimpleItemSlot):
     _live_ptr = forward_property('_item')('_live_ptr')
 
 
-class ItemProvider(Subject):
+class ItemProvider(EventObject):
     """ General interface to implement for providers used in ItemListerComponent """
     __events__ = ('items', 'selected_item')
 
@@ -74,9 +85,9 @@ class ItemProvider(Subject):
 
 
 class ItemListerComponentBase(CompoundComponent):
-    __events__ = ('items',)
+    __events__ = ('items', )
 
-    def __init__(self, item_provider = ItemProvider(), num_visible_items = 8, *a, **k):
+    def __init__(self, item_provider=ItemProvider(), num_visible_items=8, *a, **k):
         super(ItemListerComponentBase, self).__init__(*a, **k)
         self._item_offset = 0
         self._item_provider = item_provider
@@ -147,9 +158,11 @@ class ItemListerComponentBase(CompoundComponent):
 
         new_items = []
         if num_slots > 0:
-            new_items = [ create_slot(index, *item) for index, item in enumerate(items[:num_slots]) if item[0] != None ]
+            new_items = [ create_slot(index, *item) for index, item in enumerate(items[:num_slots]) if item[0] != None
+                        ]
         self._items = map(self.register_disconnectable, new_items)
         self.notify_items()
+        return
 
     @listens('items')
     def __on_items_changed(self):
@@ -157,7 +170,7 @@ class ItemListerComponentBase(CompoundComponent):
 
 
 class ScrollComponent(Component):
-    __events__ = ('scroll',)
+    __events__ = ('scroll', )
     button = ButtonControl(color='ItemNavigation.ItemNotSelected', repeat=True)
 
     @button.pressed
@@ -208,7 +221,8 @@ class ScrollOverlayComponent(CompoundComponent):
 
 
 class ItemListerComponent(ItemListerComponentBase):
-    select_buttons = control_list(ButtonControl, unavailable_color='ItemNavigation.NoItem')
+    color_class_name = 'ItemNavigation'
+    select_buttons = control_list(ButtonControl, unavailable_color=color_class_name + '.NoItem')
 
     def __init__(self, *a, **k):
         super(ItemListerComponent, self).__init__(*a, **k)
@@ -233,16 +247,18 @@ class ItemListerComponent(ItemListerComponentBase):
     def __on_selection_changed(self):
         self._update_button_colors()
 
+    def _items_equal(self, item, selected_item):
+        return item == selected_item
+
     def _update_button_colors(self):
         selected_item = self._item_provider.selected_item
         for button, item in izip(self.select_buttons, self.items):
-            is_selected = item == selected_item
-            button.color = self._color_for_button(button.index, is_selected)
+            button.color = self._color_for_button(button.index, self._items_equal(item, selected_item))
 
     def _color_for_button(self, button_index, is_selected):
         if is_selected:
-            return 'ItemNavigation.ItemSelected'
-        return 'ItemNavigation.ItemNotSelected'
+            return self.color_class_name + '.ItemSelected'
+        return self.color_class_name + '.ItemNotSelected'
 
     @select_buttons.pressed
     def select_buttons(self, button):

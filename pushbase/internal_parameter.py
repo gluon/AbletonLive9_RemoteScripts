@@ -1,7 +1,12 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/internal_parameter.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/internal_parameter.py
+# Compiled at: 2016-06-08 13:13:04
 from __future__ import absolute_import, print_function
 from Live import DeviceParameter
-from ableton.v2.base import listenable_property, liveobj_valid, nop, Slot, SlotError, SlotManager, Subject
+from ableton.v2.base import listenable_property, liveobj_valid, nop, EventError, EventObject, Slot
 
 def identity(value, _parent):
     return value
@@ -17,14 +22,15 @@ def to_percentage_display(value):
     return unicode(percentage_str + ' %')
 
 
-class InternalParameterBase(Subject):
+class InternalParameterBase(EventObject):
     is_enabled = True
     is_quantized = False
 
-    def __init__(self, name = None, *a, **k):
-        raise name is not None or AssertionError
+    def __init__(self, name=None, *a, **k):
+        assert name is not None
         super(InternalParameterBase, self).__init__(*a, **k)
         self._name = name
+        return
 
     def _has_valid_parent(self):
         return liveobj_valid(self._parent)
@@ -82,14 +88,15 @@ class InternalParameter(InternalParameterBase):
     Class implementing the DeviceParameter interface. Using instances of this class,
     we can mix script-internal values with DeviceParameter instances.
     """
-    __events__ = ('value',)
+    __events__ = ('value', )
 
-    def __init__(self, parent = None, display_value_conversion = None, *a, **k):
+    def __init__(self, parent=None, display_value_conversion=None, *a, **k):
         super(InternalParameter, self).__init__(*a, **k)
         self._value = 0.0
         self._parent = parent
         self.set_display_value_conversion(display_value_conversion)
         self.set_scaling_functions(None, None)
+        return
 
     def set_display_value_conversion(self, display_value_conversion):
         self._display_value_conversion = display_value_conversion or to_percentage_display
@@ -109,7 +116,7 @@ class InternalParameter(InternalParameterBase):
         return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError('Invalid value %f' % new_value)
+        assert self.min <= new_value <= self.max, 'Invalid value %f' % new_value
         self.linear_value = self._to_internal(new_value, self._parent)
 
     value = property(_get_value, _set_value)
@@ -137,17 +144,27 @@ class InternalParameter(InternalParameterBase):
         return self._display_value_conversion(self.value)
 
 
-class WrappingParameter(InternalParameter, SlotManager):
+class PropertyHostMixin(object):
+    """
+    This is only used to document the set_property_host API
+    """
 
-    def __init__(self, property_host = None, source_property = None, from_property_value = None, to_property_value = None, display_value_conversion = nop, value_items = [], *a, **k):
-        raise source_property is not None or AssertionError
+    def set_property_host(self, new_host):
+        raise NotImplementedError
+
+
+class WrappingParameter(InternalParameter, PropertyHostMixin):
+
+    def __init__(self, property_host=None, source_property=None, from_property_value=None, to_property_value=None, display_value_conversion=nop, value_items=[], *a, **k):
+        assert source_property is not None
         super(WrappingParameter, self).__init__(display_value_conversion=display_value_conversion, *a, **k)
         self._property_host = property_host
-        raise self._property_host == None or hasattr(self._property_host, source_property) or source_property in dir(self._property_host) or AssertionError
+        assert self._property_host == None or hasattr(self._property_host, source_property) or source_property in dir(self._property_host)
         self._source_property = source_property
         self._value_items = value_items
         self.set_scaling_functions(to_property_value, from_property_value)
-        self._property_slot = self.register_slot(Slot(listener=self.notify_value, event=source_property, subject=self._property_host))
+        self._property_slot = self.register_slot(Slot(listener=self.notify_value, event_name=source_property, subject=self._property_host))
+        return
 
     def set_property_host(self, new_host):
         self._property_host = new_host
@@ -167,7 +184,7 @@ class WrappingParameter(InternalParameter, SlotManager):
             return self.min
 
     def _set_value(self, new_value):
-        raise self.min <= new_value <= self.max or AssertionError('Invalid value %f' % new_value)
+        assert self.min <= new_value <= self.max, 'Invalid value %f' % new_value
         if liveobj_valid(self._property_host):
             try:
                 setattr(self._property_host, self._source_property, self._to_internal(new_value, self._property_host))
@@ -194,17 +211,17 @@ class WrappingParameter(InternalParameter, SlotManager):
         return self._value_items
 
 
-class EnumWrappingParameter(InternalParameterBase, SlotManager):
+class EnumWrappingParameter(InternalParameterBase, PropertyHostMixin):
     is_enabled = True
     is_quantized = True
 
-    def __init__(self, parent = None, index_property_host = None, values_property_host = None, values_property = None, index_property = None, value_type = int, to_index_conversion = None, from_index_conversion = None, *a, **k):
-        raise parent is not None or AssertionError
-        raise values_property is not None or AssertionError
-        raise index_property is not None or AssertionError
+    def __init__(self, parent=None, index_property_host=None, values_host=None, values_property=None, index_property=None, value_type=int, to_index_conversion=None, from_index_conversion=None, *a, **k):
+        assert parent is not None
+        assert values_property is not None
+        assert index_property is not None
         super(EnumWrappingParameter, self).__init__(*a, **k)
         self._parent = parent
-        self._values_property_host = values_property_host
+        self._values_host = values_host
         self._index_property_host = index_property_host
         self._values_property = values_property
         self._index_property = index_property
@@ -213,11 +230,13 @@ class EnumWrappingParameter(InternalParameterBase, SlotManager):
         self.value_type = value_type
         self._index_property_slot = self.register_slot(index_property_host, self.notify_value, index_property)
         try:
-            self.register_slot(self._values_property_host, self.notify_value_items, values_property)
-        except SlotError:
+            self.register_slot(self._values_host, self.notify_value_items, values_property)
+        except EventError:
             pass
 
-    def set_index_property_host(self, new_host):
+        return
+
+    def set_property_host(self, new_host):
         self._index_property_host = new_host
         self._index_property_slot.subject = self._index_property_host
 
@@ -243,8 +262,8 @@ class EnumWrappingParameter(InternalParameterBase, SlotManager):
         self._set_index(new_value)
 
     def _get_values(self):
-        if liveobj_valid(self._values_property_host):
-            return getattr(self._values_property_host, self._values_property)
+        if liveobj_valid(self._values_host):
+            return getattr(self._values_host, self._values_property)
         return []
 
     def _get_index(self):
@@ -269,7 +288,7 @@ class EnumWrappingParameter(InternalParameterBase, SlotManager):
 
 
 class RelativeInternalParameter(InternalParameter):
-    __events__ = ('delta',)
+    __events__ = ('delta', )
 
     @property
     def default_value(self):

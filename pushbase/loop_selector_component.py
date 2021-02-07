@@ -1,13 +1,18 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/loop_selector_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/loop_selector_component.py
+# Compiled at: 2016-09-29 19:13:24
 from __future__ import absolute_import, print_function
 from contextlib import contextmanager
 from functools import partial
-from itertools import izip
-from ableton.v2.base import clamp, listens, liveobj_changed, liveobj_valid, Subject, task
+from itertools import ifilter, izip
+from ableton.v2.base import EventObject, clamp, first, listens, liveobj_changed, liveobj_valid, task
 from ableton.v2.control_surface import defaults, Component
 from ableton.v2.control_surface.control import ButtonControl
 
-def create_clip_in_selected_slot(creator, song, clip_length = None):
+def create_clip_in_selected_slot(creator, song, clip_length=None):
     """
     Create a new clip in the selected slot of if none exists, using a
     given creator object.  Fires it if the song is playing and
@@ -15,7 +20,7 @@ def create_clip_in_selected_slot(creator, song, clip_length = None):
     """
     selected_slot = song.view.highlighted_clip_slot
     if creator and selected_slot and not selected_slot.has_clip:
-        creator.create(selected_slot, clip_length)
+        creator.create(selected_slot, clip_length, legato_launch=True)
         song.view.detail_clip = selected_slot.clip
     return selected_slot.clip
 
@@ -24,7 +29,7 @@ def clip_is_new_recording(clip):
     return clip.is_recording and not clip.is_overdubbing
 
 
-class Paginator(Subject):
+class Paginator(EventObject):
     """
     Paginator interface for objects that split continuous time into
     discrete pages.  This can be used as trivial paginator splits time
@@ -66,9 +71,9 @@ class LoopSelectorComponent(Component):
     """
     next_page_button = ButtonControl()
     prev_page_button = ButtonControl()
-    __events__ = ('is_following',)
+    __events__ = ('is_following', )
 
-    def __init__(self, clip_creator = None, measure_length = 4.0, follow_detail_clip = False, paginator = None, *a, **k):
+    def __init__(self, clip_creator=None, measure_length=4.0, follow_detail_clip=False, paginator=None, default_size=1, *a, **k):
         super(LoopSelectorComponent, self).__init__(*a, **k)
         self._clip_creator = clip_creator
         self._sequencer_clip = None
@@ -81,6 +86,7 @@ class LoopSelectorComponent(Component):
         self._select_button = None
         self._short_loop_selector_matrix = None
         self._loop_selector_matrix = None
+        self._default_size = default_size
         self._pressed_pages = []
         self._page_colors = []
         self._measure_length = measure_length
@@ -93,6 +99,7 @@ class LoopSelectorComponent(Component):
         self._on_song_playback_status_changed.subject = self.song
         if paginator is not None:
             self.set_paginator(paginator)
+        return
 
     def _get_is_following(self):
         return self._can_follow and self._is_following
@@ -117,7 +124,7 @@ class LoopSelectorComponent(Component):
     def _on_page_length_changed(self):
         self._update_page_colors()
         self._update_follow_button()
-        self._select_start_page_if_out_of_loop_range()
+        self._select_start_page()
 
     def set_follow_button(self, button):
         self._follow_button = button
@@ -140,20 +147,20 @@ class LoopSelectorComponent(Component):
             self._on_loop_end_changed.subject = clip
             self._on_is_recording_changed.subject = clip
             self._sequencer_clip = clip
-            self._select_start_page_if_out_of_loop_range()
+            self._select_start_page()
             self._on_loop_changed()
 
     def _update_follow_button(self):
         if self.is_enabled() and self._follow_button:
             self._follow_button.set_light(self.is_following)
 
-    def _select_start_page_if_out_of_loop_range(self):
-        if self._sequencer_clip:
+    def _select_start_page(self):
+        if liveobj_valid(self._sequencer_clip):
             page_start = self._paginator.page_index * self._paginator.page_length
-            if self._sequencer_clip and (page_start <= self._sequencer_clip.loop_start or page_start >= self._sequencer_clip.loop_end):
+            if page_start <= self._sequencer_clip.loop_start or page_start >= self._sequencer_clip.loop_end:
                 self._paginator.select_page_in_point(self._sequencer_clip.loop_start)
-        else:
-            self._paginator.select_page_in_point(0)
+            else:
+                self._paginator.select_page_in_point(page_start)
 
     @listens('loop_start')
     def _on_loop_start_changed(self):
@@ -164,7 +171,7 @@ class LoopSelectorComponent(Component):
         self._on_loop_changed()
 
     def _on_loop_changed(self):
-        if self._sequencer_clip:
+        if liveobj_valid(self._sequencer_clip):
             self._loop_start = self._sequencer_clip.loop_start
             self._loop_end = self._sequencer_clip.loop_end
             self._loop_length = self._loop_end - self._loop_start
@@ -179,6 +186,9 @@ class LoopSelectorComponent(Component):
         self._on_loop_selector_matrix_value.subject = matrix
         if matrix:
             matrix.reset()
+            for button, _ in ifilter(first, matrix.iterbuttons()):
+                button.sensitivity_profile = 'loop'
+
         self._update_page_colors()
 
     def set_short_loop_selector_matrix(self, matrix):
@@ -256,14 +266,15 @@ class LoopSelectorComponent(Component):
             self._update_page_leds()
 
     def _get_size(self):
-        return max(len(self._loop_selector_matrix or []), len(self._short_loop_selector_matrix or []), 1)
+        return max(len(self._loop_selector_matrix or []), len(self._short_loop_selector_matrix or []), self._default_size)
 
     def _get_loop_in_pages(self):
         page_length = self._page_length_in_beats
         loop_start = int(self._loop_start / page_length)
         loop_end = int(self._loop_end / page_length)
         loop_length = loop_end - loop_start + int(self._loop_end % page_length != 0)
-        return (loop_start, loop_length)
+        return (
+         loop_start, loop_length)
 
     def _selected_pages_range(self):
         size = self._get_size()
@@ -271,7 +282,8 @@ class LoopSelectorComponent(Component):
         seq_page_length = max(self._paginator.page_length / page_length, 1)
         seq_page_start = int(self._paginator.page_index * self._paginator.page_length / page_length)
         seq_page_end = int(min(seq_page_start + seq_page_length, self.page_offset + size))
-        return (seq_page_start, seq_page_end)
+        return (
+         seq_page_start, seq_page_end)
 
     def _update_page_colors(self):
         """
@@ -356,7 +368,8 @@ class LoopSelectorComponent(Component):
         page = x + y * self._short_loop_selector_matrix.width()
         if self.is_enabled():
             if value or not is_momentary:
-                self._pressed_pages = [page]
+                self._pressed_pages = [
+                 page]
                 self._try_set_loop()
                 self._pressed_pages = []
 
@@ -393,7 +406,7 @@ class LoopSelectorComponent(Component):
         self._pressed_pages.append(page)
         absolute_page = page + self.page_offset
         if not self._select_button or not self._select_button.is_pressed():
-            if self._sequencer_clip == None and not self.song.view.highlighted_clip_slot.has_clip:
+            if not liveobj_valid(self._sequencer_clip) and not self.song.view.highlighted_clip_slot.has_clip:
                 create_clip(absolute_page)
             elif liveobj_valid(self._sequencer_clip):
                 handle_page_press_on_clip(absolute_page)
@@ -409,7 +422,7 @@ class LoopSelectorComponent(Component):
 
     def _try_set_loop(self):
         did_set_loop = False
-        if self._sequencer_clip:
+        if liveobj_valid(self._sequencer_clip):
             if not clip_is_new_recording(self._sequencer_clip):
                 lowest_page = min(self._pressed_pages) + self.page_offset
                 if self._try_select_page(lowest_page):
@@ -427,14 +440,16 @@ class LoopSelectorComponent(Component):
         loop_end = self._quantize_page_index(end_page, quant) + quant
         if loop_start >= self._sequencer_clip.loop_end:
             self._sequencer_clip.loop_end = loop_end
-            self._sequencer_clip.loop_start = loop_start
-            self._sequencer_clip.end_marker = loop_end
-            self._sequencer_clip.start_marker = loop_start
+            if self._sequencer_clip.loop_end == loop_end:
+                self._sequencer_clip.loop_start = loop_start
+                self._sequencer_clip.end_marker = loop_end
+                self._sequencer_clip.start_marker = loop_start
         else:
             self._sequencer_clip.loop_start = loop_start
-            self._sequencer_clip.loop_end = loop_end
-            self._sequencer_clip.start_marker = loop_start
-            self._sequencer_clip.end_marker = loop_end
+            if self._sequencer_clip.loop_start == loop_start:
+                self._sequencer_clip.loop_end = loop_end
+                self._sequencer_clip.end_marker = loop_end
+                self._sequencer_clip.start_marker = loop_start
         self._sequencer_clip.view.show_loop()
 
     @property
@@ -443,7 +458,7 @@ class LoopSelectorComponent(Component):
 
     @property
     def _page_length_in_beats(self):
-        return clamp(self._paginator.page_length, 0.5, self._one_measure_in_beats)
+        return clamp(self._paginator.page_length, 0.25, self._one_measure_in_beats)
 
     @property
     def _one_measure_in_beats(self):

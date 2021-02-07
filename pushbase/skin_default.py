@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/skin_default.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/skin_default.py
+# Compiled at: 2016-11-16 18:13:21
 from __future__ import absolute_import, print_function
 from ableton.v2.control_surface import Skin
 from .colors import Basic, Rgb, Pulse, Blink, BiLed
@@ -21,6 +26,7 @@ class Colors:
         Off = Basic.HALF
         Disabled = Basic.OFF
         Alert = Basic.FULL_BLINK_SLOW
+        Transparent = Basic.TRANSPARENT
 
     class DefaultMatrix:
         On = Rgb.WHITE
@@ -97,6 +103,7 @@ class Colors:
         SliceSelected = Rgb.OCEAN
         SliceUnselected = Rgb.YELLOW
         NoSlice = Rgb.YELLOW.shade(2)
+        NextSlice = Pulse(Rgb.YELLOW.shade(2), Rgb.OCEAN.highlight(), 48)
 
     class LoopSelector:
         Playhead = Rgb.GREEN
@@ -105,6 +112,12 @@ class Colors:
         InsideLoopStartBar = Rgb.WHITE
         InsideLoop = Rgb.WHITE
         OutsideLoop = Rgb.BLACK
+
+    class VelocityLevels:
+        LowLevel = Rgb.DARK_GREY
+        MidLevel = Rgb.GREY
+        HighLevel = Rgb.WHITE
+        SelectedLevel = Rgb.OCEAN
 
     class NoteEditor:
 
@@ -170,6 +183,8 @@ class Colors:
     class FixedLength:
         On = Basic.FULL
         Off = Basic.HALF
+        PhraseAlignedOn = BiLed.AMBER
+        PhraseAlignedOff = BiLed.YELLOW_HALF
 
     class Accent:
         On = Basic.FULL

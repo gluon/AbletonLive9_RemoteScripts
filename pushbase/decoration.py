@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/decoration.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/decoration.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from itertools import ifilter
 from ableton.v2.base import CompoundDisconnectable, Proxy
@@ -24,7 +29,7 @@ class LiveObjectDict(dict):
         return super(LiveObjectDict, self).get(self._transform_key(key), *default)
 
     def _transform_key(self, key):
-        raise hasattr(key, '_live_ptr') or AssertionError
+        assert hasattr(key, '_live_ptr')
         return key._live_ptr
 
     def update(self, *a, **k):
@@ -43,12 +48,14 @@ class LiveObjectDict(dict):
 
 class LiveObjectDecorator(CompoundDisconnectable, Proxy):
 
-    def __init__(self, live_object = None, additional_properties = {}):
-        raise live_object is not None or AssertionError
+    def __init__(self, live_object=None, additional_properties={}):
+        assert live_object is not None
         super(LiveObjectDecorator, self).__init__(proxied_object=live_object)
         self._live_object = live_object
         for name, value in additional_properties.iteritems():
             setattr(self, name, value)
+
+        return
 
     def __eq__(self, other):
         return id(self) == id(other) or self._live_object == other
@@ -70,7 +77,7 @@ class DecoratorFactory(CompoundDisconnectable):
         super(DecoratorFactory, self).__init__(*a, **k)
         self.decorated_objects = LiveObjectDict()
 
-    def decorate(self, live_object, additional_properties = {}, **k):
+    def decorate(self, live_object, additional_properties={}, **k):
         if self._should_be_decorated(live_object):
             if not self.decorated_objects.get(live_object, None):
                 self.decorated_objects[live_object] = self.register_disconnectable(self._get_decorated_object(live_object, additional_properties, **k))

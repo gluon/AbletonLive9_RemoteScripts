@@ -1,4 +1,5 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/declaration.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/model/declaration.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from itertools import count
 
@@ -49,12 +50,7 @@ def is_reference_property_decl(decl):
 
 
 def is_value_property_type(decl):
-    return decl.property_type in (int,
-     long,
-     float,
-     unicode,
-     str,
-     bool)
+    return decl.property_type in (int, long, float, unicode, str, bool)
 
 
 def is_custom_property(decl):
@@ -69,16 +65,18 @@ class view_property(property_declaration):
     sentinel = object()
     GLOBAL_ORDER = count()
 
-    def __init__(self, property_type, default_value = sentinel, depends = (), *a, **k):
+    def __init__(self, property_type, default_value=sentinel, depends=(), *a, **k):
         super(view_property, self).__init__(*a, **k)
         self.property_type = property_type
         self.default_value = default_value
         self.order = self.GLOBAL_ORDER.next()
-        raise default_value is not self.sentinel or is_view_model_property_decl(self) or is_list_property_decl(self) or is_binding_property_decl(self) or is_reference_property_decl(self) or AssertionError
+        assert default_value is not self.sentinel or is_view_model_property_decl(self) or is_list_property_decl(self) or is_binding_property_decl(self) or is_reference_property_decl(self)
         depends = depends
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__, self.property_type)
+        return '<%s %r>' % (
+         self.__class__.__name__,
+         self.property_type)
 
     def visit(self, name, visitor):
         if name == 'id':
@@ -88,10 +86,11 @@ class view_property(property_declaration):
 
 class custom_property(view_property):
 
-    def __init__(self, property_type, wrapper_class = None, *a, **k):
-        raise wrapper_class is not None or AssertionError
+    def __init__(self, property_type, wrapper_class=None, *a, **k):
+        assert wrapper_class is not None
         super(custom_property, self).__init__(property_type=property_type, *a, **k)
         self.wrapper_class = wrapper_class
+        return
 
     def visit(self, name, visitor):
         if name == 'id':
@@ -125,7 +124,9 @@ class listof(object):
         self.property_type = property_type
 
     def __repr__(self):
-        return '<%s %r>' % (self.__class__.__name__, self.property_type)
+        return '<%s %r>' % (
+         self.__class__.__name__,
+         self.property_type)
 
 
 class listmodel(listof):

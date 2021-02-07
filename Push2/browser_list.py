@@ -1,15 +1,16 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_list.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/browser_list.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 from itertools import islice
-from ableton.v2.base import Subject, listenable_property, clamp, nop
+from ableton.v2.base import EventObject, listenable_property, clamp, nop
 from .model.uniqueid import UniqueIdMixin
 
-class BrowserList(Subject, UniqueIdMixin):
+class BrowserList(EventObject, UniqueIdMixin):
     LAZY_ACCESS_COUNT = 1000
     LAZY_ACCESS_THRESHOLD = LAZY_ACCESS_COUNT - 100
 
-    def __init__(self, item_iterator = None, item_wrapper = nop, limit = -1, *a, **k):
+    def __init__(self, item_iterator=None, item_wrapper=nop, limit=-1, *a, **k):
         super(BrowserList, self).__init__(*a, **k)
         self._selected_index = -1
         self._item_iterator = item_iterator
@@ -18,7 +19,7 @@ class BrowserList(Subject, UniqueIdMixin):
         self._access_all = False
         self._items = []
         self._update_items()
-        raise self.LAZY_ACCESS_COUNT > self.LAZY_ACCESS_THRESHOLD or AssertionError
+        assert self.LAZY_ACCESS_COUNT > self.LAZY_ACCESS_THRESHOLD
 
     def _get_limit(self):
         return self._limit
@@ -70,7 +71,8 @@ class BrowserList(Subject, UniqueIdMixin):
     def selected_item(self):
         if self.selected_index == -1:
             return None
-        return self.items[self.selected_index]
+        else:
+            return self.items[self.selected_index]
 
     @listenable_property
     def selected_index(self):
@@ -78,15 +80,15 @@ class BrowserList(Subject, UniqueIdMixin):
 
     @selected_index.setter
     def selected_index(self, value):
-        if not (value != self._selected_index and (value == -1 or self._limit == -1)):
-            raise AssertionError
-            num_children = len(self._items)
-            if value < -1 or value >= num_children:
-                raise IndexError('Index %i must be in [-1..%i]' % (value, num_children - 1))
-            self._selected_index = value
-            self.notify_selected_index()
-            if self._selected_index >= self.LAZY_ACCESS_THRESHOLD and not self._access_all:
-                self.access_all = True
+        if value != self._selected_index:
+            if not value == -1:
+                assert self._limit == -1
+                num_children = len(self._items)
+                if value < -1 or value >= num_children:
+                    raise IndexError('Index %i must be in [-1..%i]' % (value, num_children - 1))
+                self._selected_index = value
+                self.notify_selected_index()
+                self.access_all = self._selected_index >= self.LAZY_ACCESS_THRESHOLD and not self._access_all and True
 
     def select_index_with_offset(self, offset):
         self.selected_index = clamp(self._selected_index + offset, 0, len(self._items) - 1)

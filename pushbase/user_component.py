@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/user_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/user_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import Component
@@ -8,13 +13,14 @@ class UserComponentBase(Component):
     __events__ = ('mode', 'before_mode_sent', 'after_mode_sent')
     defer_sysex_sending = False
 
-    def __init__(self, value_control = None, *a, **k):
-        raise value_control is not None or AssertionError
+    def __init__(self, value_control=None, *a, **k):
+        assert value_control is not None
         super(UserComponentBase, self).__init__(*a, **k)
         self._value_control = value_control
         self.__on_value.subject = self._value_control
         self._selected_mode = sysex.LIVE_MODE
         self._pending_mode_to_select = None
+        return
 
     def toggle_mode(self):
         self.mode = sysex.LIVE_MODE if self.mode == sysex.USER_MODE else sysex.USER_MODE
@@ -38,6 +44,7 @@ class UserComponentBase(Component):
         if self.is_enabled() and self._pending_mode_to_select:
             self._apply_mode(self._pending_mode_to_select)
             self._pending_mode_to_select = None
+        return
 
     def force_send_mode(self):
         self._do_apply_mode(self._selected_mode)

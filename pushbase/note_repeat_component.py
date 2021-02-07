@@ -1,17 +1,15 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_repeat_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/note_repeat_component.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from ableton.v2.base import listens, task
 from ableton.v2.control_surface import CompoundComponent
 from .action_with_options_component import OptionsComponent
 t = 3.0 / 2.0
-NOTE_REPEAT_FREQUENCIES = [32 * t,
- 32,
- 16 * t,
- 16,
- 8 * t,
- 8,
- 4 * t,
- 4]
+NOTE_REPEAT_FREQUENCIES = [32 * t, 32, 16 * t, 16, 8 * t, 8, 4 * t, 4]
 del t
 
 class DummyNoteRepeat(object):
@@ -36,6 +34,7 @@ class NoteRepeatComponent(CompoundComponent):
         self._options.selected_option = 5
         self._on_selected_option_changed.subject = self._options
         self.set_note_repeat(None)
+        return
 
     def on_enabled_changed(self):
         if self.is_enabled():
@@ -64,6 +63,7 @@ class NoteRepeatComponent(CompoundComponent):
             self._note_repeat.enabled = False
         self._note_repeat = note_repeat
         self._update_note_repeat(enabled=self.is_enabled())
+        return
 
     def set_pad_parameters(self, element):
         if element:
@@ -91,6 +91,6 @@ class NoteRepeatComponent(CompoundComponent):
         frequency = NOTE_REPEAT_FREQUENCIES[option]
         self._note_repeat.repeat_rate = 1.0 / frequency * 4.0
 
-    def _update_note_repeat(self, enabled = False):
+    def _update_note_repeat(self, enabled=False):
         self._on_selected_option_changed(self._options.selected_option)
         self._note_repeat.enabled = self.is_enabled()

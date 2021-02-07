@@ -1,7 +1,8 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mute_solo_stop.py
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/Push2/mute_solo_stop.py
+# Compiled at: 2016-06-08 13:13:04
 from __future__ import absolute_import, print_function
 from functools import partial
-from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, MultiSlot, SlotManager, Subject
+from ableton.v2.base import listenable_property, listens, listens_group, liveobj_valid, EventObject, MultiSlot
 from ableton.v2.control_surface import Component, CompoundComponent, Layer
 from ableton.v2.control_surface.control import ButtonControl
 from pushbase.message_box_component import Messenger
@@ -14,17 +15,18 @@ def stop_clip_in_selected_track(song):
         selected_track.stop_all_clips()
 
 
-class TrackStateColorIndicator(Subject, SlotManager):
+class TrackStateColorIndicator(EventObject):
     color = listenable_property.managed('DefaultButton.On')
 
-    def __init__(self, item_provider = None, track_property = None, property_active_color = None, song = None, *a, **k):
+    def __init__(self, item_provider=None, track_property=None, property_active_color=None, song=None, *a, **k):
         super(TrackStateColorIndicator, self).__init__(*a, **k)
         self._provider = item_provider
         self._active_color = property_active_color
         self._property = track_property
         self._song = song
         self.__on_items_changed.subject = item_provider
-        self.register_slot(MultiSlot(listener=self.__on_property_changed, event=('selected_item', track_property), subject=item_provider))
+        self.register_slot(MultiSlot(listener=self.__on_property_changed, event_name_list=(
+         'selected_item', track_property), subject=item_provider))
         self._update_color()
 
     @listens('items')
@@ -43,23 +45,24 @@ class TrackStateColorIndicator(Subject, SlotManager):
 class GlobalMixerActionComponent(Component):
     action_button = ButtonControl(delay_time=GLOBAL_ACTION_LOCK_MODE_DELAY)
 
-    def __init__(self, track_list_component = None, mode = None, immediate_action = None, default_color_indicator = None, mode_locked_color = None, mode_active_color = None, *a, **k):
-        if not track_list_component is not None:
-            raise AssertionError
-            raise mode is not None or AssertionError
-            raise mode in track_list_component.modes or AssertionError
-            super(GlobalMixerActionComponent, self).__init__(*a, **k)
-            self._mode = mode
-            self._immediate_action = immediate_action
-            self._mode_locked = False
-            self._default_color_indicator = None
-            self._locked_color = mode_locked_color
-            self._active_color = mode_active_color if mode_active_color is not None else 'DefaultButton.On'
-            self._allow_released_immediately_action = True
-            self._track_list_component = track_list_component
-            self._default_color_indicator = default_color_indicator is not None and self.register_disconnectable(default_color_indicator)
+    def __init__(self, track_list_component=None, mode=None, immediate_action=None, default_color_indicator=None, mode_locked_color=None, mode_active_color=None, *a, **k):
+        assert track_list_component is not None
+        assert mode is not None
+        assert mode in track_list_component.modes
+        super(GlobalMixerActionComponent, self).__init__(*a, **k)
+        self._mode = mode
+        self._immediate_action = immediate_action
+        self._mode_locked = False
+        self._default_color_indicator = None
+        self._locked_color = mode_locked_color
+        self._active_color = mode_active_color if mode_active_color is not None else 'DefaultButton.On'
+        self._allow_released_immediately_action = True
+        self._track_list_component = track_list_component
+        if default_color_indicator is not None:
+            self._default_color_indicator = self.register_disconnectable(default_color_indicator)
             self.__on_default_color_changed.subject = default_color_indicator
         self._update_default_color()
+        return
 
     @listenable_property
     def mode_locked(self):
@@ -123,11 +126,12 @@ class GlobalMixerActionComponent(Component):
 
 class MuteSoloStopClipComponent(CompoundComponent, Messenger):
     MESSAGE_FOR_MODE = {'mute': 'Mute: %s',
-     'solo': 'Solo: %s',
-     'stop': 'Stop Clips: %s'}
+       'solo': 'Solo: %s',
+       'stop': 'Stop Clips: %s'
+       }
     stop_all_clips_button = ButtonControl()
 
-    def __init__(self, item_provider = None, solo_track_button = None, mute_track_button = None, stop_clips_button = None, track_list_component = None, cancellation_action_performers = [], *a, **k):
+    def __init__(self, item_provider=None, solo_track_button=None, mute_track_button=None, stop_clips_button=None, track_list_component=None, cancellation_action_performers=[], *a, **k):
         super(MuteSoloStopClipComponent, self).__init__(*a, **k)
         self._currently_locked_button_handler = None
         self._track_list = track_list_component
@@ -137,10 +141,15 @@ class MuteSoloStopClipComponent(CompoundComponent, Messenger):
         self._mute_button_handler.layer = Layer(action_button=mute_track_button)
         self._stop_button_handler = self.register_component(GlobalMixerActionComponent(track_list_component=track_list_component, mode='stop', immediate_action=partial(stop_clip_in_selected_track, self.song), mode_locked_color='StopClips.LockedStopMode'))
         self._stop_button_handler.layer = Layer(action_button=stop_clips_button)
-        self.__on_mute_solo_stop_cancel_action_performed.replace_subjects([track_list_component] + cancellation_action_performers)
-        button_handlers = (self._mute_button_handler, self._solo_button_handler, self._stop_button_handler)
+        self.__on_mute_solo_stop_cancel_action_performed.replace_subjects([
+         track_list_component] + cancellation_action_performers)
+        button_handlers = (
+         self._mute_button_handler,
+         self._solo_button_handler,
+         self._stop_button_handler)
         self.__on_mode_locked_changed.replace_subjects(button_handlers, button_handlers)
         self.__on_selected_item_changed.subject = item_provider
+        return
 
     @stop_all_clips_button.pressed
     def stop_all_clips_button(self, button):
@@ -160,6 +169,7 @@ class MuteSoloStopClipComponent(CompoundComponent, Messenger):
             self._currently_locked_button_handler = None
         self._track_list.locked_mode = self._currently_locked_button_handler.mode if is_locked else None
         self._show_mode_lock_change_notification(is_locked, button_handler.mode)
+        return
 
     @listens('selected_item')
     def __on_selected_item_changed(self):

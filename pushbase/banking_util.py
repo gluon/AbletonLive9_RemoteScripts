@@ -1,4 +1,9 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/banking_util.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/banking_util.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 from math import ceil
 from copy import deepcopy
@@ -49,7 +54,7 @@ def all_parameters(device):
     return []
 
 
-def device_bank_count(device, bank_size = 8, definition = None, definitions = None):
+def device_bank_count(device, bank_size=8, definition=None, definitions=None):
     count = 0
     if liveobj_valid(device):
         definition = definition or definitions.get(device.class_name, {})
@@ -68,7 +73,7 @@ def device_bank_definition(device, definitions):
     return definition
 
 
-def device_bank_names(device, bank_size = 8, definitions = None):
+def device_bank_names(device, bank_size=8, definitions=None):
     names = []
     if liveobj_valid(device):
         class_name = device.class_name
@@ -76,7 +81,8 @@ def device_bank_names(device, bank_size = 8, definitions = None):
             names = definitions[class_name].keys()
         elif has_bank_count(device) and has_bank_names(device, definitions):
             offset = int(has_main_bank(device, definitions))
-            names = [ device.get_bank_name(index - offset) for index in xrange(device_bank_count(device, definitions=definitions)) ]
+            names = [ device.get_bank_name(index - offset) for index in xrange(device_bank_count(device, definitions=definitions))
+                    ]
             if has_main_bank(device, definitions) and not names[0]:
                 names[0] = MAIN_KEY
         else:

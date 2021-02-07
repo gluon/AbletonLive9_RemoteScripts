@@ -1,26 +1,48 @@
-#Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/percussion_instrument_finder_component.py
+# uncompyle6 version 2.9.10
+# Python bytecode 2.7 (62211)
+# Decompiled from: Python 2.7.13 (default, Dec 17 2016, 23:03:43) 
+# [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)]
+# Embedded file name: /Users/versonator/Jenkins/live/output/mac_64_static/Release/python-bundle/MIDI Remote Scripts/pushbase/percussion_instrument_finder.py
+# Compiled at: 2016-05-20 03:43:52
 from __future__ import absolute_import, print_function
 import Live
 from itertools import chain
-from ableton.v2.base import Subject, listens_group, liveobj_changed, liveobj_valid
-from ableton.v2.control_surface import Component
+from ableton.v2.base import EventObject, listens_group, liveobj_changed, liveobj_valid
+from ableton.v2.control_surface.mode import Mode
 from .device_chain_utils import find_instrument_devices, find_instrument_meeting_requirement
 
-class PercussionInstrumentFinderComponent(Component, Subject):
+class PercussionInstrumentFinder(Mode, EventObject):
     """
     Looks in the hierarchy of devices of the selected track, looking
     for the first available drum-rack or sliced simpler (depth-first),
     updating as the device list changes.
     """
-    __events__ = ('instrument',)
+    __events__ = ('instrument', )
     _drum_group = None
     _simpler = None
 
-    def __init__(self, device_parent = None, *a, **k):
-        raise liveobj_valid(device_parent) or AssertionError
-        super(PercussionInstrumentFinderComponent, self).__init__(*a, **k)
+    def __init__(self, device_parent=None, is_enabled=True, *a, **k):
+        assert liveobj_valid(device_parent)
+        super(PercussionInstrumentFinder, self).__init__(*a, **k)
+        self._is_enabled = is_enabled
         self._device_parent = None
         self.device_parent = device_parent
+        return
+
+    @property
+    def is_enabled(self):
+        return self._is_enabled
+
+    @is_enabled.setter
+    def is_enabled(self, enabled):
+        self._is_enabled = enabled
+        self.update()
+
+    def enter_mode(self):
+        self.is_enabled = True
+
+    def leave_mode(self):
+        self.is_enabled = False
 
     @property
     def drum_group(self):
@@ -62,8 +84,7 @@ class PercussionInstrumentFinderComponent(Component, Subject):
         self.update()
 
     def update(self):
-        super(PercussionInstrumentFinderComponent, self).update()
-        if self.is_enabled():
+        if self.is_enabled:
             self._update_listeners()
             self._update_instruments()
 
