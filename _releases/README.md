@@ -8,8 +8,6 @@ Novation_Impulse2.zip
 
 Novation_Impulse2_9_1.zip 
  for ableton before 9.1
-
-
  
 
 
