@@ -10,6 +10,9 @@ Novation_Impulse2_9_1.zip
  for ableton before 9.1
 
 
- 
+extract the zip to the 
+
+"C:\ProgramData\Ableton\Live 9 [here it could sat Suite 64]\Resources\MIDI Remote Scripts" 
+
 
 
